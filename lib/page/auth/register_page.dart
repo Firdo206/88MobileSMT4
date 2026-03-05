@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/api_service.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -9,6 +10,32 @@ class RegisterPage extends StatefulWidget {
 
 class _RegisterPageState extends State<RegisterPage> {
   bool _isPasswordHidden = true;
+
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController phoneController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+
+    Future<void> registerUser() async {
+      final response = await ApiService.register(
+        nameController.text,
+        emailController.text,
+        phoneController.text,
+        passwordController.text,
+      );
+
+      if (response['status'] == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Registrasi berhasil")),
+        );
+
+        Navigator.pop(context);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(response['message'] ?? "Registrasi gagal")),
+        );
+      }
+    }
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +68,10 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                _buildTextField(hint: "Masukkan nama lengkap"),
+                _buildTextField(
+                  hint: "Masukkan nama lengkap",
+                  controller: nameController,
+                ),
 
                 const SizedBox(height: 20),
 
@@ -54,7 +84,10 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                _buildTextField(hint: "Masukkan email"),
+                _buildTextField(
+                  hint: "Masukkan email",
+                  controller: emailController,
+                ),
 
                 const SizedBox(height: 20),
 
@@ -67,11 +100,14 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                _buildTextField(hint: "Masukkan no telepon"),
+                _buildTextField(
+                  hint: "Masukkan no telepon",
+                  controller: phoneController,
+                ),
 
                 const SizedBox(height: 20),
 
-                /// PASSWORD (ADA ICON MATA)
+                /// PASSWORD
                 const Text(
                   "Password",
                   style: TextStyle(
@@ -81,6 +117,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
                 const SizedBox(height: 8),
                 TextField(
+                  controller: passwordController,
                   obscureText: _isPasswordHidden,
                   decoration: InputDecoration(
                     hintText: "Masukkan password",
@@ -109,7 +146,8 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(6),
-                      borderSide: const BorderSide(color: primaryRed, width: 2),
+                      borderSide:
+                          const BorderSide(color: primaryRed, width: 2),
                     ),
                   ),
                 ),
@@ -127,7 +165,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
-                    onPressed: () {},
+                    onPressed: registerUser,
                     child: const Text(
                       "Daftar",
                       style: TextStyle(
@@ -144,13 +182,13 @@ class _RegisterPageState extends State<RegisterPage> {
                 /// SUDAH PUNYA AKUN
                 Center(
                   child: RichText(
-                    text: TextSpan(
+                    text: const TextSpan(
                       text: "Sudah punya akun? ",
-                      style: const TextStyle(color: Colors.grey, fontSize: 14),
+                      style: TextStyle(color: Colors.grey, fontSize: 14),
                       children: [
                         TextSpan(
                           text: "Masuk",
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: primaryRed,
                             fontWeight: FontWeight.bold,
                           ),
@@ -169,10 +207,14 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  Widget _buildTextField({required String hint}) {
+  Widget _buildTextField({
+    required String hint,
+    required TextEditingController controller,
+  }) {
     const Color primaryRed = Color(0xFF8B0D0D);
 
     return TextField(
+      controller: controller,
       decoration: InputDecoration(
         hintText: hint,
         filled: true,
