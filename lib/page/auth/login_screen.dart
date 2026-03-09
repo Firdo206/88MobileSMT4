@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'register_page.dart';
+import '../../services/auth_service.dart';
+import '../dashboard/dashboard_page.dart';
+import '../navigation/main_page.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -10,6 +13,9 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   bool _obscurePassword = true;
+
+  TextEditingController emailController = TextEditingController();
+  TextEditingController passwordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -45,6 +51,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 8),
 
                     TextField(
+                      controller: emailController,
                       decoration: InputDecoration(
                         hintText: "Masukkan email",
                         contentPadding: const EdgeInsets.symmetric(
@@ -81,6 +88,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 8),
 
                     TextField(
+                      controller: passwordController,
                       obscureText: _obscurePassword,
                       decoration: InputDecoration(
                         hintText: "Masukkan password",
@@ -141,7 +149,25 @@ class _LoginScreenState extends State<LoginScreen> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        onPressed: () {},
+                        onPressed: () async {
+                          var result = await AuthService.login(
+                            emailController.text,
+                            passwordController.text,
+                          );
+
+                          if (result['status'] == true) {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const MainPage(),
+                              ),
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(result['message'])),
+                            );
+                          }
+                        },
                         child: const Text(
                           "Masuk",
                           style: TextStyle(

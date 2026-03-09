@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../services/api_service.dart';
+import '../../services/auth_service.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -16,26 +16,26 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
-    Future<void> registerUser() async {
-      final response = await ApiService.register(
-        nameController.text,
-        emailController.text,
-        phoneController.text,
-        passwordController.text,
+  Future<void> registerUser() async {
+    final response = await AuthService.register(
+      nameController.text,
+      emailController.text,
+      phoneController.text,
+      passwordController.text,
+    );
+
+    if (response['status'] == true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Registrasi berhasil")),
       );
 
-      if (response['status'] == true) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Registrasi berhasil")),
-        );
-
-        Navigator.pop(context);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(response['message'] ?? "Registrasi gagal")),
-        );
-      }
+      Navigator.pop(context);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(response['message'] ?? "Registrasi gagal")),
+      );
     }
+  }
 
   @override
   Widget build(BuildContext context) {
