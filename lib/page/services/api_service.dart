@@ -12,9 +12,7 @@ class ApiService {
   ) async {
     final response = await http.post(
       Uri.parse("$baseUrl/register"),
-      headers: {
-        "Accept": "application/json"
-      },
+      headers: {"Accept": "application/json"},
       body: {
         "name": name,
         "email": email,
