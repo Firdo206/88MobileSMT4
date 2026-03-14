@@ -17,22 +17,32 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController passwordController = TextEditingController();
 
   Future<void> registerUser() async {
-    final response = await AuthService.register(
-      nameController.text,
-      emailController.text,
-      phoneController.text,
-      passwordController.text,
-    );
-
-    if (response['status'] == true) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Registrasi berhasil")),
+    try {
+      final response = await AuthService.register(
+        nameController.text,
+        emailController.text,
+        phoneController.text,
+        passwordController.text,
       );
 
-      Navigator.pop(context);
-    } else {
+      if (response['status'] == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Registrasi berhasil")),
+        );
+
+        Navigator.pop(context);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(response['message'] ?? "Registrasi gagal"),
+          ),
+        );
+      }
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(response['message'] ?? "Registrasi gagal")),
+        const SnackBar(
+          content: Text("Tidak dapat terhubung ke server"),
+        ),
       );
     }
   }
@@ -123,7 +133,8 @@ class _RegisterPageState extends State<RegisterPage> {
                     hintText: "Masukkan password",
                     filled: true,
                     fillColor: Colors.white,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 16),
                     suffixIcon: IconButton(
                       icon: Icon(
                         _isPasswordHidden
