@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'api_service.dart';
 
 class AuthService {
@@ -20,7 +21,15 @@ class AuthService {
       }),
     );
 
-    return jsonDecode(response.body);
+    var data = jsonDecode(response.body);
+
+    // simpan user_id jika login berhasil
+    if (data['status'] == true) {
+      final prefs = await SharedPreferences.getInstance();
+      prefs.setInt("user_id", data['data']['id']);
+    }
+
+    return data;
   }
 
 

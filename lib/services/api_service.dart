@@ -1,6 +1,3 @@
 class ApiService {
-
-  static const String baseUrl =
-      "http://localhost/bus_88fix/public/api";
-
+  static const String baseUrl = "http://127.0.0.1/bus_88fix/public/api";
 }
