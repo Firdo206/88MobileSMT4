@@ -6,6 +6,7 @@ class PusatBantuanPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF5F5F5), // TAMBAHAN BACKGROUND HALAMAN
       appBar: AppBar(
         title: const Text(
           "Pusat bantuan",
@@ -17,6 +18,7 @@ class PusatBantuanPage extends StatelessWidget {
       ),
 
       body: ListView(
+        padding: const EdgeInsets.all(16), // TAMBAHAN SPACING
         children: const [
 
           HelpItem(
@@ -79,14 +81,25 @@ class HelpItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: Colors.black12),
-        ),
+      margin: const EdgeInsets.only(bottom: 12), // JARAK ANTAR ITEM
+      decoration: BoxDecoration(
+        color: Colors.white, 
+        borderRadius: BorderRadius.circular(12), 
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 6,
+            offset: Offset(0, 2),
+          )
+        ],
       ),
 
       child: ExpansionTile(
         tilePadding: const EdgeInsets.symmetric(horizontal: 16),
+
+        iconColor: const Color(0xFF8B2635), // WARNA PANAH
+        collapsedIconColor: const Color(0xFF8B2635),
+
         title: Text(
           question,
           style: const TextStyle(
@@ -98,7 +111,12 @@ class HelpItem extends StatelessWidget {
         children: [
           Container(
             width: double.infinity,
-            color: Colors.grey.shade200,
+            decoration: const BoxDecoration(
+              color: Color(0xFFF9F9F9), 
+              borderRadius: BorderRadius.vertical(
+                bottom: Radius.circular(12),
+              ),
+            ),
             padding: const EdgeInsets.all(16),
             child: Text(
               answer,
