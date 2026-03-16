@@ -21,11 +21,8 @@ class ProfileService {
     }
 
   }
-
-
-  // ==============================
+  
   // UPLOAD AVATAR
-  // ==============================
   static Future<bool> uploadAvatar(int userId, File imageFile) async {
 
     var uri = Uri.parse("${ApiService.baseUrl}/upload-avatar");
@@ -42,6 +39,32 @@ class ProfileService {
     );
 
     var response = await request.send();
+
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      return false;
+    }
+
+  }
+
+  // UPDATE NAMA
+  static Future<bool> updateName(int userId, String name) async {
+
+    final response = await http.post(
+      Uri.parse("${ApiService.baseUrl}/update-name"),
+      headers: {
+        "Accept": "application/json"
+      },
+      body: {
+        "user_id": userId.toString(),
+        "name": name
+      },
+    );
+
+    // DEBUG RESPONSE
+    print("STATUS CODE: ${response.statusCode}");
+    print("RESPONSE BODY: ${response.body}");
 
     if (response.statusCode == 200) {
       return true;

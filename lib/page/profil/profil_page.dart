@@ -47,9 +47,7 @@ class _ProfilPageState extends State<ProfilPage> {
 
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(
-        builder: (context) => const LoginPage(),
-      ),
+      MaterialPageRoute(builder: (context) => const LoginPage()),
       (route) => false,
     );
   }
@@ -69,11 +67,7 @@ class _ProfilPageState extends State<ProfilPage> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  Icons.logout,
-                  size: 40,
-                  color: primaryColor,
-                ),
+                Icon(Icons.logout, size: 40, color: primaryColor),
                 const SizedBox(height: 16),
                 Text(
                   "Logout",
@@ -127,7 +121,7 @@ class _ProfilPageState extends State<ProfilPage> {
                       ),
                     ),
                   ],
-                )
+                ),
               ],
             ),
           ),
@@ -172,8 +166,10 @@ class _ProfilPageState extends State<ProfilPage> {
           child: Column(
             children: [
               Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 child: Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
@@ -225,8 +221,7 @@ class _ProfilPageState extends State<ProfilPage> {
                           await Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) =>
-                                  const AkunKeamananPage(),
+                              builder: (context) => const AkunKeamananPage(),
                             ),
                           );
                           loadProfile();
@@ -246,8 +241,7 @@ class _ProfilPageState extends State<ProfilPage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) =>
-                                  const PusatBantuanPage(),
+                              builder: (context) => const PusatBantuanPage(),
                             ),
                           );
                         },

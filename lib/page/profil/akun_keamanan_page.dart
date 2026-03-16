@@ -19,6 +19,9 @@ class _AkunKeamananPageState extends State<AkunKeamananPage> {
   File? _image;
   final ImagePicker _picker = ImagePicker();
 
+  /// CONTROLLER EDIT NAMA
+  final TextEditingController nameController = TextEditingController();
+
   final TextEditingController emailController =
       TextEditingController(text: "");
 
@@ -46,6 +49,79 @@ class _AkunKeamananPageState extends State<AkunKeamananPage> {
       phoneController.text = data['data']['phone'];
       avatar = data['data']['avatar'] ?? "";
     });
+  }
+
+  /// POPUP EDIT NAMA
+  void showEditNameDialog() {
+
+    nameController.text = name;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Ganti Nama"),
+          content: TextField(
+            controller: nameController,
+            decoration: const InputDecoration(
+              hintText: "Masukkan nama baru",
+            ),
+          ),
+          actions: [
+
+            /// BATAL
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text("Batal"),
+            ),
+
+            /// SIMPAN
+            ElevatedButton(
+              onPressed: () async {
+
+                final prefs = await SharedPreferences.getInstance();
+                int userId = prefs.getInt("user_id") ?? 0;
+
+                bool success = await ProfileService.updateName(
+                  userId,
+                  nameController.text,
+                );
+
+                if(success){
+
+                  setState(() {
+                    name = nameController.text;
+                  });
+
+                  Navigator.pop(context);
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Nama berhasil diupdate"),
+                    ),
+                  );
+
+                }else{
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Update gagal"),
+                    ),
+                  );
+
+                }
+
+              },
+              child: const Text("Simpan"),
+            )
+
+          ],
+        );
+      },
+    );
+
   }
 
   // PILIH FOTO + UPLOAD KE LARAVEL
@@ -175,19 +251,22 @@ class _AkunKeamananPageState extends State<AkunKeamananPage> {
 
             const SizedBox(height: 10),
 
-            /// NAMA
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  name.isEmpty ? "Loading..." : name,
-                  style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(width: 5),
-                const Icon(Icons.edit, size: 16, color: Colors.red)
-              ],
+            /// NAMA (BISA DIKLIK)
+            GestureDetector(
+              onTap: showEditNameDialog,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    name.isEmpty ? "Loading..." : name,
+                    style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(width: 5),
+                  const Icon(Icons.edit, size: 16, color: Colors.red)
+                ],
+              ),
             ),
 
             const SizedBox(height: 25),
