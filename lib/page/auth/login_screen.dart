@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'register_page.dart';
 import '../../services/auth_service.dart';
-import '../dashboard/dashboard_page.dart';
 import '../navigation/main_page.dart';
-
-// TAMBAHAN IMPORT
 import '../../services/google_auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -21,6 +18,102 @@ class _LoginScreenState extends State<LoginScreen> {
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
 
+  /// POPUP MODERN
+  void showPopup(
+    String title,
+    String message,
+    IconData icon,
+    Color color, {
+    bool autoClose = false,
+  }) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(25),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                /// ICON BULAT
+                Container(
+                  width: 70,
+                  height: 70,
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, size: 40, color: color),
+                ),
+
+                const SizedBox(height: 20),
+
+                /// TITLE
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+
+                const SizedBox(height: 8),
+
+                /// MESSAGE
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.grey,
+                    fontSize: 15,
+                  ),
+                ),
+
+                /// BUTTON HANYA UNTUK ERROR
+                if (!autoClose) ...[
+                  const SizedBox(height: 25),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 45,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: color,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: const Text(
+                        "OK",
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ]
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    /// AUTO CLOSE JIKA LOGIN BERHASIL
+    if (autoClose) {
+      Future.delayed(const Duration(seconds: 1), () {
+        Navigator.pop(context);
+      });
+    }
+  }
+
   Future<void> loginUser() async {
     try {
       var result = await AuthService.login(
@@ -29,29 +122,41 @@ class _LoginScreenState extends State<LoginScreen> {
       );
 
       if (result['status'] == true) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const MainPage(),
-          ),
+        showPopup(
+          "Login Berhasil",
+          "Selamat datang 👋",
+          Icons.check_circle,
+          Colors.green,
+          autoClose: true,
         );
+
+        Future.delayed(const Duration(seconds: 1), () {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const MainPage(),
+            ),
+          );
+        });
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result['message'] ?? "Login gagal"),
-          ),
+        showPopup(
+          "Login Gagal",
+          result['message'] ?? "Email atau password salah",
+          Icons.error,
+          Colors.red,
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Tidak dapat terhubung ke server"),
-        ),
+      showPopup(
+        "Server Error",
+        "Tidak dapat terhubung ke server",
+        Icons.warning,
+        Colors.orange,
       );
     }
   }
 
-  // TAMBAHAN FUNCTION LOGIN GOOGLE
+  /// LOGIN GOOGLE
   Future<void> loginGoogle() async {
     try {
       var account = await GoogleAuthService.signIn();
@@ -71,23 +176,37 @@ class _LoginScreenState extends State<LoginScreen> {
           prefs.setString("name", result["data"]["name"]);
           prefs.setString("email", result["data"]["email"]);
 
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const MainPage(),
-            ),
+          showPopup(
+            "Login Google Berhasil",
+            "Selamat datang di 88Trans",
+            Icons.check_circle,
+            Colors.green,
+            autoClose: true,
           );
+
+          Future.delayed(const Duration(seconds: 1), () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const MainPage(),
+              ),
+            );
+          });
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(result["message"] ?? "Login gagal")),
+          showPopup(
+            "Login Gagal",
+            result["message"] ?? "Login gagal",
+            Icons.error,
+            Colors.red,
           );
         }
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Login Google gagal"),
-        ),
+      showPopup(
+        "Login Google Gagal",
+        "Terjadi kesalahan saat login",
+        Icons.warning,
+        Colors.orange,
       );
     }
   }
@@ -110,7 +229,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     /// LOGO
                     Center(
-                      child: Image.asset("assets/images/logo.png", height: 110),
+                      child: Image.asset(
+                        "assets/images/logo.png",
+                        height: 110,
+                      ),
                     ),
 
                     const SizedBox(height: 60),
@@ -136,9 +258,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           vertical: 14,
                         ),
                         enabledBorder: OutlineInputBorder(
-                          borderSide: const BorderSide(
-                            color: Color(0xFF8B0000),
-                          ),
+                          borderSide:
+                              const BorderSide(color: Color(0xFF8B0000)),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         focusedBorder: OutlineInputBorder(
@@ -174,9 +295,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           vertical: 14,
                         ),
                         enabledBorder: OutlineInputBorder(
-                          borderSide: const BorderSide(
-                            color: Color(0xFF8B0000),
-                          ),
+                          borderSide:
+                              const BorderSide(color: Color(0xFF8B0000)),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         focusedBorder: OutlineInputBorder(
@@ -204,7 +324,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     const SizedBox(height: 10),
 
-                    /// LUPA PASSWORD
                     const Align(
                       alignment: Alignment.centerRight,
                       child: Text(
@@ -242,7 +361,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
 
-            /// BAGIAN BAWAH ABU-ABU
+            /// BAGIAN BAWAH
             Container(
               padding: const EdgeInsets.all(20),
               decoration: const BoxDecoration(
@@ -251,7 +370,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               child: Column(
                 children: [
-                  /// GOOGLE BUTTON
                   SizedBox(
                     width: double.infinity,
                     height: 50,
@@ -263,18 +381,19 @@ class _LoginScreenState extends State<LoginScreen> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      onPressed: loginGoogle, // TAMBAHAN DI SINI
-                      icon: Image.asset("assets/icons/Symbol.png", height: 22),
+                      onPressed: loginGoogle,
+                      icon:
+                          Image.asset("assets/icons/Symbol.png", height: 22),
                       label: const Text(
                         "Sign in with Google",
-                        style: TextStyle(color: Colors.black, fontSize: 15),
+                        style:
+                            TextStyle(color: Colors.black, fontSize: 15),
                       ),
                     ),
                   ),
 
                   const SizedBox(height: 70),
 
-                  /// BUAT AKUN
                   GestureDetector(
                     onTap: () {
                       Navigator.push(
