@@ -56,4 +56,36 @@ class AuthService {
     return jsonDecode(response.body);
   }
 
+
+  // TAMBAHAN GOOGLE LOGIN (INI YANG MEMPERBAIKI ERROR)
+  static Future<Map<String, dynamic>> googleLogin(
+      String googleId,
+      String name,
+      String email,
+      String photo) async {
+
+    final response = await http.post(
+      Uri.parse("${ApiService.baseUrl}/google-login"),
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: jsonEncode({
+        "google_id": googleId,
+        "name": name,
+        "email": email,
+        "photo": photo
+      }),
+    );
+
+    var data = jsonDecode(response.body);
+
+    // simpan user_id jika berhasil login
+    if (data['status'] == true) {
+      final prefs = await SharedPreferences.getInstance();
+      prefs.setInt("user_id", data['data']['id']);
+    }
+
+    return data;
+  }
+
 }

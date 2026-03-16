@@ -4,6 +4,10 @@ import '../../services/auth_service.dart';
 import '../dashboard/dashboard_page.dart';
 import '../navigation/main_page.dart';
 
+// TAMBAHAN IMPORT
+import '../../services/google_auth_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -47,9 +51,51 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  // TAMBAHAN FUNCTION LOGIN GOOGLE
+  Future<void> loginGoogle() async {
+    try {
+      var account = await GoogleAuthService.signIn();
+
+      if (account != null) {
+        var result = await AuthService.googleLogin(
+          account.id,
+          account.displayName ?? "",
+          account.email,
+          account.photoUrl ?? "",
+        );
+
+        if (result["status"] == true) {
+          final prefs = await SharedPreferences.getInstance();
+
+          prefs.setInt("user_id", result["data"]["id"]);
+          prefs.setString("name", result["data"]["name"]);
+          prefs.setString("email", result["data"]["email"]);
+
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const MainPage(),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(result["message"] ?? "Login gagal")),
+          );
+        }
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Login Google gagal"),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: const Color(0xFFF2F2F2),
       body: SafeArea(
         child: Column(
@@ -82,6 +128,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     TextField(
                       controller: emailController,
+                      keyboardType: TextInputType.emailAddress,
                       decoration: InputDecoration(
                         hintText: "Masukkan email",
                         contentPadding: const EdgeInsets.symmetric(
@@ -216,7 +263,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      onPressed: () {},
+                      onPressed: loginGoogle, // TAMBAHAN DI SINI
                       icon: Image.asset("assets/icons/Symbol.png", height: 22),
                       label: const Text(
                         "Sign in with Google",

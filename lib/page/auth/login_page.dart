@@ -1,10 +1,48 @@
+import 'package:app_88trans/services/auth_service.dart';
 import 'package:flutter/material.dart';
-import 'login_screen.dart'; // ⬅ TAMBAHKAN INI
+import 'login_screen.dart';
 import 'register_page.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../services/google_auth_service.dart';
+import '../../services/api_service.dart';
+import '../navigation/main_page.dart'; // TAMBAHAN IMPORT
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
+
+  // TAMBAHAN FUNCTION GOOGLE LOGIN
+  Future loginGoogle(BuildContext context) async {
+    var account = await GoogleAuthService.signIn();
+
+    if (account != null) {
+      var result = await AuthService.googleLogin(
+        account.id,
+        account.displayName ?? "",
+        account.email,
+        account.photoUrl ?? "",
+      );
+
+      if (result["status"] == true) {
+        final prefs = await SharedPreferences.getInstance();
+
+        prefs.setInt("user_id", result["data"]["id"]);
+        prefs.setString("name", result["data"]["name"]);
+        prefs.setString("email", result["data"]["email"]);
+
+        print("Login Google berhasil");
+
+        // TAMBAHAN NAVIGASI KE DASHBOARD
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const MainPage()),
+        );
+      } else {
+        print("Login gagal");
+      }
+    } else {
+      print("User batal login Google");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -14,7 +52,6 @@ class LoginPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            
             /// TOMBOL MASUK (POJOK KIRI ATAS)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -57,7 +94,6 @@ class LoginPage extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  
                   /// BUTTON BUAT AKUN BARU
                   SizedBox(
                     width: double.infinity,
@@ -116,19 +152,17 @@ class LoginPage extends StatelessWidget {
                     child: OutlinedButton.icon(
                       style: OutlinedButton.styleFrom(
                         backgroundColor: Colors.white,
-                        side: const BorderSide(
-                          color: Colors.black,
-                          width: 1.5,
-                        ),
+                        side: const BorderSide(color: Colors.black, width: 1.5),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(30),
                         ),
                       ),
-                      onPressed: () {},
-                      icon: Image.asset(
-                        "assets/icons/Symbol.png",
-                        height: 22,
-                      ),
+
+                      onPressed: () {
+                        loginGoogle(context);
+                      },
+
+                      icon: Image.asset("assets/icons/Symbol.png", height: 22),
                       label: const Text(
                         "Sign in with Google",
                         style: TextStyle(
