@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'api_service.dart';
 
@@ -17,6 +18,35 @@ class ProfileService {
       return jsonDecode(response.body);
     } else {
       throw Exception("Gagal mengambil data profil");
+    }
+
+  }
+
+
+  // ==============================
+  // UPLOAD AVATAR
+  // ==============================
+  static Future<bool> uploadAvatar(int userId, File imageFile) async {
+
+    var uri = Uri.parse("${ApiService.baseUrl}/upload-avatar");
+
+    var request = http.MultipartRequest('POST', uri);
+
+    request.fields['user_id'] = userId.toString();
+
+    request.files.add(
+      await http.MultipartFile.fromPath(
+        'avatar',
+        imageFile.path,
+      ),
+    );
+
+    var response = await request.send();
+
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      return false;
     }
 
   }
