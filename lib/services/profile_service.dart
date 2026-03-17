@@ -56,4 +56,32 @@ class ProfileService {
       return false;
     }
   }
+
+  // UPDATE PASSWORD (BARU 🔥)
+  static Future<bool> updatePassword(
+    int userId,
+    String oldPassword,
+    String newPassword,
+  ) async {
+    final response = await http.post(
+      Uri.parse("${ApiService.baseUrl}/update-password"),
+      headers: {"Accept": "application/json"},
+      body: {
+        "user_id": userId.toString(),
+        "old_password": oldPassword,
+        "new_password": newPassword,
+      },
+    );
+
+    // DEBUG RESPONSE
+    print("UPDATE PASSWORD STATUS: ${response.statusCode}");
+    print("UPDATE PASSWORD BODY: ${response.body}");
+
+    if (response.statusCode == 200) {
+      var data = jsonDecode(response.body);
+      return data['status']; // ambil dari Laravel
+    } else {
+      return false;
+    }
+  }
 }
