@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/profile_service.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'ganti_password_page.dart';
 
 class AkunKeamananPage extends StatefulWidget {
   const AkunKeamananPage({super.key});
@@ -58,66 +59,200 @@ class _AkunKeamananPageState extends State<AkunKeamananPage> {
 
     showDialog(
       context: context,
+      barrierColor: Colors.black.withOpacity(0.6),
       builder: (context) {
-        return AlertDialog(
-          title: const Text("Ganti Nama"),
-          content: TextField(
-            controller: nameController,
-            decoration: const InputDecoration(
-              hintText: "Masukkan nama baru",
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.15),
+                  blurRadius: 30,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.all(28),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+
+                /// HEADER
+                Center(
+                  child: Column(
+                    children: [
+
+                      Image.asset(
+                        'assets/images/logo.png',
+                        width: 60,
+                        height: 60,
+                      ),
+
+                      const SizedBox(height: 12),
+                      const Text(
+                        "Ganti Nama",
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        "Masukkan nama baru kamu",
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey[500],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                /// LABEL
+                Text(
+                  "Nama",
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey[700],
+                    letterSpacing: 0.2,
+                  ),
+                ),
+
+                const SizedBox(height: 8),
+
+                /// INPUT
+                TextField(
+                  controller: nameController,
+                  style: const TextStyle(fontSize: 15, color: Colors.black87),
+                  decoration: InputDecoration(
+                    hintText: "Masukkan nama baru",
+                    hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
+                    prefixIcon: Icon(Icons.edit_outlined, color: Colors.grey[400], size: 20),
+                    filled: true,
+                    fillColor: Colors.grey[50],
+                    contentPadding: const EdgeInsets.symmetric(
+                      vertical: 14,
+                      horizontal: 16,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(color: Colors.grey[200]!, width: 1.5),
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(color: Colors.grey[200]!, width: 1.5),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: Colors.black, width: 1.5),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                /// TOMBOL
+                Row(
+                  children: [
+
+                    /// BATAL
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          side: BorderSide(color: Colors.grey[300]!),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: Text(
+                          "Batal",
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(width: 12),
+
+                    /// SIMPAN
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () async {
+
+                          final prefs = await SharedPreferences.getInstance();
+                          int userId = prefs.getInt("user_id") ?? 0;
+
+                          bool success = await ProfileService.updateName(
+                            userId,
+                            nameController.text,
+                          );
+
+                          if(success){
+
+                            setState(() {
+                              name = nameController.text;
+                            });
+
+                            Navigator.pop(context);
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text("Nama berhasil diupdate"),
+                              ),
+                            );
+
+                          }else{
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text("Update gagal"),
+                              ),
+                            );
+
+                          }
+
+                        },
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          side: BorderSide(color: Colors.grey[300]!),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: Text(
+                          "Simpan",
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                  ],
+                ),
+
+              ],
             ),
           ),
-          actions: [
-
-            /// BATAL
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: const Text("Batal"),
-            ),
-
-            /// SIMPAN
-            ElevatedButton(
-              onPressed: () async {
-
-                final prefs = await SharedPreferences.getInstance();
-                int userId = prefs.getInt("user_id") ?? 0;
-
-                bool success = await ProfileService.updateName(
-                  userId,
-                  nameController.text,
-                );
-
-                if(success){
-
-                  setState(() {
-                    name = nameController.text;
-                  });
-
-                  Navigator.pop(context);
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text("Nama berhasil diupdate"),
-                    ),
-                  );
-
-                }else{
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text("Update gagal"),
-                    ),
-                  );
-
-                }
-
-              },
-              child: const Text("Simpan"),
-            )
-
-          ],
         );
       },
     );
@@ -190,52 +325,78 @@ class _AkunKeamananPageState extends State<AkunKeamananPage> {
             GestureDetector(
               onTap: pickImage,
               child: Stack(
+                clipBehavior: Clip.none,
                 children: [
 
-                  CircleAvatar(
-                    radius: 45,
-                    backgroundColor: Colors.grey[300],
+                  /// RING LUAR (PUTIH) + SHADOW
+                  Container(
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.12),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                      border: Border.all(
+                        color: Colors.white,
+                        width: 3,
+                      ),
+                    ),
                     child: ClipOval(
                       child: _image != null
                           ? Image.file(
                               _image!,
-                              width: 90,
-                              height: 90,
+                              width: 100,
+                              height: 100,
                               fit: BoxFit.cover,
                             )
                           : avatar.isNotEmpty
                               ? Image.network(
                                   "http://192.168.1.10:8000/avatar/$avatar?${DateTime.now().millisecondsSinceEpoch}",
-                                    key: ValueKey(avatar),  
-                                  width: 90,
-                                  height: 90,
+                                  key: ValueKey(avatar),
+                                  width: 100,
+                                  height: 100,
                                   fit: BoxFit.cover,
                                   errorBuilder: (context, error, stackTrace) {
                                     return Image.network(
                                       "https://randomuser.me/api/portraits/women/44.jpg",
-                                      width: 90,
-                                      height: 90,
+                                      width: 100,
+                                      height: 100,
                                       fit: BoxFit.cover,
                                     );
                                   },
                                 )
                               : Image.network(
                                   "https://randomuser.me/api/portraits/women/44.jpg",
-                                  width: 90,
-                                  height: 90,
+                                  width: 100,
+                                  height: 100,
                                   fit: BoxFit.cover,
                                 ),
                     ),
                   ),
 
+                  /// TOMBOL + (HITAM)
                   Positioned(
                     bottom: 0,
                     right: 0,
                     child: Container(
                       padding: const EdgeInsets.all(6),
-                      decoration: const BoxDecoration(
-                        color: Colors.red,
+                      decoration: BoxDecoration(
+                        color: Colors.black,
                         shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 2),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black26,
+                            blurRadius: 6,
+                            offset: Offset(0, 2),
+                          )
+                        ],
                       ),
                       child: const Icon(
                         Icons.add,
@@ -264,7 +425,7 @@ class _AkunKeamananPageState extends State<AkunKeamananPage> {
                         fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(width: 5),
-                  const Icon(Icons.edit, size: 16, color: Colors.red)
+                  const Icon(Icons.edit_outlined, size: 16, color: Colors.black54)
                 ],
               ),
             ),
@@ -341,8 +502,16 @@ class _AkunKeamananPageState extends State<AkunKeamananPage> {
                   style: TextStyle(color: Colors.grey),
                 ),
                 const SizedBox(width: 5),
+
                 GestureDetector(
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const GantiPasswordPage(),
+                      ),
+                    );
+                  },
                   child: const Text(
                     "Ubah",
                     style: TextStyle(
@@ -350,9 +519,9 @@ class _AkunKeamananPageState extends State<AkunKeamananPage> {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                )
+                ),
               ],
-            )
+              ),
           ],
         ),
       ),
