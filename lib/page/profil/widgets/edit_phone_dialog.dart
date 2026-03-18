@@ -4,10 +4,7 @@ import '../../../services/otp_service.dart';
 class EditPhoneDialog extends StatefulWidget {
   final int userId;
 
-  const EditPhoneDialog({
-    super.key,
-    required this.userId,
-  });
+  const EditPhoneDialog({super.key, required this.userId});
 
   @override
   State<EditPhoneDialog> createState() => _EditPhoneDialogState();
@@ -31,9 +28,9 @@ class _EditPhoneDialogState extends State<EditPhoneDialog> {
 
     setState(() => isLoading = false);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(result['message'])),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(result['message'])));
   }
 
   /// =========================
@@ -41,9 +38,9 @@ class _EditPhoneDialogState extends State<EditPhoneDialog> {
   /// =========================
   void checkOtp() {
     if (otpController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("OTP tidak boleh kosong")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("OTP tidak boleh kosong")));
       return;
     }
 
@@ -57,9 +54,9 @@ class _EditPhoneDialogState extends State<EditPhoneDialog> {
   /// =========================
   Future<void> updatePhone() async {
     if (phoneController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Nomor tidak boleh kosong")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Nomor tidak boleh kosong")));
       return;
     }
 
@@ -74,15 +71,15 @@ class _EditPhoneDialogState extends State<EditPhoneDialog> {
     setState(() => isLoading = false);
 
     if (result['status']) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result['message'])),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(result['message'])));
 
       Navigator.pop(context, phoneController.text);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result['message'])),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(result['message'])));
     }
   }
 
@@ -111,10 +108,7 @@ class _EditPhoneDialogState extends State<EditPhoneDialog> {
 
             Text(
               step == 1 ? "Verifikasi OTP" : "Masukkan Nomor Baru",
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
 
             const SizedBox(height: 4),
@@ -180,8 +174,8 @@ class _EditPhoneDialogState extends State<EditPhoneDialog> {
                     onPressed: isLoading
                         ? null
                         : step == 1
-                            ? checkOtp
-                            : updatePhone,
+                        ? checkOtp
+                        : updatePhone,
                     child: isLoading
                         ? const CircularProgressIndicator(color: Colors.white)
                         : Text(step == 1 ? "Verifikasi" : "Simpan"),

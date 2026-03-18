@@ -5,12 +5,13 @@ import 'register_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/google_auth_service.dart';
 import '../../services/api_service.dart';
-import '../navigation/main_page.dart'; // TAMBAHAN IMPORT
+import '../navigation/main_page.dart';
+import '../profil/input_phone_page.dart'; // 🔥 TAMBAHAN
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
 
-  // TAMBAHAN FUNCTION GOOGLE LOGIN
+  // 🔥 GOOGLE LOGIN + VALIDASI NOMOR
   Future loginGoogle(BuildContext context) async {
     var account = await GoogleAuthService.signIn();
 
@@ -25,19 +26,41 @@ class LoginPage extends StatelessWidget {
       if (result["status"] == true) {
         final prefs = await SharedPreferences.getInstance();
 
-        prefs.setInt("user_id", result["data"]["id"]);
-        prefs.setString("name", result["data"]["name"]);
-        prefs.setString("email", result["data"]["email"]);
+        var user = result["data"];
+
+        prefs.setInt("user_id", user["id"]);
+        prefs.setString("name", user["name"]);
+        prefs.setString("email", user["email"]);
 
         print("Login Google berhasil");
+        print("DATA USER: $user");
 
-        // TAMBAHAN NAVIGASI KE DASHBOARD
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const MainPage()),
-        );
+        // 🔥 CEK NOMOR
+        if (user["phone"] == null || user["phone"] == "") {
+
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => InputPhonePage(
+                userId: user["id"],
+              ),
+            ),
+          );
+
+        } else {
+
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const MainPage()),
+          );
+
+        }
+
       } else {
         print("Login gagal");
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Login gagal")),
+        );
       }
     } else {
       print("User batal login Google");

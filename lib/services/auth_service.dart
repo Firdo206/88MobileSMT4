@@ -5,7 +5,7 @@ import 'api_service.dart';
 
 class AuthService {
 
-  // LOGIN
+  /// 🔥 LOGIN EMAIL
   static Future<Map<String, dynamic>> login(
       String email,
       String password) async {
@@ -23,17 +23,23 @@ class AuthService {
 
     var data = jsonDecode(response.body);
 
-    // simpan user_id jika login berhasil
     if (data['status'] == true) {
       final prefs = await SharedPreferences.getInstance();
+
       prefs.setInt("user_id", data['data']['id']);
+      prefs.setString("name", data['data']['name'] ?? "");
+      prefs.setString("email", data['data']['email'] ?? "");
+      prefs.setString("phone", data['data']['phone'] ?? "");
+
+      /// 🔥 SIMPAN STATUS PHONE
+      prefs.setBool("require_phone", data['require_phone'] ?? false);
     }
 
     return data;
   }
 
 
-  // REGISTER
+  /// 🔥 REGISTER
   static Future<Map<String, dynamic>> register(
       String name,
       String email,
@@ -57,7 +63,7 @@ class AuthService {
   }
 
 
-  // TAMBAHAN GOOGLE LOGIN (INI YANG MEMPERBAIKI ERROR)
+  /// 🔥 GOOGLE LOGIN
   static Future<Map<String, dynamic>> googleLogin(
       String googleId,
       String name,
@@ -79,10 +85,16 @@ class AuthService {
 
     var data = jsonDecode(response.body);
 
-    // simpan user_id jika berhasil login
     if (data['status'] == true) {
       final prefs = await SharedPreferences.getInstance();
+
       prefs.setInt("user_id", data['data']['id']);
+      prefs.setString("name", data['data']['name'] ?? "");
+      prefs.setString("email", data['data']['email'] ?? "");
+      prefs.setString("phone", data['data']['phone'] ?? "");
+
+      /// 🔥 PENTING BANGET INI
+      prefs.setBool("require_phone", data['require_phone'] ?? false);
     }
 
     return data;

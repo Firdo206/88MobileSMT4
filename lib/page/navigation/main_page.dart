@@ -3,6 +3,7 @@ import '../dashboard/dashboard_page.dart';
 import '../pesanan/pesanan_page.dart';
 import '../armada/armada_page.dart';
 import '../profil/profil_page.dart';
+import '../profil/input_phone_page.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});

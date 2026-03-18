@@ -17,6 +17,26 @@ class ProfileService {
     }
   }
 
+  // 🔥 TAMBAHAN: UPDATE NOMOR (FIRST TIME - TANPA OTP)
+  static Future<Map<String, dynamic>> updatePhone(
+      int userId, String phone) async {
+
+    final response = await http.post(
+      Uri.parse("${ApiService.baseUrl}/update-phone"),
+      headers: {"Accept": "application/json"},
+      body: {
+        "user_id": userId.toString(),
+        "phone": phone,
+      },
+    );
+
+    // DEBUG
+    print("UPDATE PHONE STATUS: ${response.statusCode}");
+    print("UPDATE PHONE BODY: ${response.body}");
+
+    return jsonDecode(response.body);
+  }
+
   // UPLOAD AVATAR
   static Future<bool> uploadAvatar(int userId, File imageFile) async {
     var uri = Uri.parse("${ApiService.baseUrl}/upload-avatar");

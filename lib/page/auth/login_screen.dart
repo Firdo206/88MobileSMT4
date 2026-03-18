@@ -5,6 +5,9 @@ import '../navigation/main_page.dart';
 import '../../services/google_auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// 🔥 TAMBAHAN IMPORT
+import '../profil/input_phone_page.dart';
+
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -39,7 +42,6 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                /// ICON BULAT
                 Container(
                   width: 70,
                   height: 70,
@@ -52,7 +54,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 const SizedBox(height: 20),
 
-                /// TITLE
                 Text(
                   title,
                   style: const TextStyle(
@@ -63,7 +64,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 const SizedBox(height: 8),
 
-                /// MESSAGE
                 Text(
                   message,
                   textAlign: TextAlign.center,
@@ -73,7 +73,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
 
-                /// BUTTON HANYA UNTUK ERROR
                 if (!autoClose) ...[
                   const SizedBox(height: 25),
                   SizedBox(
@@ -106,7 +105,6 @@ class _LoginScreenState extends State<LoginScreen> {
       },
     );
 
-    /// AUTO CLOSE JIKA LOGIN BERHASIL
     if (autoClose) {
       Future.delayed(const Duration(seconds: 1), () {
         Navigator.pop(context);
@@ -156,7 +154,7 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  /// LOGIN GOOGLE
+  /// 🔥 LOGIN GOOGLE (SUDAH DISUPPORT INPUT NOMOR)
   Future<void> loginGoogle() async {
     try {
       var account = await GoogleAuthService.signIn();
@@ -185,12 +183,26 @@ class _LoginScreenState extends State<LoginScreen> {
           );
 
           Future.delayed(const Duration(seconds: 1), () {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const MainPage(),
-              ),
-            );
+
+            /// 🔥 CEK NOMOR
+            if (result["require_phone"] == true) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => InputPhonePage(
+                    userId: result["data"]["id"],
+                  ),
+                ),
+              );
+            } else {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const MainPage(),
+                ),
+              );
+            }
+
           });
         } else {
           showPopup(
@@ -227,7 +239,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   children: [
                     const SizedBox(height: 50),
 
-                    /// LOGO
                     Center(
                       child: Image.asset(
                         "assets/images/logo.png",
@@ -237,7 +248,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     const SizedBox(height: 60),
 
-                    /// EMAIL
                     const Text(
                       "Email",
                       style: TextStyle(
@@ -274,7 +284,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     const SizedBox(height: 25),
 
-                    /// PASSWORD
                     const Text(
                       "Password",
                       style: TextStyle(
@@ -334,7 +343,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     const SizedBox(height: 30),
 
-                    /// BUTTON MASUK
                     SizedBox(
                       width: double.infinity,
                       height: 55,
@@ -361,7 +369,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
 
-            /// BAGIAN BAWAH
             Container(
               padding: const EdgeInsets.all(20),
               decoration: const BoxDecoration(
