@@ -39,28 +39,45 @@ class _MainPageState extends State<MainPage> {
         currentIndex: selectedIndex,
         onTap: onItemTapped,
 
-        selectedItemColor: Colors.black,
-        unselectedItemColor: Colors.grey,
+        selectedItemColor: const Color(0xFF1A1A2E),
+        unselectedItemColor: const Color(0xFFBEB8B0),
+
+        backgroundColor: Colors.white,
+        elevation: 12,
+        type: BottomNavigationBarType.fixed,
+
+        selectedLabelStyle: const TextStyle(
+          fontWeight: FontWeight.w700,
+          fontSize: 11,
+        ),
+        unselectedLabelStyle: const TextStyle(
+          fontWeight: FontWeight.w500,
+          fontSize: 11,
+        ),
 
         items: const [
 
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
+            icon: Icon(Icons.home_outlined),
+            activeIcon: Icon(Icons.home_rounded),
             label: "Beranda",
           ),
 
           BottomNavigationBarItem(
-            icon: Icon(Icons.confirmation_number),
+            icon: Icon(Icons.confirmation_number_outlined),
+            activeIcon: Icon(Icons.confirmation_number_rounded),
             label: "Pesanan",
           ),
 
           BottomNavigationBarItem(
-            icon: Icon(Icons.directions_bus),
+            icon: Icon(Icons.directions_bus_outlined),
+            activeIcon: Icon(Icons.directions_bus_rounded),
             label: "Armada",
           ),
 
           BottomNavigationBarItem(
-            icon: Icon(Icons.person),
+            icon: Icon(Icons.person_outline_rounded),
+            activeIcon: Icon(Icons.person_rounded),
             label: "Akun",
           ),
 

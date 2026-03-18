@@ -31,7 +31,6 @@ class AuthService {
       prefs.setString("email", data['data']['email'] ?? "");
       prefs.setString("phone", data['data']['phone'] ?? "");
 
-      /// 🔥 SIMPAN STATUS PHONE
       prefs.setBool("require_phone", data['require_phone'] ?? false);
     }
 
@@ -93,11 +92,74 @@ class AuthService {
       prefs.setString("email", data['data']['email'] ?? "");
       prefs.setString("phone", data['data']['phone'] ?? "");
 
-      /// 🔥 PENTING BANGET INI
       prefs.setBool("require_phone", data['require_phone'] ?? false);
     }
 
     return data;
+  }
+
+
+  // =========================================
+  // 🔥 FORGOT PASSWORD (KIRIM OTP)
+  // =========================================
+  static Future<Map<String, dynamic>> forgotPassword(String email) async {
+    final response = await http.post(
+      Uri.parse("${ApiService.baseUrl}/forgot-password"),
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: jsonEncode({
+        "email": email
+      }),
+    );
+
+    return jsonDecode(response.body);
+  }
+
+
+  // =========================================
+  // 🔥 VERIFY OTP
+  // =========================================
+  static Future<Map<String, dynamic>> verifyOtp(
+      String email,
+      String otp) async {
+
+    final response = await http.post(
+      Uri.parse("${ApiService.baseUrl}/verify-otp-reset"),
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: jsonEncode({
+        "email": email,
+        "otp": otp
+      }),
+    );
+
+    return jsonDecode(response.body);
+  }
+
+
+  // =========================================
+  // 🔥 RESET PASSWORD
+  // =========================================
+  static Future<Map<String, dynamic>> resetPassword(
+      String email,
+      String otp,
+      String password) async {
+
+    final response = await http.post(
+      Uri.parse("${ApiService.baseUrl}/reset-password"),
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: jsonEncode({
+        "email": email,
+        "otp": otp,
+        "password": password
+      }),
+    );
+
+    return jsonDecode(response.body);
   }
 
 }

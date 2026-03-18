@@ -5,8 +5,8 @@ import '../navigation/main_page.dart';
 import '../../services/google_auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// 🔥 TAMBAHAN IMPORT
 import '../profil/input_phone_page.dart';
+import 'forgot_password_flow_page.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -51,9 +51,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   child: Icon(icon, size: 40, color: color),
                 ),
-
                 const SizedBox(height: 20),
-
                 Text(
                   title,
                   style: const TextStyle(
@@ -61,18 +59,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-
                 const SizedBox(height: 8),
-
                 Text(
                   message,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.grey,
-                    fontSize: 15,
-                  ),
+                  style: const TextStyle(color: Colors.grey, fontSize: 15),
                 ),
-
                 if (!autoClose) ...[
                   const SizedBox(height: 25),
                   SizedBox(
@@ -97,7 +89,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                   ),
-                ]
+                ],
               ],
             ),
           ),
@@ -131,9 +123,7 @@ class _LoginScreenState extends State<LoginScreen> {
         Future.delayed(const Duration(seconds: 1), () {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(
-              builder: (context) => const MainPage(),
-            ),
+            MaterialPageRoute(builder: (context) => const MainPage()),
           );
         });
       } else {
@@ -154,7 +144,260 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  /// 🔥 LOGIN GOOGLE (SUDAH DISUPPORT INPUT NOMOR)
+  /// 🔥 FORGOT PASSWORD — UI CANTIK
+  Future<void> forgotPassword() async {
+    final TextEditingController emailForgotController = TextEditingController();
+    bool isSubmitting = false;
+
+    await showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return Dialog(
+              backgroundColor: Colors.transparent,
+              insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 32,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // ── ICON ──────────────────────────────────
+                    Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFCC1F1F).withOpacity(0.08),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.lock_reset_rounded,
+                        color: Color(0xFFCC1F1F),
+                        size: 28,
+                      ),
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    // ── JUDUL ─────────────────────────────────
+                    const Text(
+                      "Lupa Password?",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF1A1A2E),
+                        letterSpacing: -0.2,
+                      ),
+                    ),
+
+                    const SizedBox(height: 6),
+
+                    const Text(
+                      "Masukkan email kamu, kami akan\nmengirimkan kode OTP",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Color(0xFF8A8FAB),
+                        height: 1.5,
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // ── DIVIDER ───────────────────────────────
+                    Container(
+                      height: 1,
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.transparent,
+                            Color(0xFFE2E6F0),
+                            Colors.transparent,
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // ── LABEL ─────────────────────────────────
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        "EMAIL",
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF1A1A2E).withOpacity(0.45),
+                          letterSpacing: 1.1,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    // ── INPUT EMAIL ───────────────────────────
+                    Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF4F6FB),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: const Color(0xFFE2E6F0),
+                          width: 1.5,
+                        ),
+                      ),
+                      child: TextField(
+                        controller: emailForgotController,
+                        keyboardType: TextInputType.emailAddress,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Color(0xFF1A1A2E),
+                          fontWeight: FontWeight.w500,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: "contoh@email.com",
+                          hintStyle: const TextStyle(
+                            color: Color(0xFFB0B6CC),
+                            fontSize: 14,
+                          ),
+                          prefixIcon: Container(
+                            margin: const EdgeInsets.only(left: 14, right: 10),
+                            child: const Icon(
+                              Icons.email_outlined,
+                              color: Color(0xFF6C74A0),
+                              size: 20,
+                            ),
+                          ),
+                          prefixIconConstraints: const BoxConstraints(
+                            minWidth: 0,
+                            minHeight: 0,
+                          ),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 15,
+                            horizontal: 4,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // ── TOMBOL KIRIM OTP ──────────────────────
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFCC1F1F),
+                          disabledBackgroundColor: const Color(
+                            0xFFCC1F1F,
+                          ).withOpacity(0.6),
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        onPressed: isSubmitting
+                            ? null
+                            : () async {
+                                setDialogState(() => isSubmitting = true);
+
+                                var res = await AuthService.forgotPassword(
+                                  emailForgotController.text,
+                                );
+
+                                setDialogState(() => isSubmitting = false);
+
+                                if (res["status"]) {
+                                  final String emailToSend =
+                                      emailForgotController.text;
+                                  final scaffoldCtx = this.context;
+                                  Navigator.pop(context);
+                                  Navigator.push(
+                                    scaffoldCtx,
+                                    MaterialPageRoute(
+                                      builder: (_) => ForgotPasswordFlowPage(
+                                        email: emailToSend,
+                                      ),
+                                    ),
+                                  );
+                                } else {
+                                  showPopup(
+                                    "Gagal",
+                                    res["message"],
+                                    Icons.error,
+                                    Colors.red,
+                                  );
+                                }
+                              },
+                        child: isSubmitting
+                            ? const SizedBox(
+                                height: 22,
+                                width: 22,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2.5,
+                                ),
+                              )
+                            : const Text(
+                                "Kirim OTP",
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                ),
+                              ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    // ── BATAL ─────────────────────────────────
+                    SizedBox(
+                      width: double.infinity,
+                      height: 44,
+                      child: TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: TextButton.styleFrom(
+                          foregroundColor: const Color(0xFF8A8FAB),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        child: const Text(
+                          "Batal",
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  /// 🔥 LOGIN GOOGLE
   Future<void> loginGoogle() async {
     try {
       var account = await GoogleAuthService.signIn();
@@ -183,26 +426,20 @@ class _LoginScreenState extends State<LoginScreen> {
           );
 
           Future.delayed(const Duration(seconds: 1), () {
-
-            /// 🔥 CEK NOMOR
             if (result["require_phone"] == true) {
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => InputPhonePage(
-                    userId: result["data"]["id"],
-                  ),
+                  builder: (context) =>
+                      InputPhonePage(userId: result["data"]["id"]),
                 ),
               );
             } else {
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => const MainPage(),
-                ),
+                MaterialPageRoute(builder: (context) => const MainPage()),
               );
             }
-
           });
         } else {
           showPopup(
@@ -240,10 +477,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 50),
 
                     Center(
-                      child: Image.asset(
-                        "assets/images/logo.png",
-                        height: 110,
-                      ),
+                      child: Image.asset("assets/images/logo.png", height: 110),
                     ),
 
                     const SizedBox(height: 60),
@@ -268,8 +502,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           vertical: 14,
                         ),
                         enabledBorder: OutlineInputBorder(
-                          borderSide:
-                              const BorderSide(color: Color(0xFF8B0000)),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF8B0000),
+                          ),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         focusedBorder: OutlineInputBorder(
@@ -304,8 +539,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           vertical: 14,
                         ),
                         enabledBorder: OutlineInputBorder(
-                          borderSide:
-                              const BorderSide(color: Color(0xFF8B0000)),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF8B0000),
+                          ),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         focusedBorder: OutlineInputBorder(
@@ -333,11 +569,17 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     const SizedBox(height: 10),
 
-                    const Align(
+                    Align(
                       alignment: Alignment.centerRight,
-                      child: Text(
-                        "Lupa Password?",
-                        style: TextStyle(fontWeight: FontWeight.w500),
+                      child: GestureDetector(
+                        onTap: forgotPassword,
+                        child: const Text(
+                          "Lupa Password?",
+                          style: TextStyle(
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF8B0000),
+                          ),
+                        ),
                       ),
                     ),
 
@@ -389,12 +631,10 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                       onPressed: loginGoogle,
-                      icon:
-                          Image.asset("assets/icons/Symbol.png", height: 22),
+                      icon: Image.asset("assets/icons/Symbol.png", height: 22),
                       label: const Text(
                         "Sign in with Google",
-                        style:
-                            TextStyle(color: Colors.black, fontSize: 15),
+                        style: TextStyle(color: Colors.black, fontSize: 15),
                       ),
                     ),
                   ),
