@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/profile_service.dart';
+import '../../services/api_service.dart';
 import 'pusat_bantuan_page.dart';
 import '../auth/login_page.dart';
 import 'akun_keamanan_page.dart';
@@ -132,7 +133,7 @@ class _ProfilPageState extends State<ProfilPage> {
 
   Widget buildAvatar() {
     String imageUrl = avatar.isNotEmpty
-        ? "http://192.168.1.10:8000/avatar/$avatar"
+        ? "${ApiService.storageUrl}/avatar/$avatar"
         : "https://randomuser.me/api/portraits/women/44.jpg";
 
     return Container(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/profile_service.dart';
+import '../../services/api_service.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'ganti_password_page.dart';
@@ -149,8 +150,7 @@ class _AkunKeamananPageState extends State<AkunKeamananPage> {
     if (pickedFile != null) {
       File imageFile = File(pickedFile.path);
 
-      bool success =
-          await ProfileService.uploadAvatar(userId, imageFile);
+      bool success = await ProfileService.uploadAvatar(userId, imageFile);
 
       if (success) {
         setState(() {
@@ -203,7 +203,7 @@ class _AkunKeamananPageState extends State<AkunKeamananPage> {
                           ? Image.file(_image!, fit: BoxFit.cover)
                           : avatar.isNotEmpty
                               ? Image.network(
-                                  "http://192.168.1.10:8000/avatar/$avatar?${DateTime.now().millisecondsSinceEpoch}",
+                                  "${ApiService.storageUrl}/avatar/$avatar?${DateTime.now().millisecondsSinceEpoch}",
                                   fit: BoxFit.cover,
                                 )
                               : Image.network(
@@ -221,8 +221,7 @@ class _AkunKeamananPageState extends State<AkunKeamananPage> {
                         color: Colors.black,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.add,
-                          size: 18, color: Colors.white),
+                      child: const Icon(Icons.add, size: 18, color: Colors.white),
                     ),
                   )
                 ],
@@ -268,7 +267,7 @@ class _AkunKeamananPageState extends State<AkunKeamananPage> {
 
             const SizedBox(height: 15),
 
-            /// NO TELP 🔥 (UPDATED)
+            /// NO TELP
             const Align(
                 alignment: Alignment.centerLeft, child: Text("No Telp")),
             const SizedBox(height: 5),
@@ -296,7 +295,7 @@ class _AkunKeamananPageState extends State<AkunKeamananPage> {
                 );
 
                 if (result != null) {
-                  loadProfile(); // 🔥 refresh dari server
+                  loadProfile();
                 }
               },
             ),
@@ -331,8 +330,7 @@ class _AkunKeamananPageState extends State<AkunKeamananPage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) =>
-                            const GantiPasswordPage(),
+                        builder: (context) => const GantiPasswordPage(),
                       ),
                     );
                   },

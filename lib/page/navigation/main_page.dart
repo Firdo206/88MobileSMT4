@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../dashboard/dashboard_page.dart';
 import '../pesanan/pesanan_page.dart';
-import '../armada/armada_page.dart';
+import '../paket_wisata/paket_wisata_page.dart'; 
 import '../profil/profil_page.dart';
 import '../profil/input_phone_page.dart';
 
@@ -18,8 +18,8 @@ class _MainPageState extends State<MainPage> {
 
   final List<Widget> pages = [
     const DashboardPage(),
-    const PesananPage(),
-    const ArmadaPage(),
+    const PaketWisataPage(), 
+    const PesananPage(),     
     const ProfilPage(),
   ];
 
@@ -63,16 +63,16 @@ class _MainPageState extends State<MainPage> {
             label: "Beranda",
           ),
 
+            BottomNavigationBarItem(
+            icon: Icon(Icons.travel_explore_outlined),
+            activeIcon: Icon(Icons.travel_explore),
+            label: "Paket Wisata",
+          ),
+
           BottomNavigationBarItem(
             icon: Icon(Icons.confirmation_number_outlined),
             activeIcon: Icon(Icons.confirmation_number_rounded),
             label: "Pesanan",
-          ),
-
-          BottomNavigationBarItem(
-            icon: Icon(Icons.directions_bus_outlined),
-            activeIcon: Icon(Icons.directions_bus_rounded),
-            label: "Armada",
           ),
 
           BottomNavigationBarItem(

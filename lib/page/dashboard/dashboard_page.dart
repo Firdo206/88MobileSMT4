@@ -5,13 +5,10 @@ class DashboardPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Dashboard"),
-      ),
-      body: const Center(
+    return const Scaffold(
+      body: Center(
         child: Text(
-          "INI DASBORD king manchester united",
+          "halaman dashboard",
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
