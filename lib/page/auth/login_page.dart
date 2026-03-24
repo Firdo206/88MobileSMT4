@@ -6,7 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/google_auth_service.dart';
 import '../../services/api_service.dart';
 import '../navigation/main_page.dart';
-import '../profil/input_phone_page.dart'; // 🔥 TAMBAHAN
+import '../profil/input_phone_page.dart'; 
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
