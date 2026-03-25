@@ -46,17 +46,20 @@ class AuthService {
       String password) async {
 
     final response = await http.post(
-      Uri.parse("${ApiService.baseUrl}/register"),
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: jsonEncode({
-        "name": name,
-        "email": email,
-        "phone": phone,
-        "password": password
-      }),
-    );
+        Uri.parse("${ApiService.baseUrl}/register"),
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+        },
+        body: jsonEncode({
+          "name": name,
+          "email": email,
+          "phone": phone,
+          "password": password
+        }),
+      );
+    print("STATUS CODE: ${response.statusCode}");
+    print("RESPONSE BODY: ${response.body}");       
 
     return jsonDecode(response.body);
   }

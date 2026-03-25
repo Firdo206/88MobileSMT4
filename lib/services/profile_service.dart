@@ -19,15 +19,13 @@ class ProfileService {
 
   // 🔥 TAMBAHAN: UPDATE NOMOR (FIRST TIME - TANPA OTP)
   static Future<Map<String, dynamic>> updatePhone(
-      int userId, String phone) async {
-
+    int userId,
+    String phone,
+  ) async {
     final response = await http.post(
       Uri.parse("${ApiService.baseUrl}/update-phone"),
       headers: {"Accept": "application/json"},
-      body: {
-        "user_id": userId.toString(),
-        "phone": phone,
-      },
+      body: {"user_id": userId.toString(), "phone": phone},
     );
 
     // DEBUG
