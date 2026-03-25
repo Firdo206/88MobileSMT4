@@ -26,23 +26,22 @@ class _RegisterPageState extends State<RegisterPage> {
       );
 
       if (response['status'] == true) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Registrasi berhasil")),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Registrasi berhasil")));
 
         Navigator.pop(context);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(response['message'] ?? "Registrasi gagal"),
-          ),
+          SnackBar(content: Text(response['message'] ?? "Registrasi gagal")),
         );
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print("ERROR TYPE: ${e.runtimeType}");
+      print("ERROR MESSAGE: $e");
+      print("STACK TRACE: $stackTrace");
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Tidak dapat terhubung ke server"),
-        ),
+        const SnackBar(content: Text("Tidak dapat terhubung ke server")),
       );
     }
   }
@@ -133,8 +132,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     hintText: "Masukkan password",
                     filled: true,
                     fillColor: Colors.white,
-                    contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 16),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16),
                     suffixIcon: IconButton(
                       icon: Icon(
                         _isPasswordHidden
@@ -157,8 +155,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(6),
-                      borderSide:
-                          const BorderSide(color: primaryRed, width: 2),
+                      borderSide: const BorderSide(color: primaryRed, width: 2),
                     ),
                   ),
                 ),
