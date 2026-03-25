@@ -4,8 +4,7 @@
         android:usesCleartextTraffic="true"
         android:label="app_88trans"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher"
-        android:usesCleartextTraffic="true">
+        android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"
             android:exported="true"

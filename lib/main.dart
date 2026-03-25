@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'page/auth/login_page.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 void main() {
   runApp(const MyApp());
@@ -11,8 +12,14 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+      return MaterialApp(
       debugShowCheckedModeBanner: false,
+
+      theme: ThemeData(
+        scaffoldBackgroundColor: Color(0xFFF5F5F5),
+        textTheme: GoogleFonts.robotoTextTheme(),
+      ),
+
       home: SplashPage(),
     );
   }
