@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import '../dashboard/dashboard_page.dart';
 import '../pesanan/pesanan_page.dart';
-import '../paket_wisata/paket_wisata_page.dart'; 
+import '../paket_wisata/paket_wisata_page.dart';
 import '../profil/profil_page.dart';
 import '../profil/input_phone_page.dart';
 
 class MainPage extends StatefulWidget {
-  const MainPage({super.key});
+  final int initialIndex;
+  const MainPage({super.key, this.initialIndex = 0});
 
   @override
   State<MainPage> createState() => _MainPageState();
@@ -14,12 +15,19 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
 
-  int selectedIndex = 0;
+  late int selectedIndex;
+
+  // ✅ TAMBAHAN
+  @override
+  void initState() {
+    super.initState();
+    selectedIndex = widget.initialIndex;
+  }
 
   final List<Widget> pages = [
     const DashboardPage(),
-    const PaketWisataPage(), 
-    const PesananPage(),     
+    const PaketWisataPage(),
+    const PesananPage(),
     const ProfilPage(),
   ];
 
@@ -63,7 +71,7 @@ class _MainPageState extends State<MainPage> {
             label: "Beranda",
           ),
 
-            BottomNavigationBarItem(
+          BottomNavigationBarItem(
             icon: Icon(Icons.travel_explore_outlined),
             activeIcon: Icon(Icons.travel_explore),
             label: "Paket Wisata",

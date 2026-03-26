@@ -2,7 +2,7 @@
 <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:usesCleartextTraffic="true"
-        android:label="app_88trans"
+        android:label="88Trans"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

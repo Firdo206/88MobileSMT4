@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/booking_service.dart';
@@ -30,6 +31,11 @@ class _PesananPageState extends State<PesananPage> {
 
       final data = await BookingService.getMyBookings(userId);
 
+      // DEBUG - cek apakah passengers ada di response API
+      if (data != null && data.isNotEmpty) {
+        print("BOOKING DATA: ${jsonEncode(data[0])}");
+      }
+
       setState(() {
         bookings = data ?? [];
         isLoading = false;
@@ -55,15 +61,15 @@ class _PesananPageState extends State<PesananPage> {
     String proof = booking["payment_proof"] ?? "";
 
     if(status == "pending" && proof == ""){
-      return Colors.orange; // belum bayar
+      return Colors.orange;
     }
 
     if(status == "pending" && proof != ""){
-      return Colors.blue; // menunggu konfirmasi
+      return Colors.blue;
     }
 
     if(status == "paid"){
-      return Colors.green; // selesai
+      return Colors.green;
     }
 
     if(status == "expired"){
@@ -139,7 +145,7 @@ class _PesananPageState extends State<PesananPage> {
 
           : ListView.builder(
               itemCount: bookings.length,
-              itemBuilder: (context,index){
+              itemBuilder: (context, index){
 
                 final booking = bookings[index];
 
@@ -150,14 +156,38 @@ class _PesananPageState extends State<PesananPage> {
 
                   onTap: () async {
 
-                    /// hanya bisa bayar jika belum upload bukti
                     if(status == "pending" && proof == ""){
+
+                      // Ambil passengers dari API, fallback ke data booking utama
+                      final rawPassengers = booking['passengers'];
+                      List passengerList = [];
+
+                      if (rawPassengers != null && rawPassengers is List && rawPassengers.isNotEmpty) {
+                        passengerList = List<Map<String, dynamic>>.from(rawPassengers);
+                      } else {
+                        passengerList = [
+                          {
+                            'seat': booking['seat_number'] ?? booking['seats'] ?? '-',
+                            'passenger_name': booking['passenger_name'] ?? '-',
+                            'phone': booking['phone'] ?? '-',
+                          }
+                        ];
+                      }
 
                       await Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (_) => PaymentPage(
-                            bookingData: booking,
+                            bookingData: {
+                              ...Map<String, dynamic>.from(booking),
+                              'total_price': int.tryParse(
+                                double.tryParse(booking['total_price']?.toString() ?? '0')
+                                    ?.toStringAsFixed(0) ?? '0'
+                              ) ?? 0,
+                              'passengers': passengerList,
+                              'passenger_name': booking['passenger_name'] ?? "-",
+                              'expired_at': booking['expired_at'],  // ← tambah ini
+                            },
                           ),
                         ),
                       );
@@ -173,7 +203,7 @@ class _PesananPageState extends State<PesananPage> {
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.blue,width: 2),
+                      border: Border.all(color: Colors.blue, width: 2),
                     ),
 
                     child: Column(
@@ -189,21 +219,21 @@ class _PesananPageState extends State<PesananPage> {
                           ),
                         ),
 
-                        const SizedBox(height:5),
+                        const SizedBox(height: 5),
 
                         /// RUTE
                         Text(
                           "${booking["origin"] ?? "-"} → ${booking["destination"] ?? "-"}"
                         ),
 
-                        const SizedBox(height:5),
+                        const SizedBox(height: 5),
 
                         /// TANGGAL
                         Text(
                           "Tanggal : ${booking["departure_date"] ?? "-"}"
                         ),
 
-                        const SizedBox(height:5),
+                        const SizedBox(height: 5),
 
                         /// TOTAL HARGA
                         Text(
@@ -213,13 +243,13 @@ class _PesananPageState extends State<PesananPage> {
                           ),
                         ),
 
-                        const SizedBox(height:10),
+                        const SizedBox(height: 10),
 
                         /// STATUS
                         Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal:12,
-                            vertical:6
+                            horizontal: 12,
+                            vertical: 6
                           ),
                           decoration: BoxDecoration(
                             color: getStatusColor(booking),
