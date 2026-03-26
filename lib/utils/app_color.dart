@@ -6,4 +6,5 @@ class AppColor {
   static const textPrimary = Colors.black;
   static const textSecondary = Colors.grey;
   static const card = Colors.white;
+  static const softRed = Color(0xFFE8B4B4);
 }

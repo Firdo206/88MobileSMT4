@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../utils/app_color.dart';
+import '../booking/booking_form_page.dart';
 
 class PaketDetailPage extends StatelessWidget {
   final dynamic data;
@@ -29,7 +31,7 @@ class PaketDetailPage extends StatelessWidget {
       }
     }
 
-    /// 🔥 EXCLUSIONS (EKSTENSI)
+    /// 🔥 EXCLUSIONS
     List<String> exclusions = [];
     if (data['exclusions'] != null) {
       if (data['exclusions'] is List) {
@@ -51,7 +53,7 @@ class PaketDetailPage extends StatelessWidget {
         iconTheme: const IconThemeData(color: Colors.black),
       ),
 
-      /// 🔥 BOTTOM BAR (WA + PESAN)
+      /// 🔥 BOTTOM BAR
       bottomNavigationBar: Container(
         padding: const EdgeInsets.all(16),
         color: Colors.white,
@@ -59,13 +61,21 @@ class PaketDetailPage extends StatelessWidget {
           children: [
 
             /// WA BUTTON
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.shade300),
-                borderRadius: BorderRadius.circular(12),
+            GestureDetector(
+              onTap: () async {
+                final url = Uri.parse("https://wa.me/6285234203707"); // ganti nomor
+                if (await canLaunchUrl(url)) {
+                  await launchUrl(url);
+                }
+              },
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade300),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.chat, color: Colors.green),
               ),
-              child: const Icon(Icons.chat, color: Colors.green),
             ),
 
             const SizedBox(width: 12),
@@ -80,7 +90,14 @@ class PaketDetailPage extends StatelessWidget {
                     borderRadius: BorderRadius.circular(20),
                   ),
                 ),
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => BookingFormPage(data: data),
+                    ),
+                  );
+                },
                 child: const Text("Pesan"),
               ),
             )
@@ -145,13 +162,44 @@ class PaketDetailPage extends StatelessWidget {
 
                   const SizedBox(height: 8),
 
+                  /// 🔥 RATING + PRICE
+                  Row(
+                    children: [
+                      const Icon(Icons.star, color: Colors.amber, size: 16),
+                      const SizedBox(width: 4),
+                      const Text("4.8 (120 Reviews)",
+                          style: TextStyle(fontSize: 12)),
+
+                      const Spacer(),
+
+                      Text(
+                        "Rp ${data['price_per_person'] ?? '-'}",
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: Colors.red,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 6),
+
+                  /// 🔥 DURASI
+                  Text(
+                    "${data['duration_days'] ?? 0} hari",
+                    style: const TextStyle(color: Colors.grey),
+                  ),
+
+                  const SizedBox(height: 16),
+
                   /// DESCRIPTION
                   Text(
                     data['description'] ?? '-',
                     style: const TextStyle(color: Colors.grey),
                   ),
 
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 20),
 
                   /// DESTINASI
                   const Text(
@@ -166,14 +214,16 @@ class PaketDetailPage extends StatelessWidget {
                     children: destinations.map((e) {
                       return Chip(
                         label: Text(e.trim()),
-                        backgroundColor: const Color(0xFFF3E5E5), // warna figma
+                        backgroundColor:
+                            AppColor.primary.withOpacity(0.1),
+                        labelStyle: const TextStyle(fontSize: 12),
                       );
                     }).toList(),
                   ),
 
                   const SizedBox(height: 20),
 
-                  /// 🔥 2 KOLOM (FASILITAS + EKSTENSI)
+                  /// 🔥 2 KOLOM
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -189,9 +239,11 @@ class PaketDetailPage extends StatelessWidget {
                             ),
                             const SizedBox(height: 8),
 
-                            ...inclusions.map(
-                              (e) => Text("• ${e.trim()}"),
-                            ),
+                            ...inclusions.isNotEmpty
+                                ? inclusions.map(
+                                    (e) => Text("• ${e.trim()}"),
+                                  )
+                                : [const Text("-")],
                           ],
                         ),
                       ),
@@ -207,9 +259,11 @@ class PaketDetailPage extends StatelessWidget {
                             ),
                             const SizedBox(height: 8),
 
-                            ...exclusions.map(
-                              (e) => Text("• ${e.trim()}"),
-                            ),
+                            ...exclusions.isNotEmpty
+                                ? exclusions.map(
+                                    (e) => Text("• ${e.trim()}"),
+                                  )
+                                : [const Text("-")],
                           ],
                         ),
                       ),

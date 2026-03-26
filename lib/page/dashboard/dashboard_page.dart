@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import '../../utils/app_color.dart';
 import '../booking/schedule_page.dart';
+import '../promo/widgets/promo_card.dart';
+import '../promo/promo_list.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -32,35 +35,39 @@ class _DashboardPageState extends State<DashboardPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[200],
+      backgroundColor: AppColor.background,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
             children: [
 
-              /// 🔴 HEADER GRADIENT
+              /// 🔴 HEADER
               Container(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.fromLTRB(20, 30, 20, 30),
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Color(0xFF8B0000), Color(0xFFB22222)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFF8B0000),
+                      Color(0xFFB22222),
+                      Color(0xFFF5F5F5),
+                    ],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    stops: [0.0, 0.6, 1.0],
                   ),
                   borderRadius: BorderRadius.vertical(
-                    bottom: Radius.circular(25),
+                    bottom: Radius.circular(30),
                   ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
 
-                    /// TITLE
                     const Text(
                       "Cari\nDestinasi Kamu",
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 22,
+                        fontSize: 24,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -69,10 +76,17 @@ class _DashboardPageState extends State<DashboardPage> {
 
                     /// 🔳 CARD FORM
                     Container(
-                      padding: const EdgeInsets.all(15),
+                      padding: const EdgeInsets.all(18),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(15),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.08),
+                            blurRadius: 20,
+                            offset: const Offset(0, 10),
+                          )
+                        ],
                       ),
                       child: Column(
                         children: [
@@ -83,6 +97,7 @@ class _DashboardPageState extends State<DashboardPage> {
                             decoration: const InputDecoration(
                               labelText: "Kota Asal",
                               hintText: "Pilih kota asal",
+                              border: UnderlineInputBorder(),
                             ),
                           ),
 
@@ -94,10 +109,11 @@ class _DashboardPageState extends State<DashboardPage> {
                             decoration: const InputDecoration(
                               labelText: "Kota Tujuan",
                               hintText: "Pilih kota tujuan",
+                              border: UnderlineInputBorder(),
                             ),
                           ),
 
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 15),
 
                           /// DATE
                           InkWell(
@@ -106,7 +122,7 @@ class _DashboardPageState extends State<DashboardPage> {
                               padding: const EdgeInsets.all(15),
                               decoration: BoxDecoration(
                                 border: Border.all(color: Colors.grey),
-                                borderRadius: BorderRadius.circular(10),
+                                borderRadius: BorderRadius.circular(12),
                               ),
                               child: Row(
                                 mainAxisAlignment:
@@ -125,9 +141,9 @@ class _DashboardPageState extends State<DashboardPage> {
                             ),
                           ),
 
-                          const SizedBox(height: 15),
+                          const SizedBox(height: 20),
 
-                          /// 🔴 BUTTON (ADA SHADOW + EFFECT)
+                          /// 🔴 BUTTON
                           GestureDetector(
                             onTap: () {
                               Navigator.push(
@@ -144,16 +160,16 @@ class _DashboardPageState extends State<DashboardPage> {
                             },
                             child: Container(
                               width: double.infinity,
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 15),
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 16),
                               decoration: BoxDecoration(
-                                color: Colors.red[800],
-                                borderRadius: BorderRadius.circular(25),
+                                color: AppColor.primary,
+                                borderRadius: BorderRadius.circular(50),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.red.withOpacity(0.4),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 5),
+                                    color: AppColor.primary.withOpacity(0.3),
+                                    blurRadius: 15,
+                                    offset: const Offset(0, 6),
                                   )
                                 ],
                               ),
@@ -182,13 +198,9 @@ class _DashboardPageState extends State<DashboardPage> {
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Row(
                   children: [
-                    Expanded(
-                      child: _menuButton("Cari Tiket", true),
-                    ),
+                    Expanded(child: _menuButton("Cari Tiket", true)),
                     const SizedBox(width: 10),
-                    Expanded(
-                      child: _menuButton("Sewa Bus", false),
-                    ),
+                    Expanded(child: _menuButton("Sewa Bus", false)),
                   ],
                 ),
               ),
@@ -201,57 +213,62 @@ class _DashboardPageState extends State<DashboardPage> {
                 child: Row(
                   mainAxisAlignment:
                       MainAxisAlignment.spaceBetween,
-                  children: const [
-                    Text(
+                  children: [
+                    const Text(
                       "Promo",
                       style:
                           TextStyle(fontWeight: FontWeight.bold),
                     ),
-                    Text("Lihat semua",
-                        style: TextStyle(fontSize: 12)),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const PromoListPage(),
+                          ),
+                        );
+                      },
+                      child: const Text(
+                        "Lihat semua",
+                        style: TextStyle(fontSize: 12),
+                      ),
+                    ),
                   ],
                 ),
               ),
 
               const SizedBox(height: 10),
 
-              /// 🎟️ PROMO LIST (DUMMY 3 CARD)
+              /// 🎟️ PROMO (3 CARD LANGSUNG)
               SizedBox(
-                height: 130,
-                child: ListView.builder(
+                height: 220,
+                child: ListView(
                   scrollDirection: Axis.horizontal,
-                  itemCount: 3,
-                  padding: const EdgeInsets.only(left: 20),
-                  itemBuilder: (context, index) {
-                    return Container(
-                      width: 220,
-                      margin: const EdgeInsets.only(right: 15),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.red[100],
-                        borderRadius:
-                            BorderRadius.circular(15),
+                  children: const [
+                    SizedBox(width: 20),
+
+                    SizedBox(
+                      width: 260,
+                      child: PromoCard(
+                        title: "januaryhappy",
+                        code: "Saweriaaa097275",
                       ),
-                      child: Column(
-                        crossAxisAlignment:
-                            CrossAxisAlignment.start,
-                        children: const [
-                          Text("januaryhappy",
-                              style: TextStyle(
-                                  fontWeight:
-                                      FontWeight.bold)),
-                          SizedBox(height: 5),
-                          Text("Saweriaaa097275"),
-                          SizedBox(height: 5),
-                          Text(
-                            "Syarat & ketentuan berlaku",
-                            style:
-                                TextStyle(fontSize: 11),
-                          ),
-                        ],
+                    ),
+                    SizedBox(
+                      width: 260,
+                      child: PromoCard(
+                        title: "januaryhappy",
+                        code: "Saweriaaa097275",
                       ),
-                    );
-                  },
+                    ),
+                    SizedBox(
+                      width: 260,
+                      child: PromoCard(
+                        title: "januaryhappy",
+                        code: "Saweriaaa097275",
+                      ),
+                    ),
+                  ],
                 ),
               ),
 
@@ -263,20 +280,18 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  /// 🔘 MENU BUTTON STYLE
   Widget _menuButton(String title, bool active) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(
         color: active ? Colors.white : Colors.grey[300],
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Center(
         child: Text(
           title,
           style: TextStyle(
-            color: active ? Colors.red : Colors.black,
+            color: active ? AppColor.primary : Colors.black,
             fontWeight: FontWeight.bold,
           ),
         ),
