@@ -5,6 +5,9 @@ import '../../services/api_service.dart';
 import 'pusat_bantuan_page.dart';
 import '../auth/login_page.dart';
 import 'akun_keamanan_page.dart';
+import 'riwayat_tiket_page.dart';
+import 'riwayat_bus_page.dart';
+import 'riwayat_tour_page.dart';
 
 class ProfilPage extends StatefulWidget {
   const ProfilPage({super.key});
@@ -229,11 +232,63 @@ class _ProfilPageState extends State<ProfilPage> {
                         },
                       ),
                       const Divider(height: 1, indent: 56, endIndent: 16),
-                      _buildMenuItem(
-                        icon: Icons.history,
-                        title: 'Riwayat pesanan',
-                        onTap: () {},
-                      ),
+                     ExpansionTile(
+                          leading: const Icon(Icons.history, color: Colors.black87),
+                          title: const Text(
+                            "Riwayat Pesanan",
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          children: [
+
+                            /// 🎫 TIKET
+                            ListTile(
+                              contentPadding: const EdgeInsets.only(left: 56, right: 16),
+                              title: const Text("Riwayat Tiket"),
+                              trailing: const Icon(Icons.arrow_forward_ios, size: 14),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const RiwayatTiketPage(),
+                                  ),
+                                );
+                              },
+                            ),
+
+                            /// 🚐 BUS
+                            ListTile(
+                              contentPadding: const EdgeInsets.only(left: 56, right: 16),
+                              title: const Text("Riwayat Sewa Bus"),
+                              trailing: const Icon(Icons.arrow_forward_ios, size: 14),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const RiwayatBusPage(),
+                                  ),
+                                );
+                              },
+                            ),
+
+                            /// 🧳 TOUR
+                            ListTile(
+                              contentPadding: const EdgeInsets.only(left: 56, right: 16),
+                              title: const Text("Riwayat Paket Wisata"),
+                              trailing: const Icon(Icons.arrow_forward_ios, size: 14),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const RiwayatTourPage(),
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
                       const Divider(height: 1, indent: 56, endIndent: 16),
                       _buildMenuItem(
                         icon: Icons.help_outline,

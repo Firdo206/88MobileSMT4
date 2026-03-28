@@ -25,4 +25,25 @@ class BookingService {
 
   }
 
+  static Future cancelBooking(int id) async {
+  final response = await http.post(
+    Uri.parse("${ApiService.baseUrl}/booking/cancel/$id"),
+    headers: {
+      "Accept": "application/json"
+    }
+  );
+
+  return jsonDecode(response.body);
+}
+
+static Future finish(int id) async {
+  final url = Uri.parse("${ApiService.baseUrl}/finish-booking/$id");
+
+  final res = await http.post(url);
+
+  if (res.statusCode != 200) {
+    throw Exception("Gagal finish booking");
+  }
+}
+
 }

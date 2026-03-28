@@ -164,7 +164,7 @@ class BookingSummaryPage extends StatelessWidget {
                 onPressed: () async {
 
                   /// 🔥 HIT API SIMPAN DB
-                  final result = await BookingService.createBooking(
+                  final result = await BookingPaketService.createBooking(
                     userId: 1,
                     tourId: data['id'],
                     date: "${date.year}-${date.month}-${date.day}",
