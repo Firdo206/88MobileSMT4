@@ -25,6 +25,16 @@ class BookingService {
 
   }
 
+    static Future<Map> getBookingDetail(int id) async {
+    final res = await http.get(
+      Uri.parse("${ApiService.baseUrl}/booking-detail/$id"),
+      headers: {"Accept": "application/json"},
+    );
+
+    final data = jsonDecode(res.body);
+    return data["data"];
+  }
+
   static Future cancelBooking(int id) async {
   final response = await http.post(
     Uri.parse("${ApiService.baseUrl}/booking/cancel/$id"),

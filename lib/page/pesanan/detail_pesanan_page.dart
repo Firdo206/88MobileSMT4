@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../services/booking_service.dart';
 import '../../services/booking_paket_service.dart';
 import '../../services/rental_service.dart';
+import '../booking/payment_page.dart'; // 🔥 tiket
+import '../payment/payment_page.dart' as other; // 🔥 paket & rental
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:pdf/pdf.dart';
@@ -438,7 +440,46 @@ class DetailPesananPage extends StatelessWidget {
         _mainButton(
           text: "Lanjut Pembayaran",
           color: const Color(0xFF8B2E2E), // 🔴 merah
-          onTap: () {},
+          onTap: () {
+
+            /// 🎫 TIKET
+            if (type == "ticket") {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => PaymentPage(
+                    bookingData: data,
+                  ),
+                ),
+              );
+            }
+
+            /// 🌴 PAKET
+            else if (type == "tour") {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => other.PaymentPage(
+                    data: data,
+                    type: "tour",
+                  ),
+                ),
+              );
+            }
+
+            /// 🚌 SEWA
+            else {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => other.PaymentPage(
+                    data: data,
+                    type: "rental",
+                  ),
+                ),
+              );
+            }
+          },
         ),
         const SizedBox(height: 10),
               _mainButton(
@@ -667,6 +708,7 @@ class DetailPesananPage extends StatelessWidget {
                         ),
                       ),
                       child: const Text("Ya"),
+                      
                     ),
                   ),
                 ],
