@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'transfer_page.dart';
+import '../pesanan/pesanan_page.dart';
 
 class PaymentPage extends StatelessWidget {
   final Map data;
@@ -50,17 +51,45 @@ class PaymentPage extends StatelessWidget {
         ? "Pesan Sewa Bus"
         : "Pesan Paket Wisata";
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+    return WillPopScope(
+    onWillPop: () async {
+      bool keluar = await _showExitDialog(context);
+
+      if (keluar) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => PesananPage()),
+          (route) => false,
+        );
+      }
+
+      return false; // ❗ penting → biar gak auto pop
+    },
+    child: Scaffold(
+        backgroundColor: const Color(0xFFF5F5F5),
 
       /// 🔥 APPBAR MIRIP TIKET
       appBar: AppBar(
-        title: Text(title),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0,
-        centerTitle: true,
+      title: Text(title),
+      backgroundColor: Colors.white,
+      foregroundColor: Colors.black,
+      elevation: 0,
+      centerTitle: true,
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
+        onPressed: () async {
+          bool keluar = await _showExitDialog(context);
+
+          if (keluar) {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => PesananPage()),
+              (route) => false,
+            );
+          }
+        },
       ),
+    ),
 
       body: Column(
         children: [
@@ -94,7 +123,7 @@ class PaymentPage extends StatelessWidget {
               ],
             ),
           ),
-
+      
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -236,9 +265,36 @@ class PaymentPage extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 
+  Future<bool> _showExitDialog(BuildContext context) async {
+    return await showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text("Keluar Pembayaran"),
+            content: const Text(
+              "Lanjutkan bayar nanti?\nPesananmu ada di menu Pesanan.",
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context, false);
+                },
+                child: const Text("Tidak"),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context, true);
+                },
+                child: const Text("Ya"),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
   Widget _row(String title, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),

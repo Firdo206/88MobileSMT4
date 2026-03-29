@@ -880,7 +880,7 @@ pw.Widget _cell(String text) {
 }
 
   /// ================= API =================
-  Future<void> cancelOrder(BuildContext context) async {
+    Future<void> cancelOrder(BuildContext context) async {
     if (type == "ticket") {
       await BookingService.cancelBooking(data["id"]);
     } else if (type == "tour") {
@@ -888,7 +888,10 @@ pw.Widget _cell(String text) {
     } else {
       await RentalService.cancelRental(data["id"]);
     }
-    Navigator.pop(context, true);
+
+    /// 🔥 pakai ROOT navigator biar tembus keluar dialog + page
+    Navigator.of(context, rootNavigator: true).pop(); // tutup dialog
+    Navigator.pop(context, true); // keluar dari detail page
   }
 
   Future<void> finishOrder(BuildContext context) async {
