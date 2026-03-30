@@ -2,7 +2,9 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'api_service.dart';
 
-class BookingService {
+class BookingPaketService {
+
+  /// CREATE BOOKING PAKET
   static Future createBooking({
     required int userId,
     required int tourId,
@@ -27,4 +29,45 @@ class BookingService {
 
     return jsonDecode(response.body);
   }
+
+  /// 🔥 GET DATA PAKET USER
+  static Future<List> getMyTours(int userId) async {
+
+    final response = await http.get(
+      Uri.parse("${ApiService.baseUrl}/my-tour-bookings/$userId"),
+      headers: {
+        "Accept": "application/json"
+      }
+    );
+
+    final data = jsonDecode(response.body);
+
+    if(data["data"] != null){
+      return data["data"];
+    }
+
+    return [];
+  }
+
+  static Future cancelTour(int id) async {
+  final response = await http.post(
+    Uri.parse("${ApiService.baseUrl}/cancel-tour-booking/$id"),
+    headers: {
+      "Accept": "application/json"
+    }
+  );
+
+  return jsonDecode(response.body);
+}
+
+static Future finish(int id) async {
+  final url = Uri.parse("${ApiService.baseUrl}/finish-tour/$id");
+
+  final res = await http.post(url);
+
+  if (res.statusCode != 200) {
+    throw Exception("Gagal finish tour");
+  }
+}
+
 }

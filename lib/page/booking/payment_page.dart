@@ -90,17 +90,37 @@ class _PaymentPageState extends State<PaymentPage> {
 
   @override
   Widget build(BuildContext context) {
-    final seats = widget.bookingData['seats'] ?? [];
-    final totalPrice = int.tryParse(widget.bookingData['total_price'].toString()) ?? 0;
+    final rawSeats = widget.bookingData['seats'];
+    final rawPassengers = widget.bookingData['passengers'];
+
+    final seats = rawSeats is List
+        ? rawSeats
+        : (rawSeats is String && rawSeats.isNotEmpty)
+            ? rawSeats.split(',')
+            : [];
+
+    final passengers = rawPassengers is List ? rawPassengers : [];
+
+    /// 🔥 fallback jumlah kursi
+    final seatCount = seats.isNotEmpty
+        ? seats.length
+        : (widget.bookingData['seat_count'] ?? 1);
+
+    /// 🔥 fallback total
+    final totalPrice = int.tryParse(
+          widget.bookingData['total_price']?.toString() ?? "0",
+        ) ??
+        (seatCount * (int.tryParse(widget.bookingData['price']?.toString() ?? "0") ?? 0));
+
+    final pricePerSeat =
+        seatCount == 0 ? 0 : (totalPrice ~/ seatCount);
 
     final bookingId = int.tryParse(
           (widget.bookingData['id'] ?? widget.bookingData['booking_id'])?.toString() ?? "0",
         ) ?? 0;
 
     final bookingCode = widget.bookingData['booking_code'] ?? "";
-    final pricePerSeat = seats.isEmpty ? 0 : totalPrice ~/ seats.length;
-    final passengers = widget.bookingData['passengers'] as List? ?? [];
-
+    
     return Scaffold(
       backgroundColor: const Color(0xFFF2F2F2),
       appBar: AppBar(
@@ -217,32 +237,47 @@ class _PaymentPageState extends State<PaymentPage> {
                         const Text("Penumpang", style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.black87)),
                         const SizedBox(height: 8),
 
-                        // ✅ Tampil per penumpang jika ada, fallback ke 1 nama
-                        if (passengers.isNotEmpty)
-                          ...passengers.map((p) => Container(
-                            margin: const EdgeInsets.only(bottom: 8),
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                            decoration: BoxDecoration(color: const Color(0xFFF5EAEA), borderRadius: BorderRadius.circular(10)),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 36, height: 36,
-                                  decoration: BoxDecoration(color: _primary, borderRadius: BorderRadius.circular(8)),
-                                  alignment: Alignment.center,
-                                  child: Text(p['seat'].toString(), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                        /// 🔥 PENUMPANG FIX (ANTI KOSONG)
+                  if (passengers.isNotEmpty)
+                    ...passengers.map((p) => Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF5EAEA),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  color: _primary,
+                                  borderRadius: BorderRadius.circular(8),
                                 ),
-                                const SizedBox(width: 12),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(p['passenger_name'] ?? "-", style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.black87)),
-                                    if ((p['phone'] ?? '').toString().isNotEmpty)
-                                      Text(p['phone'].toString(), style: const TextStyle(fontSize: 11, color: Colors.grey)),
-                                  ],
+                                alignment: Alignment.center,
+                                child: Text(
+                                  p['seat']?.toString() ?? "-",
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                              ],
-                            ),
-                          )).toList()
+                              ),
+                              const SizedBox(width: 12),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(p['passenger_name'] ?? "-"),
+                                  Text(
+                                    p['phone'] ?? "",
+                                    style: const TextStyle(fontSize: 11),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ))
                         else
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -277,7 +312,7 @@ class _PaymentPageState extends State<PaymentPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text("${seats.length} Kursi x ${formatPrice(pricePerSeat)}", style: const TextStyle(fontSize: 12, color: Colors.black54)),
+                        Text("$seatCount Kursi x ${formatPrice(pricePerSeat)}", style: const TextStyle(fontSize: 12, color: Colors.black54)),
                         const SizedBox(height: 8),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,

@@ -1,8 +1,11 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../services/booking_service.dart';
-import '../booking/payment_page.dart';
+import '../../services/booking_paket_service.dart';
+import '../../services/rental_service.dart';
+import '../pesanan/detail_pesanan_page.dart';
+import 'widgets/order_card.dart';
 
 class PesananPage extends StatefulWidget {
   const PesananPage({super.key});
@@ -13,264 +16,346 @@ class PesananPage extends StatefulWidget {
 
 class _PesananPageState extends State<PesananPage> {
 
-  List bookings = [];
+  List orders = [];
+  List filteredOrders = [];
+
   bool isLoading = true;
+  String selectedFilter = "all";
 
   @override
   void initState() {
     super.initState();
-    loadBookings();
+    loadAllOrders();
   }
 
-  Future loadBookings() async {
-
+  /// ================= LOAD DATA =================
+  Future loadAllOrders() async {
     try {
+      setState(() => isLoading = true);
 
       final prefs = await SharedPreferences.getInstance();
       int userId = prefs.getInt("user_id") ?? 0;
 
-      final data = await BookingService.getMyBookings(userId);
+      final bookings = await BookingService.getMyBookings(userId);
+      final tours = await BookingPaketService.getMyTours(userId);
+      final rentals = await RentalService.getMyRentals(userId);
 
-      // DEBUG - cek apakah passengers ada di response API
-      if (data != null && data.isNotEmpty) {
-        print("BOOKING DATA: ${jsonEncode(data[0])}");
+      List temp = [];
+
+      for (var b in bookings ?? []) {
+        temp.add({"type": "ticket", "data": b});
       }
 
+      for (var t in tours ?? []) {
+        temp.add({"type": "tour", "data": t});
+      }
+
+      for (var r in rentals ?? []) {
+        temp.add({"type": "bus", "data": r});
+      }
+
+      List activeOrders = temp.where((e) {
+        final status = e["data"]["status_final"];
+
+        return [
+          "pending_payment",
+          "waiting_confirmation",
+          "waiting_approval",
+          "paid"
+        ].contains(status);
+      }).toList();
+
       setState(() {
-        bookings = data ?? [];
+        orders = activeOrders;
+        filteredOrders = activeOrders;
         isLoading = false;
       });
 
     } catch (e) {
-
-      print("ERROR LOAD BOOKING : $e");
-
-      setState(() {
-        bookings = [];
-        isLoading = false;
-      });
-
+      print("ERROR LOAD: $e");
+      setState(() => isLoading = false);
     }
-
   }
 
-  /// WARNA STATUS
-  Color getStatusColor(Map booking){
+  /// ================= FILTER =================
+  void applyFilter(String type){
+    setState(() {
+      selectedFilter = type;
 
-    String status = booking["payment_status"] ?? "pending";
-    String proof = booking["payment_proof"] ?? "";
-
-    if(status == "pending" && proof == ""){
-      return Colors.orange;
-    }
-
-    if(status == "pending" && proof != ""){
-      return Colors.blue;
-    }
-
-    if(status == "paid"){
-      return Colors.green;
-    }
-
-    if(status == "expired"){
-      return Colors.grey;
-    }
-
-    if(status == "cancelled"){
-      return Colors.red;
-    }
-
-    if(status == "refund"){
-      return Colors.purple;
-    }
-
-    return Colors.grey;
+      if(type == "all"){
+        filteredOrders = orders;
+      }else{
+        filteredOrders =
+            orders.where((e) => e["type"] == type).toList();
+      }
+    });
   }
 
-  /// TEXT STATUS
-  String getStatusText(Map booking){
+  /// ================= SEARCH =================
+  void applySearch(String query) {
+    final q = query.toLowerCase();
 
-    String status = booking["payment_status"] ?? "pending";
-    String proof = booking["payment_proof"] ?? "";
+    setState(() {
+      filteredOrders = orders.where((e) {
+        final data = e["data"];
 
-    if(status == "pending" && proof == ""){
-      return "BELUM BAYAR";
-    }
+        final code = (data["booking_code"] ??
+                data["rental_code"] ??
+                "")
+            .toString()
+            .toLowerCase();
 
-    if(status == "pending" && proof != ""){
-      return "MENUNGGU KONFIRMASI";
-    }
+        final name = (data["name"] ?? "").toString().toLowerCase();
 
-    if(status == "paid"){
-      return "SELESAI";
-    }
+        final destination = (data["destination"] ??
+                data["package_name"] ??
+                "")
+            .toString()
+            .toLowerCase();
 
-    if(status == "expired"){
-      return "KADALUARSA";
-    }
-
-    if(status == "cancelled"){
-      return "DIBATALKAN";
-    }
-
-    if(status == "refund"){
-      return "REFUND";
-    }
-
-    return status.toUpperCase();
+        return code.contains(q) ||
+            name.contains(q) ||
+            destination.contains(q);
+      }).toList();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Pesanan"),
-        backgroundColor: Colors.red,
-      ),
+      backgroundColor: const Color(0xFFF5F5F5),
 
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
+      body: SafeArea(
+        child: isLoading
+            ? const Center(child: CircularProgressIndicator())
 
-          : bookings.isEmpty
-          ? const Center(
-              child: Text(
-                "Belum ada pesanan",
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold
-                ),
-              ),
-            )
+            /// 🔥 EMPTY SEMUA
+            : orders.isEmpty
+            ? _emptyState(
+                title: "Belum Ada Pesanan",
+                subtitle: "Yuk mulai rencanakan perjalananmu sekarang!",
+                image: "assets/images/empty_all.png",
+              )
 
-          : ListView.builder(
-              itemCount: bookings.length,
-              itemBuilder: (context, index){
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
 
-                final booking = bookings[index];
-
-                String status = booking["payment_status"] ?? "pending";
-                String proof = booking["payment_proof"] ?? "";
-
-                return GestureDetector(
-
-                  onTap: () async {
-
-                    if(status == "pending" && proof == ""){
-
-                      // Ambil passengers dari API, fallback ke data booking utama
-                      final rawPassengers = booking['passengers'];
-                      List passengerList = [];
-
-                      if (rawPassengers != null && rawPassengers is List && rawPassengers.isNotEmpty) {
-                        passengerList = List<Map<String, dynamic>>.from(rawPassengers);
-                      } else {
-                        passengerList = [
-                          {
-                            'seat': booking['seat_number'] ?? booking['seats'] ?? '-',
-                            'passenger_name': booking['passenger_name'] ?? '-',
-                            'phone': booking['phone'] ?? '-',
-                          }
-                        ];
-                      }
-
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => PaymentPage(
-                            bookingData: {
-                              ...Map<String, dynamic>.from(booking),
-                              'total_price': int.tryParse(
-                                double.tryParse(booking['total_price']?.toString() ?? '0')
-                                    ?.toStringAsFixed(0) ?? '0'
-                              ) ?? 0,
-                              'passengers': passengerList,
-                              'passenger_name': booking['passenger_name'] ?? "-",
-                              'expired_at': booking['expired_at'],  // ← tambah ini
-                            },
-                          ),
-                        ),
-                      );
-
-                      loadBookings();
-
-                    }
-
-                  },
-
-                  child: Container(
-                    margin: const EdgeInsets.all(12),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.blue, width: 2),
-                    ),
-
+                  /// 🔥 HEADER
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 20, 16, 10),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-
-                        /// BOOKING CODE
+                      children: const [
                         Text(
-                          "Kode : ${booking["booking_code"] ?? "-"}",
-                          style: const TextStyle(
+                          "Pesanan",
+                          style: TextStyle(
+                            fontSize: 22,
                             fontWeight: FontWeight.bold,
-                            fontSize: 16
                           ),
                         ),
-
-                        const SizedBox(height: 5),
-
-                        /// RUTE
+                        SizedBox(height: 4),
                         Text(
-                          "${booking["origin"] ?? "-"} → ${booking["destination"] ?? "-"}"
-                        ),
-
-                        const SizedBox(height: 5),
-
-                        /// TANGGAL
-                        Text(
-                          "Tanggal : ${booking["departure_date"] ?? "-"}"
-                        ),
-
-                        const SizedBox(height: 5),
-
-                        /// TOTAL HARGA
-                        Text(
-                          "Rp ${booking["total_price"] ?? 0}",
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold
+                          "Kelola semua pesananmu",
+                          style: TextStyle(
+                            color: Colors.grey,
+                            fontSize: 13,
                           ),
                         ),
-
-                        const SizedBox(height: 10),
-
-                        /// STATUS
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6
-                          ),
-                          decoration: BoxDecoration(
-                            color: getStatusColor(booking),
-                            borderRadius: BorderRadius.circular(20)
-                          ),
-                          child: Text(
-                            getStatusText(booking),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold
-                            ),
-                          ),
-                        )
-
                       ],
                     ),
                   ),
-                );
 
-              }
+                  /// 🔍 SEARCH
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          )
+                        ],
+                      ),
+                      child: TextField(
+                        onChanged: applySearch,
+                        decoration: const InputDecoration(
+                          hintText: "Cari pesanan...",
+                          prefixIcon: Icon(Icons.search),
+                          border: InputBorder.none,
+                          contentPadding:
+                              EdgeInsets.symmetric(vertical: 14),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  /// 🔥 FILTER
+                  SizedBox(
+                    height: 42,
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 12),
+                      children: [
+                        filterChip("Semua", "all"),
+                        filterChip("Tiket", "ticket"),
+                        filterChip("Sewa", "bus"),
+                        filterChip("Paket", "tour"),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  /// 📋 LIST / EMPTY FILTER
+                  Expanded(
+                    child: filteredOrders.isEmpty
+                        ? _buildEmptyByFilter()
+                        : ListView.builder(
+                            padding:
+                                const EdgeInsets.only(bottom: 20),
+                            itemCount: filteredOrders.length,
+                            itemBuilder: (context, index) {
+                              final item =
+                                  filteredOrders[index];
+                              final type = item["type"];
+                              final data = item["data"];
+
+                              return Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(
+                                        horizontal: 16),
+                                child: OrderCard(
+                                  type: type,
+                                  data: data,
+                                  onTap: () async {
+                                    final result =
+                                        await Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) =>
+                                            DetailPesananPage(
+                                          data: data,
+                                          type: type,
+                                        ),
+                                      ),
+                                    );
+
+                                    if (result == true) {
+                                      loadAllOrders();
+                                    }
+                                  },
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              ),
+      ),
+    );
+  }
+
+  /// ================= EMPTY STATE =================
+  Widget _emptyState({
+    required String title,
+    required String subtitle,
+    required String image,
+  }) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Image.asset(image, height: 140),
+          const SizedBox(height: 20),
+          Text(
+            title,
+            style: const TextStyle(
+                fontSize: 16, fontWeight: FontWeight.bold),
           ),
+          const SizedBox(height: 6),
+          Text(
+            subtitle,
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Colors.grey),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// ================= EMPTY FILTER =================
+  Widget _buildEmptyByFilter() {
+    if (selectedFilter == "ticket") {
+      return _emptyState(
+        title: "Belum Ada Tiket",
+        subtitle: "Kamu belum memesan tiket bus",
+        image: "assets/images/empty_ticket.png",
+      );
+    }
+
+    if (selectedFilter == "bus") {
+      return _emptyState(
+        title: "Belum Ada Sewa Bus",
+        subtitle: "Belum ada penyewaan bus",
+        image: "assets/images/empty_bus.png",
+      );
+    }
+
+    if (selectedFilter == "tour") {
+      return _emptyState(
+        title: "Belum Ada Paket Wisata",
+        subtitle: "Ayo mulai liburan seru!",
+        image: "assets/images/empty_tour.png",
+      );
+    }
+
+    return _emptyState(
+      title: "Tidak Ditemukan",
+      subtitle: "Coba kata kunci lain ya",
+      image: "assets/images/empty_search.png",
+    );
+  }
+
+  /// ================= CHIP =================
+  Widget filterChip(String title, String value) {
+    bool isActive = selectedFilter == value;
+
+    return GestureDetector(
+      onTap: () => applyFilter(value),
+      child: Container(
+        margin: const EdgeInsets.only(left: 8),
+        padding:
+            const EdgeInsets.symmetric(horizontal: 18),
+        decoration: BoxDecoration(
+          color: isActive
+              ? const Color(0xFF8B2E2E)
+              : Colors.white,
+          borderRadius: BorderRadius.circular(30),
+          border: Border.all(
+            color: isActive
+                ? const Color(0xFF8B2E2E)
+                : Colors.grey.shade300,
+          ),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          title,
+          style: TextStyle(
+            color: isActive
+                ? Colors.white
+                : Colors.black87,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
     );
   }
 }
