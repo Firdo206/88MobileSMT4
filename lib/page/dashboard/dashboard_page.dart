@@ -3,6 +3,7 @@ import '../../utils/app_color.dart';
 import '../booking/schedule_page.dart';
 import '../promo/widgets/promo_card.dart';
 import '../promo/promo_list.dart';
+import '../armada/armada_page.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -239,7 +240,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
               const SizedBox(height: 10),
 
-              /// 🎟️ PROMO (3 CARD LANGSUNG)
+              /// 🎟️ PROMO
               SizedBox(
                 height: 220,
                 child: ListView(
@@ -280,19 +281,32 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
+  /// 🔥 MENU BUTTON (SUDAH ADA NAVIGASI)
   Widget _menuButton(String title, bool active) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      decoration: BoxDecoration(
-        color: active ? Colors.white : Colors.grey[300],
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Center(
-        child: Text(
-          title,
-          style: TextStyle(
-            color: active ? AppColor.primary : Colors.black,
-            fontWeight: FontWeight.bold,
+    return GestureDetector(
+      onTap: () {
+        if (title == "Sewa Bus") {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const ArmadaPage(),
+            ),
+          );
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: active ? Colors.white : Colors.grey[300],
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Center(
+          child: Text(
+            title,
+            style: TextStyle(
+              color: active ? AppColor.primary : Colors.black,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
       ),

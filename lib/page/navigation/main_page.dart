@@ -17,19 +17,11 @@ class _MainPageState extends State<MainPage> {
 
   late int selectedIndex;
 
-  // ✅ TAMBAHAN
   @override
   void initState() {
     super.initState();
     selectedIndex = widget.initialIndex;
   }
-
-  final List<Widget> pages = [
-    const DashboardPage(),
-    const PaketWisataPage(),
-    const PesananPage(),
-    const ProfilPage(),
-  ];
 
   void onItemTapped(int index) {
     setState(() {
@@ -39,6 +31,15 @@ class _MainPageState extends State<MainPage> {
 
   @override
   Widget build(BuildContext context) {
+
+    // 🔥 FIX: pindah ke dalam build() biar PesananPage rebuild setiap MainPage rebuild
+    final List<Widget> pages = [
+      const DashboardPage(),
+      const PaketWisataPage(),
+      const PesananPage(),
+      const ProfilPage(),
+    ];
+
     return Scaffold(
 
       body: pages[selectedIndex],

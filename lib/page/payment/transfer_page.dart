@@ -86,14 +86,20 @@ class _TransferPageState extends State<TransferPage> {
       setState(() => loading = false);
 
       if (response.statusCode == 200) {
+        if (!mounted) return;
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Bukti berhasil dikirim")),
         );
 
+        // 🔥 FIX: pakai GlobalKey biar PesananPage reload ulang
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(
-            builder: (_) => const MainPage(initialIndex: 2),
+            builder: (_) => MainPage(
+              initialIndex: 2,
+              key: UniqueKey(), // 🔥 force rebuild MainPage + PesananPage
+            ),
           ),
           (route) => false,
         );

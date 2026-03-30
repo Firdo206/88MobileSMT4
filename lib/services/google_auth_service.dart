@@ -7,7 +7,7 @@ class GoogleAuthService {
   static Future<GoogleSignInAccount?> signIn() async {
     try {
 
-      await _googleSignIn.signOut(); // reset akun sebelumnya
+      await _googleSignIn.signOut(); 
 
       final account = await _googleSignIn.signIn();
       return account;

@@ -30,7 +30,7 @@ class BookingPaketService {
     return jsonDecode(response.body);
   }
 
-  /// 🔥 GET DATA PAKET USER
+  /// GET DATA PAKET USER
   static Future<List> getMyTours(int userId) async {
 
     final response = await http.get(
@@ -39,7 +39,7 @@ class BookingPaketService {
         "Accept": "application/json"
       }
     );
-
+    
     final data = jsonDecode(response.body);
 
     if(data["data"] != null){

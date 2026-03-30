@@ -31,7 +31,7 @@ class AuthService {
     return data;
   }
 
-  /// 🔥 REGISTER
+  //REGISTER
   static Future<Map<String, dynamic>> register(
     String name,
     String email,
@@ -57,7 +57,7 @@ class AuthService {
     return jsonDecode(response.body);
   }
 
-  /// 🔥 GOOGLE LOGIN
+  //GOOGLE LOGIN
   static Future<Map<String, dynamic>> googleLogin(
     String googleId,
     String name,
@@ -91,9 +91,7 @@ class AuthService {
     return data;
   }
 
-  // =========================================
-  // 🔥 FORGOT PASSWORD (KIRIM OTP)
-  // =========================================
+  // FORGOT PASSWORD (KIRIM OTP)
   static Future<Map<String, dynamic>> forgotPassword(String email) async {
     final response = await http.post(
       Uri.parse("${ApiService.baseUrl}/forgot-password"),
@@ -103,10 +101,7 @@ class AuthService {
 
     return jsonDecode(response.body);
   }
-
-  // =========================================
   // 🔥 VERIFY OTP
-  // =========================================
   static Future<Map<String, dynamic>> verifyOtp(
     String email,
     String otp,
@@ -119,10 +114,7 @@ class AuthService {
 
     return jsonDecode(response.body);
   }
-
-  // =========================================
   // 🔥 RESET PASSWORD
-  // =========================================
   static Future<Map<String, dynamic>> resetPassword(
     String email,
     String otp,

@@ -144,7 +144,7 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  /// 🔥 FORGOT PASSWORD — UI CANTIK
+  /// ORGOT PASSWORD 
   Future<void> forgotPassword() async {
     final TextEditingController emailForgotController = TextEditingController();
     bool isSubmitting = false;
@@ -191,7 +191,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     const SizedBox(height: 14),
 
-                    // ── JUDUL ─────────────────────────────────
+                    //JUDUL 
                     const Text(
                       "Lupa Password?",
                       style: TextStyle(
@@ -416,6 +416,7 @@ class _LoginScreenState extends State<LoginScreen> {
           prefs.setInt("user_id", result["data"]["id"]);
           prefs.setString("name", result["data"]["name"]);
           prefs.setString("email", result["data"]["email"]);
+          prefs.setString("phone", result["data"]["phone"] ?? "");
 
           showPopup(
             "Login Google Berhasil",

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../utils/app_color.dart';
 import '../../services/booking_paket_service.dart';
 import '../payment/payment_page.dart';
@@ -20,7 +21,18 @@ class BookingSummaryPage extends StatelessWidget {
   });
 
   String formatDate(DateTime d) {
-    return "${d.day}/${d.month}/${d.year}";
+    const months = [
+      '', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+      'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'
+    ];
+    return "${d.day} ${months[d.month]} ${d.year}";
+  }
+
+  String formatRupiah(double value) {
+    return "Rp ${value.toInt().toString().replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (m) => '${m[1]}.',
+    )}";
   }
 
   @override
@@ -29,227 +41,397 @@ class BookingSummaryPage extends StatelessWidget {
     double harga = double.parse(data['price_per_person'].toString());
 
     return Scaffold(
-      backgroundColor: AppColor.background,
-      appBar: AppBar(
-        title: const Text("Konfirmasi Pesanan"),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black),
-      ),
+      backgroundColor: const Color(0xFFF5F0F0),
+      body: CustomScrollView(
+        slivers: [
 
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-
-            const Text(
-              "Ringkasan pesanan anda",
-              style: TextStyle(color: Colors.grey),
+          /// 🔥 APP BAR
+          SliverAppBar(
+            pinned: true,
+            backgroundColor: const Color(0xFF8B2E2E),
+            foregroundColor: Colors.white,
+            elevation: 0,
+            title: const Text(
+              "Ringkasan Pesanan",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
+            centerTitle: true,
+          ),
 
-            const SizedBox(height: 16),
+          SliverToBoxAdapter(
+            child: Column(
+              children: [
 
-            /// 🔥 CARD
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-
-                  /// HEADER
-                  Row(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Image.network(
-                          imageUrl,
-                          height: 70,
-                          width: 70,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Container(
-                            height: 70,
-                            width: 70,
-                            color: Colors.grey[300],
+                /// 🔥 HERO IMAGE
+                Stack(
+                  children: [
+                    SizedBox(
+                      height: 200,
+                      width: double.infinity,
+                      child: Image.network(
+                        imageUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Container(
+                          color: const Color(0xFF8B2E2E).withOpacity(0.2),
+                          child: const Icon(Icons.image_not_supported,
+                              size: 60, color: Colors.white54),
+                        ),
+                      ),
+                    ),
+                    Positioned.fill(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.transparent,
+                              Colors.black.withOpacity(0.7),
+                            ],
                           ),
                         ),
                       ),
-
-                      const SizedBox(width: 12),
-
-                      Column(
+                    ),
+                    Positioned(
+                      bottom: 16,
+                      left: 16,
+                      right: 16,
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            data['name'],
+                            data['name'] ?? '-',
                             style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
                               fontWeight: FontWeight.bold,
-                              fontSize: 16,
                             ),
                           ),
                           const SizedBox(height: 4),
-                          Text(
-                            "${data['duration_days']} hari",
-                            style: const TextStyle(color: Colors.grey),
+                          Row(
+                            children: [
+                              const Icon(Icons.schedule_rounded,
+                                  color: Colors.white70, size: 14),
+                              const SizedBox(width: 4),
+                              Text(
+                                "${data['duration_days']} hari perjalanan",
+                                style: const TextStyle(
+                                    color: Colors.white70, fontSize: 13),
+                              ),
+                            ],
                           ),
                         ],
-                      )
-                    ],
-                  ),
-
-                  const SizedBox(height: 16),
-                  const Divider(),
-
-                  /// HARGA
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text("Harga per Orang",
-                          style: TextStyle(color: Colors.grey)),
-                      Text("Rp ${harga.toStringAsFixed(0)}"),
-                    ],
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  /// TOTAL
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        "Total",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
                       ),
-                      Text(
-                        "Rp ${total.toStringAsFixed(0)}",
-                        style: const TextStyle(
-                          color: Colors.red,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  /// INFO
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.shade100,
-                      borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Text(
-                      "*Harga sudah termasuk semua pajak dan biaya layanan yang berlaku",
-                      style: TextStyle(fontSize: 12),
-                    ),
-                  )
-                ],
-              ),
-            ),
-
-            const Spacer(),
-
-            /// 🔥 BUTTON
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColor.primary,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  ],
                 ),
-               onPressed: () async {
 
-                  /// 🔥 MUNCULIN KONFIRMASI DULU
-                 bool lanjut = await _showConfirmDialog(context);
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
 
-                  if (!lanjut) return;
-
-                  /// 🔥 kasih jeda dikit biar dialog nutup dulu
-                  await Future.delayed(const Duration(milliseconds: 150));
-                  final result = await BookingPaketService.createBooking(
-                    userId: 1,
-                    tourId: data['id'],
-                    date:
-                        "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}",
-                    qty: jumlah,
-                    total: total,
-                    notes: notes,
-                  );
-
-                  print(result);
-
-                  if (result['success'] == true) {
-
-                    final bookingData = result['data'];
-
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => PaymentPage(
-                          data: bookingData,
-                          type: "tour",
+                      /// 🔥 DETAIL PERJALANAN
+                      _card(
+                        title: "Detail Perjalanan",
+                        icon: Icons.luggage_rounded,
+                        child: Column(
+                          children: [
+                            _infoRow(
+                              icon: Icons.calendar_today_rounded,
+                              label: "Tanggal",
+                              value: formatDate(date),
+                            ),
+                            const SizedBox(height: 12),
+                            _infoRow(
+                              icon: Icons.people_alt_rounded,
+                              label: "Peserta",
+                              value: "$jumlah orang",
+                            ),
+                            if (notes.isNotEmpty) ...[
+                              const SizedBox(height: 12),
+                              _infoRow(
+                                icon: Icons.edit_note_rounded,
+                                label: "Catatan",
+                                value: notes,
+                              ),
+                            ],
+                          ],
                         ),
                       ),
-                    );
 
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(result['message'] ?? "Gagal booking"),
+                      const SizedBox(height: 14),
+
+                      /// 🔥 RINCIAN HARGA
+                      _card(
+                        title: "Rincian Harga",
+                        icon: Icons.receipt_long_rounded,
+                        child: Column(
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  "$jumlah orang × ${formatRupiah(harga)}",
+                                  style: const TextStyle(
+                                      color: Colors.grey, fontSize: 13),
+                                ),
+                                Text(
+                                  formatRupiah(harga * jumlah),
+                                  style: const TextStyle(fontSize: 13),
+                                ),
+                              ],
+                            ),
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 12),
+                              child: Divider(height: 1),
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  "Total Pembayaran",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                                Text(
+                                  formatRupiah(total),
+                                  style: const TextStyle(
+                                    color: Color(0xFF8B2E2E),
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 14),
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF8B2E2E).withOpacity(0.06),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: const Color(0xFF8B2E2E).withOpacity(0.15),
+                                ),
+                              ),
+                              child: const Row(
+                                children: [
+                                  Icon(Icons.info_outline_rounded,
+                                      color: Color(0xFF8B2E2E), size: 16),
+                                  SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      "Harga sudah termasuk semua pajak dan biaya layanan",
+                                      style: TextStyle(
+                                          fontSize: 12,
+                                          color: Color(0xFF8B2E2E)),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    );
-                  }
-                },
-                child: const Text("Lanjutkan Pembayaran →"),
-              ),
-            ),
 
-          ],
-        ),
+                      const SizedBox(height: 24),
+
+                      /// 🔥 BUTTON
+                      SizedBox(
+                        width: double.infinity,
+                        height: 54,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF8B2E2E),
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                          onPressed: () async {
+                            bool lanjut = await _showConfirmDialog(context);
+                            if (!lanjut) return;
+
+                            await Future.delayed(const Duration(milliseconds: 150));
+
+                            final prefs = await SharedPreferences.getInstance();
+                            final userId = prefs.getInt("user_id") ?? 0;
+
+                            final result = await BookingPaketService.createBooking(
+                              userId: userId,
+                              tourId: data['id'],
+                              date: "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}",
+                              qty: jumlah,
+                              total: total,
+                              notes: notes,
+                            );
+
+                            print(result);
+
+                            if (result['success'] == true) {
+                              final bookingData = result['data'];
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => PaymentPage(
+                                    data: bookingData,
+                                    type: "tour",
+                                  ),
+                                ),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(result['message'] ?? "Gagal booking"),
+                                ),
+                              );
+                            }
+                          },
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                "Lanjutkan Pembayaran",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              SizedBox(width: 8),
+                              Icon(Icons.arrow_forward_rounded,
+                                  color: Colors.white, size: 20),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 24),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
-    Future<bool> _showConfirmDialog(BuildContext context) async {
+  Widget _card({
+    required String title,
+    required IconData icon,
+    required Widget child,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF8B2E2E).withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: const Color(0xFF8B2E2E), size: 18),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                  color: Colors.black87,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          child,
+        ],
+      ),
+    );
+  }
+
+  Widget _infoRow({
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 16, color: Colors.grey),
+        const SizedBox(width: 10),
+        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 13)),
+        const Spacer(),
+        Flexible(
+          child: Text(
+            value,
+            textAlign: TextAlign.right,
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+              color: Colors.black87,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<bool> _showConfirmDialog(BuildContext context) async {
     return await showDialog(
           context: context,
           barrierDismissible: false,
+          barrierColor: Colors.black.withOpacity(0.5),
           builder: (context) {
             return Dialog(
+              backgroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(24),
               ),
+              insetPadding: const EdgeInsets.symmetric(horizontal: 28),
               child: Padding(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(28),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
 
-                    /// 🔥 ICON
+                    // Icon circle
                     Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppColor.primary.withOpacity(0.1),
+                      width: 72,
+                      height: 72,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFFAECE7),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
-                        Icons.receipt_long,
-                        color: AppColor.primary,
-                        size: 32,
+                        Icons.receipt_long_rounded,
+                        color: Color(0xFFD85A30),
+                        size: 34,
                       ),
                     ),
-
                     const SizedBox(height: 16),
 
-                    /// 🔥 TITLE
+                    // Title
                     const Text(
                       "Konfirmasi Pesanan",
                       style: TextStyle(
@@ -257,58 +439,164 @@ class BookingSummaryPage extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
+                    const SizedBox(height: 8),
 
-                    const SizedBox(height: 10),
-
-                    /// 🔥 DESC
+                    // Subtitle
                     const Text(
                       "Pesanan akan langsung dibuat dan masuk ke menu Pesanan.\n\nLanjutkan pembayaran sekarang?",
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.grey),
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: 13,
+                        height: 1.6,
+                      ),
                     ),
-
                     const SizedBox(height: 20),
 
-                    /// 🔥 BUTTONS
+                    // Mini summary card
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 14),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF5F0F0),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                "Paket",
+                                style: TextStyle(
+                                    color: Colors.grey, fontSize: 13),
+                              ),
+                              Flexible(
+                                child: Text(
+                                  data['name'] ?? '-',
+                                  textAlign: TextAlign.right,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                "Tanggal",
+                                style: TextStyle(
+                                    color: Colors.grey, fontSize: 13),
+                              ),
+                              Text(
+                                formatDate(date),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                "Peserta",
+                                style: TextStyle(
+                                    color: Colors.grey, fontSize: 13),
+                              ),
+                              Text(
+                                "$jumlah orang",
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 10),
+                            child: Divider(height: 1),
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                "Total",
+                                style: TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              Text(
+                                formatRupiah(total),
+                                style: const TextStyle(
+                                  color: Color(0xFF8B2E2E),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 22),
+
+                    // Buttons
                     Row(
                       children: [
-
-                        /// ❌ CEK LAGI
                         Expanded(
                           child: OutlinedButton(
-                            onPressed: () {
-                              Navigator.pop(context, false);
-                            },
+                            onPressed: () => Navigator.pop(context, false),
                             style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(14),
                               ),
                             ),
                             child: const Text("Cek Lagi"),
                           ),
                         ),
-
                         const SizedBox(width: 10),
-
-                        /// ✅ LANJUTKAN
                         Expanded(
+                          flex: 2,
                           child: ElevatedButton(
-                            onPressed: () {
-                              Navigator.pop(context, true);
-                            },
+                            onPressed: () => Navigator.pop(context, true),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColor.primary,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              backgroundColor: const Color(0xFF8B2E2E),
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(14),
                               ),
                             ),
-                            child: const Text("Lanjutkan"),
+                            child: const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  "Lanjutkan",
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                                SizedBox(width: 6),
+                                Icon(
+                                  Icons.arrow_forward_rounded,
+                                  color: Colors.white,
+                                  size: 16,
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ],
-                    )
+                    ),
                   ],
                 ),
               ),

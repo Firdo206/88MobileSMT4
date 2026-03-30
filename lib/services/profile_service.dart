@@ -17,7 +17,7 @@ class ProfileService {
     }
   }
 
-  // 🔥 TAMBAHAN: UPDATE NOMOR (FIRST TIME - TANPA OTP)
+  // TAMBAHAN: UPDATE NOMOR (FIRST TIME - TANPA OTP)
   static Future<Map<String, dynamic>> updatePhone(
     int userId,
     String phone,
@@ -75,7 +75,7 @@ class ProfileService {
     }
   }
 
-  // UPDATE PASSWORD (BARU 🔥)
+  // UPDATE PASSWORD Baru
   static Future<bool> updatePassword(
     int userId,
     String oldPassword,
@@ -97,7 +97,7 @@ class ProfileService {
 
     if (response.statusCode == 200) {
       var data = jsonDecode(response.body);
-      return data['status']; // ambil dari Laravel
+      return data['status']; 
     } else {
       return false;
     }

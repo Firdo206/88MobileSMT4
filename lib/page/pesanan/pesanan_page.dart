@@ -36,9 +36,17 @@ class _PesananPageState extends State<PesananPage> {
       final prefs = await SharedPreferences.getInstance();
       int userId = prefs.getInt("user_id") ?? 0;
 
+      print("=== USER ID: $userId ==="); // 🔥
+
       final bookings = await BookingService.getMyBookings(userId);
+      print("=== BOOKINGS DONE: ${bookings?.length} ==="); // 🔥
+
       final tours = await BookingPaketService.getMyTours(userId);
+      print("=== TOURS DONE: ${tours?.length} ==="); // 🔥
+      print("=== TOURS DATA: $tours ==="); // 🔥
+
       final rentals = await RentalService.getMyRentals(userId);
+      print("=== RENTALS DONE: ${rentals?.length} ==="); // 🔥
 
       List temp = [];
 
@@ -54,6 +62,11 @@ class _PesananPageState extends State<PesananPage> {
         temp.add({"type": "bus", "data": r});
       }
 
+      // 🔥 cek status_final tiap item
+      for (var item in temp) {
+        print("STATUS_FINAL: ${item["data"]["status_final"]} | TYPE: ${item["type"]}");
+      }
+
       List activeOrders = temp.where((e) {
         final status = e["data"]["status_final"];
 
@@ -65,14 +78,17 @@ class _PesananPageState extends State<PesananPage> {
         ].contains(status);
       }).toList();
 
+      print("=== ACTIVE ORDERS: ${activeOrders.length} ==="); // 🔥
+
       setState(() {
         orders = activeOrders;
         filteredOrders = activeOrders;
         isLoading = false;
       });
 
-    } catch (e) {
+    } catch (e, stack) {
       print("ERROR LOAD: $e");
+      print("STACK: $stack"); // 🔥
       setState(() => isLoading = false);
     }
   }

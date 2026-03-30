@@ -41,8 +41,6 @@ class _PaymentPageState extends State<PaymentPage> {
     if (rawString.isEmpty) return;
 
     DateTime? expiry;
-
-    // Jika format tidak mengandung timezone info (dari Laravel tanpa 'Z' atau '+'),
     // anggap sebagai UTC lalu convert ke local (fix timezone WIB UTC+7)
     if (!rawString.contains('+') && !rawString.toUpperCase().contains('Z')) {
       expiry = DateTime.tryParse(rawString + 'Z')?.toLocal();
@@ -101,12 +99,12 @@ class _PaymentPageState extends State<PaymentPage> {
 
     final passengers = rawPassengers is List ? rawPassengers : [];
 
-    /// 🔥 fallback jumlah kursi
+    ///fallback jumlah kursi
     final seatCount = seats.isNotEmpty
         ? seats.length
         : (widget.bookingData['seat_count'] ?? 1);
 
-    /// 🔥 fallback total
+    ///fallback total
     final totalPrice = int.tryParse(
           widget.bookingData['total_price']?.toString() ?? "0",
         ) ??
@@ -135,7 +133,6 @@ class _PaymentPageState extends State<PaymentPage> {
       ),
       body: Column(
         children: [
-          // ── Step Indicator ──────────────────────────────
           Container(
             color: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 40),
@@ -161,7 +158,6 @@ class _PaymentPageState extends State<PaymentPage> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Column(
                 children: [
-                  // ── Warning box dengan countdown ────────
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                     decoration: BoxDecoration(
@@ -211,7 +207,7 @@ class _PaymentPageState extends State<PaymentPage> {
 
                   const SizedBox(height: 14),
 
-                  // ── Detail Pesanan ──────────────────────
+                  //Detail Pesanan 
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(16),
@@ -237,7 +233,6 @@ class _PaymentPageState extends State<PaymentPage> {
                         const Text("Penumpang", style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.black87)),
                         const SizedBox(height: 8),
 
-                        /// 🔥 PENUMPANG FIX (ANTI KOSONG)
                   if (passengers.isNotEmpty)
                     ...passengers.map((p) => Container(
                           margin: const EdgeInsets.only(bottom: 8),
@@ -300,7 +295,7 @@ class _PaymentPageState extends State<PaymentPage> {
 
                   const SizedBox(height: 14),
 
-                  // ── Ringkasan Harga ─────────────────────
+                  // Ringkasan Harga 
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(14),
@@ -337,7 +332,7 @@ class _PaymentPageState extends State<PaymentPage> {
             ),
           ),
 
-          // ── Tombol Lanjut ───────────────────────────────
+          // Lanjut
           Container(
             color: Colors.white,
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
