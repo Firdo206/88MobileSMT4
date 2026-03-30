@@ -16,7 +16,6 @@ class ArmadaPage extends StatefulWidget {
 }
 
 class _ArmadaPageState extends State<ArmadaPage> {
-
   final pickupController = TextEditingController();
   final destinationController = TextEditingController();
   final contactNameController = TextEditingController();
@@ -33,14 +32,14 @@ class _ArmadaPageState extends State<ArmadaPage> {
   int? selectedBusId;
 
   // ─── Branding warna Bus 88 ─────────────────────────────────
-  static const Color kRed       = Color(0xFFD32F2F);
-  static const Color kRedLight  = Color(0xFFFFEBEE);
-  static const Color kRedDark   = Color(0xFFB71C1C);
-  static const Color kBg        = Color(0xFFFFF8F8);
-  static const Color kCard      = Colors.white;
-  static const Color kText      = Color(0xFF1A1A1A);
+  static const Color kRed = Color(0xFFD32F2F);
+  static const Color kRedLight = Color(0xFFFFEBEE);
+  static const Color kRedDark = Color(0xFFB71C1C);
+  static const Color kBg = Color(0xFFFFF8F8);
+  static const Color kCard = Colors.white;
+  static const Color kText = Color(0xFF1A1A1A);
   static const Color kTextMuted = Color(0xFF9E9E9E);
-  static const Color kGreen     = Color(0xFF2E7D32);
+  static const Color kGreen = Color(0xFF2E7D32);
 
   @override
   void initState() {
@@ -91,14 +90,17 @@ class _ArmadaPageState extends State<ArmadaPage> {
     );
     if (picked != null) {
       setState(() {
-        if (isStart) startDate = picked;
-        else endDate = picked;
+        if (isStart)
+          startDate = picked;
+        else
+          endDate = picked;
       });
     }
   }
 
   Future<void> submit() async {
-    if (startDate == null || endDate == null) return _show("Tanggal wajib diisi");
+    if (startDate == null || endDate == null)
+      return _show("Tanggal wajib diisi");
     if (pickupController.text.isEmpty ||
         destinationController.text.isEmpty ||
         contactNameController.text.isEmpty ||
@@ -128,8 +130,10 @@ class _ArmadaPageState extends State<ArmadaPage> {
       );
       if (success) {
         _show("Berhasil booking 🚀");
-        Navigator.pushReplacement(context,
-            MaterialPageRoute(builder: (_) => const MainPage(initialIndex: 2)));
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const MainPage(initialIndex: 2)),
+        );
       } else {
         _show("Gagal booking ❌");
       }
@@ -172,7 +176,11 @@ class _ArmadaPageState extends State<ArmadaPage> {
                 expandedHeight: 130,
                 backgroundColor: kRed,
                 leading: IconButton(
-                  icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
+                  icon: const Icon(
+                    Icons.arrow_back_ios_new,
+                    color: Colors.white,
+                    size: 20,
+                  ),
                   onPressed: () => Navigator.pop(context),
                 ),
                 flexibleSpace: FlexibleSpaceBar(
@@ -187,9 +195,11 @@ class _ArmadaPageState extends State<ArmadaPage> {
                     child: Stack(
                       children: [
                         Positioned(
-                          top: -20, right: -20,
+                          top: -20,
+                          right: -20,
                           child: Container(
-                            width: 120, height: 120,
+                            width: 120,
+                            height: 120,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               color: Colors.white.withOpacity(0.08),
@@ -197,9 +207,11 @@ class _ArmadaPageState extends State<ArmadaPage> {
                           ),
                         ),
                         Positioned(
-                          bottom: -10, left: 60,
+                          bottom: -10,
+                          left: 60,
                           child: Container(
-                            width: 70, height: 70,
+                            width: 70,
+                            height: 70,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               color: Colors.white.withOpacity(0.06),
@@ -209,7 +221,10 @@ class _ArmadaPageState extends State<ArmadaPage> {
                         Align(
                           alignment: Alignment.bottomLeft,
                           child: Padding(
-                            padding: const EdgeInsets.only(left: 56, bottom: 16),
+                            padding: const EdgeInsets.only(
+                              left: 56,
+                              bottom: 16,
+                            ),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -217,7 +232,10 @@ class _ArmadaPageState extends State<ArmadaPage> {
                                 Row(
                                   children: [
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 6,
+                                        vertical: 3,
+                                      ),
                                       decoration: BoxDecoration(
                                         color: Colors.white,
                                         borderRadius: BorderRadius.circular(6),
@@ -268,7 +286,6 @@ class _ArmadaPageState extends State<ArmadaPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-
                       // ── INFO SEWA ──────────────────────────────────
                       Container(
                         padding: const EdgeInsets.all(16),
@@ -295,7 +312,11 @@ class _ArmadaPageState extends State<ArmadaPage> {
                                     color: kRedLight,
                                     borderRadius: BorderRadius.circular(8),
                                   ),
-                                  child: const Icon(Icons.info_outline, color: kRed, size: 16),
+                                  child: const Icon(
+                                    Icons.info_outline,
+                                    color: kRed,
+                                    size: 16,
+                                  ),
                                 ),
                                 const SizedBox(width: 10),
                                 const Text(
@@ -309,7 +330,9 @@ class _ArmadaPageState extends State<ArmadaPage> {
                               ],
                             ),
                             const SizedBox(height: 12),
-                            _infoItem("Pengajuan direview admin dalam 1×24 jam"),
+                            _infoItem(
+                              "Pengajuan direview admin dalam 1×24 jam",
+                            ),
                             _infoItem("Harga disepakati setelah verifikasi"),
                             _infoItem("Pembayaran aman via Midtrans"),
                             _infoItem("Armada terawat & supir berpengalaman"),
@@ -345,7 +368,11 @@ class _ArmadaPageState extends State<ArmadaPage> {
                                       color: kRedLight,
                                       borderRadius: BorderRadius.circular(8),
                                     ),
-                                    child: const Icon(Icons.edit_note_rounded, color: kRed, size: 18),
+                                    child: const Icon(
+                                      Icons.edit_note_rounded,
+                                      color: kRed,
+                                      size: 18,
+                                    ),
                                   ),
                                   const SizedBox(width: 10),
                                   const Text(
@@ -361,29 +388,50 @@ class _ArmadaPageState extends State<ArmadaPage> {
                             ),
 
                             const SizedBox(height: 16),
-                            const Divider(height: 1, thickness: 0.8, color: Color(0xFFF5F5F5)),
+                            const Divider(
+                              height: 1,
+                              thickness: 0.8,
+                              color: Color(0xFFF5F5F5),
+                            ),
 
                             Padding(
                               padding: const EdgeInsets.all(20),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-
                                   // Tanggal
-                                  _formLabel("Tanggal Mulai *", "Tanggal Selesai *"),
+                                  _formLabel(
+                                    "Tanggal Mulai *",
+                                    "Tanggal Selesai *",
+                                  ),
                                   const SizedBox(height: 8),
                                   Row(
                                     children: [
-                                      Expanded(child: _dateCard("Tanggal Mulai", startDate, () => pickDate(true))),
+                                      Expanded(
+                                        child: _dateCard(
+                                          "Tanggal Mulai",
+                                          startDate,
+                                          () => pickDate(true),
+                                        ),
+                                      ),
                                       const SizedBox(width: 12),
-                                      Expanded(child: _dateCard("Tanggal Selesai", endDate, () => pickDate(false))),
+                                      Expanded(
+                                        child: _dateCard(
+                                          "Tanggal Selesai",
+                                          endDate,
+                                          () => pickDate(false),
+                                        ),
+                                      ),
                                     ],
                                   ),
 
                                   const SizedBox(height: 18),
 
                                   // Lokasi & Tujuan
-                                  _formLabel("Lokasi Penjemputan *", "Tujuan *"),
+                                  _formLabel(
+                                    "Lokasi Penjemputan *",
+                                    "Tujuan *",
+                                  ),
                                   const SizedBox(height: 8),
                                   Row(
                                     children: [
@@ -415,7 +463,10 @@ class _ArmadaPageState extends State<ArmadaPage> {
                                   const SizedBox(height: 18),
 
                                   // Penumpang & Keperluan
-                                  _formLabel("Jumlah Penumpang", "Tujuan/Keperluan"),
+                                  _formLabel(
+                                    "Jumlah Penumpang",
+                                    "Tujuan/Keperluan",
+                                  ),
                                   const SizedBox(height: 8),
                                   Row(
                                     children: [
@@ -425,7 +476,10 @@ class _ArmadaPageState extends State<ArmadaPage> {
                                           hint: "Perkiraan",
                                           icon: Icons.people_outline,
                                           keyboardType: TextInputType.number,
-                                          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                                          inputFormatters: [
+                                            FilteringTextInputFormatter
+                                                .digitsOnly,
+                                          ],
                                         ),
                                       ),
                                       const SizedBox(width: 12),
@@ -442,7 +496,10 @@ class _ArmadaPageState extends State<ArmadaPage> {
                                   const SizedBox(height: 18),
 
                                   // Nama & Telepon
-                                  _formLabel("Nama Kontak *", "No. Telepon Kontak *"),
+                                  _formLabel(
+                                    "Nama Kontak *",
+                                    "No. Telepon Kontak *",
+                                  ),
                                   const SizedBox(height: 8),
                                   Row(
                                     children: [
@@ -471,46 +528,61 @@ class _ArmadaPageState extends State<ArmadaPage> {
                                   GestureDetector(
                                     onTap: isLoading ? null : submit,
                                     child: AnimatedContainer(
-                                      duration: const Duration(milliseconds: 200),
+                                      duration: const Duration(
+                                        milliseconds: 200,
+                                      ),
                                       width: double.infinity,
                                       height: 52,
                                       decoration: BoxDecoration(
                                         gradient: LinearGradient(
                                           colors: isLoading
-                                              ? [Colors.grey.shade400, Colors.grey.shade500]
+                                              ? [
+                                                  Colors.grey.shade400,
+                                                  Colors.grey.shade500,
+                                                ]
                                               : [kRed, kRedDark],
                                           begin: Alignment.topLeft,
                                           end: Alignment.bottomRight,
                                         ),
                                         borderRadius: BorderRadius.circular(12),
-                                        boxShadow: isLoading ? [] : [
-                                          BoxShadow(
-                                            color: kRed.withOpacity(0.35),
-                                            blurRadius: 14,
-                                            offset: const Offset(0, 5),
-                                          ),
-                                        ],
+                                        boxShadow: isLoading
+                                            ? []
+                                            : [
+                                                BoxShadow(
+                                                  color: kRed.withOpacity(0.35),
+                                                  blurRadius: 14,
+                                                  offset: const Offset(0, 5),
+                                                ),
+                                              ],
                                       ),
                                       child: Center(
                                         child: isLoading
                                             ? const SizedBox(
-                                                width: 22, height: 22,
-                                                child: CircularProgressIndicator(
-                                                  color: Colors.white,
-                                                  strokeWidth: 2.5,
-                                                ),
+                                                width: 22,
+                                                height: 22,
+                                                child:
+                                                    CircularProgressIndicator(
+                                                      color: Colors.white,
+                                                      strokeWidth: 2.5,
+                                                    ),
                                               )
                                             : const Row(
-                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
                                                 children: [
-                                                  Icon(Icons.send_rounded, color: Colors.white, size: 18),
+                                                  Icon(
+                                                    Icons.send_rounded,
+                                                    color: Colors.white,
+                                                    size: 18,
+                                                  ),
                                                   SizedBox(width: 8),
                                                   Text(
                                                     "Kirim Permintaan",
                                                     style: TextStyle(
                                                       color: Colors.white,
                                                       fontSize: 15,
-                                                      fontWeight: FontWeight.w700,
+                                                      fontWeight:
+                                                          FontWeight.w700,
                                                       letterSpacing: 0.2,
                                                     ),
                                                   ),
@@ -534,8 +606,7 @@ class _ArmadaPageState extends State<ArmadaPage> {
             ],
           ),
 
-          if (isLoading)
-            Container(color: Colors.black.withOpacity(0.15)),
+          if (isLoading) Container(color: Colors.black.withOpacity(0.15)),
         ],
       ),
     );
@@ -562,7 +633,11 @@ class _ArmadaPageState extends State<ArmadaPage> {
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(fontSize: 13, color: Color(0xFF424242), height: 1.4),
+              style: const TextStyle(
+                fontSize: 13,
+                color: Color(0xFF424242),
+                height: 1.4,
+              ),
             ),
           ),
         ],
@@ -574,18 +649,39 @@ class _ArmadaPageState extends State<ArmadaPage> {
     return Row(
       children: [
         Expanded(
-          child: Text(left, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: kText)),
+          child: Text(
+            left,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: kText,
+            ),
+          ),
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: Text(right, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: kText)),
+          child: Text(
+            right,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: kText,
+            ),
+          ),
         ),
       ],
     );
   }
 
   Widget _singleLabel(String label) {
-    return Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: kText));
+    return Text(
+      label,
+      style: const TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+        color: kText,
+      ),
+    );
   }
 
   Widget _dateCard(String title, DateTime? date, VoidCallback onTap) {
@@ -655,7 +751,10 @@ class _ArmadaPageState extends State<ArmadaPage> {
             borderRadius: BorderRadius.circular(10),
             borderSide: const BorderSide(color: kRed, width: 1.5),
           ),
-          contentPadding: const EdgeInsets.symmetric(vertical: 13, horizontal: 4),
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 13,
+            horizontal: 4,
+          ),
           isDense: true,
         ),
       ),
@@ -674,10 +773,22 @@ class _ArmadaPageState extends State<ArmadaPage> {
         isExpanded: true,
         dropdownColor: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        icon: const Icon(Icons.keyboard_arrow_down_rounded, color: kRed, size: 22),
-        style: const TextStyle(fontSize: 14, color: kText, fontWeight: FontWeight.w500),
+        icon: const Icon(
+          Icons.keyboard_arrow_down_rounded,
+          color: kRed,
+          size: 22,
+        ),
+        style: const TextStyle(
+          fontSize: 14,
+          color: kText,
+          fontWeight: FontWeight.w500,
+        ),
         decoration: InputDecoration(
-          prefixIcon: const Icon(Icons.directions_bus_outlined, color: kRed, size: 20),
+          prefixIcon: const Icon(
+            Icons.directions_bus_outlined,
+            color: kRed,
+            size: 20,
+          ),
           filled: true,
           fillColor: Colors.white,
           enabledBorder: OutlineInputBorder(
@@ -688,20 +799,35 @@ class _ArmadaPageState extends State<ArmadaPage> {
             borderRadius: BorderRadius.circular(12),
             borderSide: const BorderSide(color: kRed, width: 1.5),
           ),
-          contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 4),
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 14,
+            horizontal: 4,
+          ),
         ),
         hint: const Text(
           "Biarkan admin memilih",
           style: TextStyle(color: kTextMuted, fontSize: 14),
         ),
         selectedItemBuilder: (context) => [
-          const Text("Biarkan admin memilih",
-              style: TextStyle(color: kText, fontSize: 14, fontWeight: FontWeight.w500)),
-          ...buses.map<Widget>((bus) => Text(
-                "${bus["name"]}  ·  ${bus["capacity"]} kursi",
-                style: const TextStyle(color: kText, fontSize: 14, fontWeight: FontWeight.w500),
-                overflow: TextOverflow.ellipsis,
-              )),
+          const Text(
+            "Biarkan admin memilih",
+            style: TextStyle(
+              color: kText,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          ...buses.map<Widget>(
+            (bus) => Text(
+              "${bus["name"]}  ·  ${bus["capacity"]} kursi",
+              style: const TextStyle(
+                color: kText,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
         ],
         items: [
           DropdownMenuItem<int?>(
@@ -713,15 +839,17 @@ class _ArmadaPageState extends State<ArmadaPage> {
               isSelected: selectedBusId == null,
             ),
           ),
-          ...buses.map<DropdownMenuItem<int>>((bus) => DropdownMenuItem<int>(
-                value: bus["id"],
-                child: _dropdownItem(
-                  icon: Icons.directions_bus_outlined,
-                  label: bus["name"],
-                  sub: "${bus["capacity"]} kursi",
-                  isSelected: selectedBusId == bus["id"],
-                ),
-              )),
+          ...buses.map<DropdownMenuItem<int>>(
+            (bus) => DropdownMenuItem<int>(
+              value: bus["id"],
+              child: _dropdownItem(
+                icon: Icons.directions_bus_outlined,
+                label: bus["name"],
+                sub: "${bus["capacity"]} kursi",
+                isSelected: selectedBusId == bus["id"],
+              ),
+            ),
+          ),
         ],
         onChanged: (val) => setState(() => selectedBusId = val),
       ),
