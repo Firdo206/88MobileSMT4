@@ -1,5 +1,10 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:http/http.dart' as http;
+import '../../services/api_service.dart';
+import '../../services/payment_service.dart';
 import 'transfer_page.dart';
 
 class PaymentPage extends StatefulWidget {
@@ -20,6 +25,99 @@ class _PaymentPageState extends State<PaymentPage> {
   Timer? _timer;
   Duration _remaining = Duration.zero;
   bool _isExpired = false;
+  bool _isLoadingMidtrans = false;
+  bool _isLoadingCheck = false;      // 🔥 TAMBAHAN
+  bool _sudahBayar = false;          // 🔥 TAMBAHAN
+
+  // ================= MIDTRANS =================
+  Future<String?> getSnapToken(int bookingId) async {
+    try {
+      final response = await http.post(
+        Uri.parse(ApiService.midtransPayment),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"booking_id": bookingId}),
+      );
+
+      final data = jsonDecode(response.body);
+      debugPrint("RESPONSE MIDTRANS: ${response.body}");
+
+      if (response.statusCode == 200 && data['status'] == true) {
+        return data['snap_token'];
+      } else {
+        debugPrint("Gagal token: ${data.toString()}");
+        return null;
+      }
+    } catch (e) {
+      debugPrint("Error Midtrans: $e");
+      return null;
+    }
+  }
+
+  Future<void> openMidtrans(int bookingId) async {
+    if (_isLoadingMidtrans) return;
+
+    setState(() => _isLoadingMidtrans = true);
+
+    final token = await getSnapToken(bookingId);
+
+    if (token == null) {
+      setState(() => _isLoadingMidtrans = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Gagal membuka pembayaran")),
+      );
+      return;
+    }
+
+    final url = "https://app.sandbox.midtrans.com/snap/v2/vtweb/$token";
+
+    try {
+      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+    } catch (e) {
+      debugPrint("Launch error: $e");
+    }
+
+    setState(() {
+      _isLoadingMidtrans = false;
+      _sudahBayar = true; // 🔥 setelah buka midtrans, tampilkan tombol cek status
+    });
+  }
+
+  // ================= CEK STATUS =================
+  Future<void> _checkStatus(int bookingId) async {
+    if (_isLoadingCheck) return;
+    setState(() => _isLoadingCheck = true);
+
+    final status = await PaymentService.checkStatus(bookingId);
+
+    setState(() => _isLoadingCheck = false);
+
+    if (status == 'settlement' || status == 'capture') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("✅ Pembayaran berhasil dikonfirmasi!"),
+          backgroundColor: Colors.green,
+        ),
+      );
+      // kembali ke halaman pesanan dan refresh
+      Navigator.pop(context, true);
+    } else if (status == 'pending') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("⏳ Pembayaran masih pending, harap tunggu..."),
+          backgroundColor: Colors.orange,
+        ),
+      );
+    } else if (status != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Status: $status")),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Gagal mengecek status pembayaran")),
+      );
+    }
+  }
+  // ============================================
 
   @override
   void initState() {
@@ -41,7 +139,6 @@ class _PaymentPageState extends State<PaymentPage> {
     if (rawString.isEmpty) return;
 
     DateTime? expiry;
-    // anggap sebagai UTC lalu convert ke local (fix timezone WIB UTC+7)
     if (!rawString.contains('+') && !rawString.toUpperCase().contains('Z')) {
       expiry = DateTime.tryParse(rawString + 'Z')?.toLocal();
     } else {
@@ -99,26 +196,25 @@ class _PaymentPageState extends State<PaymentPage> {
 
     final passengers = rawPassengers is List ? rawPassengers : [];
 
-    ///fallback jumlah kursi
     final seatCount = seats.isNotEmpty
         ? seats.length
         : (widget.bookingData['seat_count'] ?? 1);
 
-    ///fallback total
     final totalPrice = int.tryParse(
           widget.bookingData['total_price']?.toString() ?? "0",
         ) ??
-        (seatCount * (int.tryParse(widget.bookingData['price']?.toString() ?? "0") ?? 0));
+        (seatCount *
+            (int.tryParse(widget.bookingData['price']?.toString() ?? "0") ?? 0));
 
-    final pricePerSeat =
-        seatCount == 0 ? 0 : (totalPrice ~/ seatCount);
+    final pricePerSeat = seatCount == 0 ? 0 : (totalPrice ~/ seatCount);
 
     final bookingId = int.tryParse(
-          (widget.bookingData['id'] ?? widget.bookingData['booking_id'])?.toString() ?? "0",
+          (widget.bookingData['id'] ?? widget.bookingData['booking_id'])
+              ?.toString() ?? "0",
         ) ?? 0;
 
     final bookingCode = widget.bookingData['booking_code'] ?? "";
-    
+
     return Scaffold(
       backgroundColor: const Color(0xFFF2F2F2),
       appBar: AppBar(
@@ -133,6 +229,7 @@ class _PaymentPageState extends State<PaymentPage> {
       ),
       body: Column(
         children: [
+          // Step indicator
           Container(
             color: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 40),
@@ -158,6 +255,7 @@ class _PaymentPageState extends State<PaymentPage> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Column(
                 children: [
+                  // Timer countdown
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                     decoration: BoxDecoration(
@@ -207,7 +305,7 @@ class _PaymentPageState extends State<PaymentPage> {
 
                   const SizedBox(height: 14),
 
-                  //Detail Pesanan 
+                  // Detail Pesanan
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(16),
@@ -228,51 +326,40 @@ class _PaymentPageState extends State<PaymentPage> {
                         _buildRow("Tanggal", widget.bookingData['departure_date'] ?? "-"),
                         _buildRow("Jam", widget.bookingData['departure_time'] ?? "-"),
                         _buildRow("Bus", widget.bookingData['bus_name'] ?? "-"),
-
                         const SizedBox(height: 14),
                         const Text("Penumpang", style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.black87)),
                         const SizedBox(height: 8),
-
-                  if (passengers.isNotEmpty)
-                    ...passengers.map((p) => Container(
-                          margin: const EdgeInsets.only(bottom: 8),
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF5EAEA),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 36,
-                                height: 36,
+                        if (passengers.isNotEmpty)
+                          ...passengers.map((p) => Container(
+                                margin: const EdgeInsets.only(bottom: 8),
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                                 decoration: BoxDecoration(
-                                  color: _primary,
-                                  borderRadius: BorderRadius.circular(8),
+                                  color: const Color(0xFFF5EAEA),
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
-                                alignment: Alignment.center,
-                                child: Text(
-                                  p['seat']?.toString() ?? "-",
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 36,
+                                      height: 36,
+                                      decoration: BoxDecoration(color: _primary, borderRadius: BorderRadius.circular(8)),
+                                      alignment: Alignment.center,
+                                      child: Text(
+                                        p['seat']?.toString() ?? "-",
+                                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(p['passenger_name'] ?? "-"),
+                                        Text(p['phone'] ?? "", style: const TextStyle(fontSize: 11)),
+                                      ],
+                                    ),
+                                  ],
                                 ),
-                              ),
-                              const SizedBox(width: 12),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(p['passenger_name'] ?? "-"),
-                                  Text(
-                                    p['phone'] ?? "",
-                                    style: const TextStyle(fontSize: 11),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ))
+                              ))
                         else
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -295,7 +382,7 @@ class _PaymentPageState extends State<PaymentPage> {
 
                   const SizedBox(height: 14),
 
-                  // Ringkasan Harga 
+                  // Ringkasan Harga
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(14),
@@ -332,45 +419,102 @@ class _PaymentPageState extends State<PaymentPage> {
             ),
           ),
 
-          // Lanjut
+          // ================= TOMBOL BAYAR =================
           Container(
             color: Colors.white,
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-            child: SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: ElevatedButton(
-                onPressed: _isExpired ? null : () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => TransferPage(
-                        bookingId: bookingId,
-                        total: totalPrice,
-                        bookingCode: bookingCode,
+            child: Column(
+              children: [
+                // 🔴 Tombol Midtrans
+                SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: ElevatedButton(
+                    onPressed: (_isExpired || _isLoadingMidtrans)
+                        ? null
+                        : () async => await openMidtrans(bookingId),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _primary,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      elevation: 0,
+                    ),
+                    child: _isLoadingMidtrans
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : const Text(
+                            "Bayar dengan Midtrans",
+                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white),
+                          ),
+                  ),
+                ),
+
+                const SizedBox(height: 10),
+
+                // ⚪ Tombol Transfer Manual
+                SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: ElevatedButton(
+                    onPressed: _isExpired
+                        ? null
+                        : () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => TransferPage(
+                                  bookingId: bookingId,
+                                  total: totalPrice,
+                                  bookingCode: bookingCode,
+                                ),
+                              ),
+                            );
+                          },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.grey.shade400,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      elevation: 0,
+                    ),
+                    child: const Text(
+                      "Transfer Manual",
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white),
+                    ),
+                  ),
+                ),
+
+                // 🟢 Tombol Cek Status — muncul SETELAH user buka Midtrans
+                if (_sudahBayar) ...[
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: OutlinedButton(
+                      onPressed: _isLoadingCheck
+                          ? null
+                          : () async => await _checkStatus(bookingId),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Color(0xFF7B2D2D), width: 1.5),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
+                      child: _isLoadingCheck
+                          ? const SizedBox(
+                              height: 22,
+                              width: 22,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Color(0xFF7B2D2D),
+                              ),
+                            )
+                          : const Text(
+                              "Cek Status Pembayaran",
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF7B2D2D),
+                              ),
+                            ),
                     ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _isExpired ? Colors.grey : _primary,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  elevation: 0,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      _isExpired ? "Pesanan Dibatalkan" : "Lanjut ke Pembayaran",
-                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white),
-                    ),
-                    if (!_isExpired) ...[
-                      const SizedBox(width: 6),
-                      const Icon(Icons.arrow_forward, color: Colors.white, size: 18),
-                    ]
-                  ],
-                ),
-              ),
+                  ),
+                ],
+              ],
             ),
           ),
         ],

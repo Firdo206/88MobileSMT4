@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../utils/app_color.dart';
+import '../../models/promo_model.dart'; // 👈 TAMBAH
 import '../../services/booking_paket_service.dart';
 import '../payment/payment_page.dart';
 
@@ -10,6 +11,7 @@ class BookingSummaryPage extends StatelessWidget {
   final int jumlah;
   final double total;
   final String notes;
+  final Promo? promo; // 👈 TAMBAH
 
   const BookingSummaryPage({
     super.key,
@@ -18,6 +20,7 @@ class BookingSummaryPage extends StatelessWidget {
     required this.jumlah,
     required this.total,
     required this.notes,
+    this.promo, // 👈 TAMBAH
   });
 
   String formatDate(DateTime d) {
@@ -39,6 +42,15 @@ class BookingSummaryPage extends StatelessWidget {
   Widget build(BuildContext context) {
     String imageUrl = data['image_url'] ?? '';
     double harga = double.parse(data['price_per_person'].toString());
+
+    // 👈 TAMBAH - hitung diskon untuk ditampilkan
+    double discount = 0;
+    if (promo != null) {
+      discount = promo!.discountType == 'percent'
+          ? harga * (promo!.discountValue / 100)
+          : promo!.discountValue;
+    }
+    double hargaFinal = (harga - discount).clamp(0, double.infinity);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F0F0),
@@ -168,6 +180,7 @@ class BookingSummaryPage extends StatelessWidget {
                         icon: Icons.receipt_long_rounded,
                         child: Column(
                           children: [
+                            // 👈 BERUBAH - tampilkan harga normal
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
@@ -178,10 +191,39 @@ class BookingSummaryPage extends StatelessWidget {
                                 ),
                                 Text(
                                   formatRupiah(harga * jumlah),
-                                  style: const TextStyle(fontSize: 13),
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    decoration: promo != null
+                                        ? TextDecoration.lineThrough
+                                        : TextDecoration.none,
+                                    color: promo != null
+                                        ? Colors.grey
+                                        : Colors.black87,
+                                  ),
                                 ),
                               ],
                             ),
+
+                            // 👈 TAMBAH - tampilkan baris diskon jika ada promo
+                            if (promo != null) ...[
+                              const SizedBox(height: 8),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Diskon "${promo!.title}"',
+                                    style: const TextStyle(
+                                        color: Colors.green, fontSize: 13),
+                                  ),
+                                  Text(
+                                    '- ${formatRupiah(discount * jumlah)}',
+                                    style: const TextStyle(
+                                        color: Colors.green, fontSize: 13),
+                                  ),
+                                ],
+                              ),
+                            ],
+
                             const Padding(
                               padding: EdgeInsets.symmetric(vertical: 12),
                               child: Divider(height: 1),
@@ -414,8 +456,6 @@ class BookingSummaryPage extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-
-                    // Icon circle
                     Container(
                       width: 72,
                       height: 72,
@@ -430,8 +470,6 @@ class BookingSummaryPage extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 16),
-
-                    // Title
                     const Text(
                       "Konfirmasi Pesanan",
                       style: TextStyle(
@@ -440,8 +478,6 @@ class BookingSummaryPage extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 8),
-
-                    // Subtitle
                     const Text(
                       "Pesanan akan langsung dibuat dan masuk ke menu Pesanan.\n\nLanjutkan pembayaran sekarang?",
                       textAlign: TextAlign.center,
@@ -452,8 +488,6 @@ class BookingSummaryPage extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 20),
-
-                    // Mini summary card
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(
@@ -548,8 +582,6 @@ class BookingSummaryPage extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 22),
-
-                    // Buttons
                     Row(
                       children: [
                         Expanded(

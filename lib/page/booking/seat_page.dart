@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 import '../../services/seat_service.dart';
+import '../../models/promo_model.dart';
 import 'passenger_page.dart';
 import 'widgets/seat_item.dart';
 
 class SeatPage extends StatefulWidget {
   final int scheduleId;
-  final dynamic scheduleData; // ✅ tambah: data schedule dari SchedulePage
+  final dynamic scheduleData;
+  final Promo? promo; // 👈 TAMBAH
 
   const SeatPage({
     super.key,
     required this.scheduleId,
-    this.scheduleData, // ✅ tambah
+    this.scheduleData,
+    this.promo, // 👈 TAMBAH
   });
 
   @override
@@ -64,10 +67,11 @@ class _SeatPageState extends State<SeatPage> {
         builder: (_) => PassengerPage(
           scheduleId: widget.scheduleId,
           selectedSeats: selectedSeats,
-          price: widget.scheduleData?['price'],                   // ✅ tambah
-          origin: widget.scheduleData?['origin'],                 // ✅ tambah
-          destination: widget.scheduleData?['destination'],       // ✅ tambah
-          departureDate: widget.scheduleData?['departure_date'],  // ✅ tambah
+          price: widget.scheduleData?['price'],
+          origin: widget.scheduleData?['origin'],
+          destination: widget.scheduleData?['destination'],
+          departureDate: widget.scheduleData?['departure_date'],
+          promo: widget.promo, // 👈 TAMBAH
         ),
       ),
     );

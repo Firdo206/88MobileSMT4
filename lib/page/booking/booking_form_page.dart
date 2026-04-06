@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import '../../utils/app_color.dart';
+import '../../models/promo_model.dart'; // 👈 TAMBAH
 import 'booking_summary_page.dart';
 
 class BookingFormPage extends StatefulWidget {
   final dynamic data;
+  final Promo? promo; // 👈 TAMBAH
 
-  const BookingFormPage({super.key, required this.data});
+  const BookingFormPage({
+    super.key,
+    required this.data,
+    this.promo, // 👈 TAMBAH
+  });
 
   @override
   State<BookingFormPage> createState() => _BookingFormPageState();
@@ -86,7 +92,6 @@ class _BookingFormPageState extends State<BookingFormPage> {
               background: Stack(
                 fit: StackFit.expand,
                 children: [
-                  /// Gradient background
                   Container(
                     decoration: const BoxDecoration(
                       gradient: LinearGradient(
@@ -96,8 +101,6 @@ class _BookingFormPageState extends State<BookingFormPage> {
                       ),
                     ),
                   ),
-
-                  /// Decorative circles
                   Positioned(
                     top: -30,
                     right: -30,
@@ -122,8 +125,6 @@ class _BookingFormPageState extends State<BookingFormPage> {
                       ),
                     ),
                   ),
-
-                  /// Content
                   Positioned(
                     bottom: 24,
                     left: 20,
@@ -244,8 +245,6 @@ class _BookingFormPageState extends State<BookingFormPage> {
                     required: true,
                     child: Row(
                       children: [
-
-                        /// MINUS
                         GestureDetector(
                           onTap: _decrement,
                           child: Container(
@@ -261,8 +260,6 @@ class _BookingFormPageState extends State<BookingFormPage> {
                             ),
                           ),
                         ),
-
-                        /// INPUT
                         Expanded(
                           child: TextField(
                             controller: jumlahController,
@@ -287,8 +284,6 @@ class _BookingFormPageState extends State<BookingFormPage> {
                             onChanged: (_) => setState(() {}),
                           ),
                         ),
-
-                        /// PLUS
                         GestureDetector(
                           onTap: _increment,
                           child: Container(
@@ -362,8 +357,6 @@ class _BookingFormPageState extends State<BookingFormPage> {
                         ),
                       ),
                       onPressed: () {
-
-                        /// VALIDASI
                         if (selectedDate == null) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text("Pilih tanggal dulu")),
@@ -373,7 +366,16 @@ class _BookingFormPageState extends State<BookingFormPage> {
 
                         int jumlah = int.parse(jumlahController.text);
                         double harga = double.parse(widget.data['price_per_person'].toString());
-                        double total = jumlah * harga;
+
+                        // 👈 BERUBAH - hitung diskon jika ada promo
+                        double discount = 0;
+                        if (widget.promo != null) {
+                          discount = widget.promo!.discountType == 'percent'
+                              ? harga * (widget.promo!.discountValue / 100)
+                              : widget.promo!.discountValue;
+                        }
+                        double hargaFinal = (harga - discount).clamp(0, double.infinity);
+                        double total = jumlah * hargaFinal;
 
                         Navigator.push(
                           context,
@@ -384,6 +386,7 @@ class _BookingFormPageState extends State<BookingFormPage> {
                               jumlah: jumlah,
                               total: total,
                               notes: catatanController.text,
+                              promo: widget.promo, // 👈 TAMBAH
                             ),
                           ),
                         );
