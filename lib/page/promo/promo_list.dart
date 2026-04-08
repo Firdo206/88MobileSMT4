@@ -3,6 +3,8 @@ import '../../../utils/app_color.dart';
 import 'widgets/promo_card.dart';
 import '../../../services/promo_service.dart';
 import '../../models/promo_model.dart';
+import '../booking/seat_page.dart';
+import '../paket_wisata/paket_detail_page.dart'; // 👈 TAMBAH
 
 class PromoListPage extends StatefulWidget {
   const PromoListPage({super.key});
@@ -95,6 +97,69 @@ class _PromoListPageState extends State<PromoListPage> {
                         quota: promo.quota,
                         usedQuota: promo.usedQuota,
                         isActive: promo.isActive,
+                        onTap: () async {
+                          showDialog(
+                            context: context,
+                            barrierDismissible: false,
+                            builder: (_) => const Center(
+                              child: CircularProgressIndicator(
+                                color: Color(0xFF8B0000),
+                              ),
+                            ),
+                          );
+
+                          try {
+                            final detail = await PromoService.getPromoDetail(promo.id);
+                            Navigator.pop(context); // tutup loading
+
+                            print("TARGET TYPE: ${promo.targetType}"); // 👈 TAMBAH INI
+                            print("TARGET DATA: ${detail['target']}"); // 👈 TAMBAH INI
+
+                            final target = detail['target'];
+                            if (target == null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Promo ini tidak terikat ke jadwal tertentu'),
+                                ),
+                              );
+                              return;
+                            }
+
+                            // 👈 BERUBAH - cek target_type promo
+                            if (promo.targetType == 'tour_package') {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => PaketDetailPage(
+                                    data: target,
+                                    promo: promo,
+                                  ),
+                                ),
+                              );
+                            } else {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => SeatPage(
+                                    scheduleId: target['id'],
+                                    scheduleData: {
+                                      'price': target['price'],
+                                      'origin': target['origin'],
+                                      'destination': target['destination'],
+                                      'departure_date': target['departure_date'],
+                                    },
+                                    promo: promo,
+                                  ),
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            Navigator.pop(context); // tutup loading
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Gagal memuat promo: $e')),
+                            );
+                          }
+                        },
                       ),
                     );
                   },

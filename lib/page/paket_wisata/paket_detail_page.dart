@@ -1,12 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../utils/app_color.dart';
+import '../../models/promo_model.dart';
 import '../booking/booking_form_page.dart';
 
 class PaketDetailPage extends StatelessWidget {
   final dynamic data;
+  final Promo? promo; // 👈 TAMBAH
 
-  const PaketDetailPage({super.key, required this.data});
+  const PaketDetailPage({
+    super.key,
+    required this.data,
+    this.promo, // 👈 TAMBAH
+  });
+
+  // 👈 TAMBAH
+  dynamic _getFinalPrice(dynamic originalPrice) {
+    if (promo == null || originalPrice == null) return originalPrice;
+    final double price = double.tryParse(originalPrice.toString()) ?? 0;
+    final double discount = promo!.discountType == 'percent'
+        ? price * (promo!.discountValue / 100)
+        : promo!.discountValue;
+    return (price - discount).clamp(0, double.infinity).toInt();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -106,13 +122,16 @@ class PaketDetailPage extends StatelessWidget {
                   ),
                 ),
                 onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => BookingFormPage(data: data),
-                    ),
-                  );
-                },
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => BookingFormPage(
+                          data: data,
+                          promo: promo, // 👈 TAMBAH
+                        ),
+                      ),
+                    );
+                  },
                 child: const Text(
                   "Pesan Sekarang",
                   style: TextStyle(
@@ -136,7 +155,6 @@ class PaketDetailPage extends StatelessWidget {
             /// 🔥 IMAGE HERO
             Stack(
               children: [
-                // Image
                 imageUrl.isNotEmpty
                     ? Image.network(
                         imageUrl,
@@ -157,7 +175,6 @@ class PaketDetailPage extends StatelessWidget {
                         child: const Icon(Icons.image_not_supported, size: 50),
                       ),
 
-                // Gradient overlay bawah
                 Positioned(
                   bottom: 0,
                   left: 0,
@@ -177,7 +194,6 @@ class PaketDetailPage extends StatelessWidget {
                   ),
                 ),
 
-                // Durasi badge
                 Positioned(
                   left: 16,
                   bottom: 16,
@@ -205,7 +221,6 @@ class PaketDetailPage extends StatelessWidget {
                   ),
                 ),
 
-                // Favorite button
                 Positioned(
                   right: 16,
                   bottom: 16,
@@ -311,14 +326,34 @@ class PaketDetailPage extends StatelessWidget {
                             style: TextStyle(fontSize: 13, color: Colors.grey),
                           ),
                           const Spacer(),
-                          Text(
-                            "Rp ${data['price_per_person'] ?? '-'}",
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                              color: AppColor.primary,
+                          // 👈 BERUBAH - tampilkan harga coret jika ada promo
+                          if (promo != null) ...[
+                            Text(
+                              "Rp ${data['price_per_person'] ?? '-'}",
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey,
+                                decoration: TextDecoration.lineThrough,
+                              ),
                             ),
-                          ),
+                            const SizedBox(width: 8),
+                            Text(
+                              "Rp ${_getFinalPrice(data['price_per_person'])}",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                                color: AppColor.primary,
+                              ),
+                            ),
+                          ] else
+                            Text(
+                              "Rp ${data['price_per_person'] ?? '-'}",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                                color: AppColor.primary,
+                              ),
+                            ),
                           const Text(
                             " /orang",
                             style: TextStyle(fontSize: 12, color: Colors.grey),
@@ -539,7 +574,6 @@ class PaketDetailPage extends StatelessWidget {
 
                     const SizedBox(height: 12),
 
-                    // Card 1 - Pasti Berangkat
                     Container(
                       padding: const EdgeInsets.all(16),
                       margin: const EdgeInsets.only(bottom: 10),
@@ -603,7 +637,6 @@ class PaketDetailPage extends StatelessWidget {
                       ),
                     ),
 
-                    // Card 2 - Asuransi
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(

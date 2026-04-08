@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/api_service.dart';
+import '../../models/promo_model.dart';
 import 'payment_page.dart';
 
 class PassengerPage extends StatefulWidget {
@@ -12,6 +13,7 @@ class PassengerPage extends StatefulWidget {
   final String? origin;
   final String? destination;
   final String? departureDate;
+  final Promo? promo; // 🆕
 
   const PassengerPage({
     super.key,
@@ -21,6 +23,7 @@ class PassengerPage extends StatefulWidget {
     this.origin,
     this.destination,
     this.departureDate,
+    this.promo, // 🆕
   });
 
   @override
@@ -38,14 +41,35 @@ class _PassengerPageState extends State<PassengerPage> {
 
   static const Color _primary = Color(0xFF7B2D2D);
 
+  // 🆕 Hitung diskon
+  double get pricePerSeat =>
+      double.tryParse(widget.price?.toString() ?? '0') ?? 0;
+
+  double get discountPerSeat {
+    if (widget.promo == null) return 0;
+    if (widget.promo!.discountType == 'percent') {
+      return pricePerSeat * (widget.promo!.discountValue / 100);
+    }
+    return widget.promo!.discountValue;
+  }
+
+  double get finalPricePerSeat =>
+      (pricePerSeat - discountPerSeat).clamp(0, double.infinity);
+
+  double get totalFinalPrice =>
+      finalPricePerSeat * widget.selectedSeats.length;
+
   @override
   void initState() {
     super.initState();
 
     // ✅ Buat controller sebanyak jumlah kursi
-    nameControllers = List.generate(widget.selectedSeats.length, (_) => TextEditingController());
-    ktpControllers = List.generate(widget.selectedSeats.length, (_) => TextEditingController());
-    phoneControllers = List.generate(widget.selectedSeats.length, (_) => TextEditingController());
+    nameControllers = List.generate(
+        widget.selectedSeats.length, (_) => TextEditingController());
+    ktpControllers = List.generate(
+        widget.selectedSeats.length, (_) => TextEditingController());
+    phoneControllers = List.generate(
+        widget.selectedSeats.length, (_) => TextEditingController());
 
     loadUser();
   }
@@ -73,7 +97,9 @@ class _PassengerPageState extends State<PassengerPage> {
     for (int i = 0; i < widget.selectedSeats.length; i++) {
       if (nameControllers[i].text.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Nama penumpang kursi ${widget.selectedSeats[i]} wajib diisi")),
+          SnackBar(
+              content: Text(
+                  "Nama penumpang kursi ${widget.selectedSeats[i]} wajib diisi")),
         );
         return;
       }
@@ -81,7 +107,9 @@ class _PassengerPageState extends State<PassengerPage> {
 
     if (userId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("User tidak ditemukan, silakan login ulang")),
+        const SnackBar(
+            content:
+                Text("User tidak ditemukan, silakan login ulang")),
       );
       return;
     }
@@ -90,12 +118,27 @@ class _PassengerPageState extends State<PassengerPage> {
 
     try {
       // ✅ Kirim data penumpang per kursi
-      final List passengers = List.generate(widget.selectedSeats.length, (i) => {
-        "seat": widget.selectedSeats[i],
-        "passenger_name": nameControllers[i].text,
-        "phone": phoneControllers[i].text,
-        "ktp": ktpControllers[i].text,
-      });
+      final List passengers =
+          List.generate(widget.selectedSeats.length, (i) => {
+                "seat": widget.selectedSeats[i],
+                "passenger_name": nameControllers[i].text,
+                "phone": phoneControllers[i].text,
+                "ktp": ktpControllers[i].text,
+              });
+
+      // 🆕 Body request — tambah promo_id & final_price jika ada promo
+      final Map<String, dynamic> requestBody = {
+        "user_id": userId,
+        "schedule_id": widget.scheduleId,
+        "seats": widget.selectedSeats,
+        "passenger_name": nameControllers[0].text,
+        "phone": phoneControllers[0].text,
+        "passengers": passengers,
+      };
+      if (widget.promo != null) {
+        requestBody["promo_id"] = widget.promo!.id;
+        requestBody["final_price"] = totalFinalPrice;
+      }
 
       final response = await http.post(
         Uri.parse("${ApiService.baseUrl}/book-seats"),
@@ -103,14 +146,7 @@ class _PassengerPageState extends State<PassengerPage> {
           "Content-Type": "application/json",
           "Accept": "application/json"
         },
-        body: jsonEncode({
-          "user_id": userId,
-          "schedule_id": widget.scheduleId,
-          "seats": widget.selectedSeats,
-          "passenger_name": nameControllers[0].text,
-          "phone": phoneControllers[0].text,
-          "passengers": passengers,
-        }),
+        body: jsonEncode(requestBody),
       );
 
       print("STATUS CODE: ${response.statusCode}");
@@ -120,6 +156,22 @@ class _PassengerPageState extends State<PassengerPage> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
+
+        // 🆕 Confirm promo setelah booking berhasil
+        if (widget.promo != null) {
+          try {
+            await http.post(
+              Uri.parse("${ApiService.baseUrl}/promo/confirm"),
+              headers: {"Content-Type": "application/json"},
+              body: jsonEncode({
+                "promo_id": widget.promo!.id,
+                "user_id": userId,
+              }),
+            );
+          } catch (_) {
+            // Jangan block user jika confirm promo gagal
+          }
+        }
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(data['message'] ?? "Booking berhasil")),
@@ -134,22 +186,34 @@ class _PassengerPageState extends State<PassengerPage> {
               bookingData: {
                 ...apiData,
                 'origin': apiData['origin'] ?? widget.origin,
-                'destination': apiData['destination'] ?? widget.destination,
-                'departure_date': apiData['departure_date'] ?? widget.departureDate,
+                'destination':
+                    apiData['destination'] ?? widget.destination,
+                'departure_date':
+                    apiData['departure_date'] ?? widget.departureDate,
                 'passenger_name': nameControllers[0].text,
                 // ✅ TAMBAHAN - kirim data semua penumpang
-                'passengers': List.generate(widget.selectedSeats.length, (i) => {
-                  'seat': widget.selectedSeats[i],
-                  'passenger_name': nameControllers[i].text,
-                  'phone': phoneControllers[i].text,
-                }),
+                'passengers': List.generate(
+                    widget.selectedSeats.length,
+                    (i) => {
+                          'seat': widget.selectedSeats[i],
+                          'passenger_name': nameControllers[i].text,
+                          'phone': phoneControllers[i].text,
+                        }),
+                // 🆕 Info diskon untuk PaymentPage
+                if (widget.promo != null)
+                  'promo_title': widget.promo!.title,
+                if (widget.promo != null)
+                  'discount_amount':
+                      discountPerSeat * widget.selectedSeats.length,
+                if (widget.promo != null) 'final_price': totalFinalPrice,
               },
             ),
           ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Booking gagal: ${response.body}")),
+          SnackBar(
+              content: Text("Booking gagal: ${response.body}")),
         );
       }
     } catch (e) {
@@ -162,7 +226,8 @@ class _PassengerPageState extends State<PassengerPage> {
   }
 
   String formatPrice(price) {
-    final number = double.tryParse(price.toString())?.toInt() ?? 0;
+    final number =
+        double.tryParse(price.toString())?.toInt() ?? 0;
     final formatted = number.toString().replaceAllMapped(
       RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
       (m) => '${m[1]}.',
@@ -177,7 +242,10 @@ class _PassengerPageState extends State<PassengerPage> {
       appBar: AppBar(
         title: const Text(
           "Pesan Tiket",
-          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w600, fontSize: 16),
+          style: TextStyle(
+              color: Colors.black87,
+              fontWeight: FontWeight.w600,
+              fontSize: 16),
         ),
         backgroundColor: Colors.white,
         elevation: 0,
@@ -190,11 +258,11 @@ class _PassengerPageState extends State<PassengerPage> {
 
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 16, vertical: 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-
                   // ✅ Form per penumpang
                   ...List.generate(widget.selectedSeats.length, (i) {
                     final seat = widget.selectedSeats[i];
@@ -225,7 +293,8 @@ class _PassengerPageState extends State<PassengerPage> {
                                 height: 36,
                                 decoration: BoxDecoration(
                                   color: _primary,
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius:
+                                      BorderRadius.circular(8),
                                 ),
                                 alignment: Alignment.center,
                                 child: Text(
@@ -239,7 +308,8 @@ class _PassengerPageState extends State<PassengerPage> {
                               ),
                               const SizedBox(width: 10),
                               Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                                crossAxisAlignment:
+                                    CrossAxisAlignment.start,
                                 children: [
                                   Text(
                                     "Penumpang Kursi $seat",
@@ -252,7 +322,9 @@ class _PassengerPageState extends State<PassengerPage> {
                                   if (isFirst)
                                     const Text(
                                       "Otomatis dari akun kamu",
-                                      style: TextStyle(fontSize: 11, color: Colors.grey),
+                                      style: TextStyle(
+                                          fontSize: 11,
+                                          color: Colors.grey),
                                     ),
                                 ],
                               ),
@@ -261,7 +333,8 @@ class _PassengerPageState extends State<PassengerPage> {
 
                           const SizedBox(height: 14),
 
-                          _FormLabel(label: "Nama lengkap", required: true),
+                          _FormLabel(
+                              label: "Nama lengkap", required: true),
                           const SizedBox(height: 6),
                           _InputField(
                             controller: nameControllers[i],
@@ -271,7 +344,9 @@ class _PassengerPageState extends State<PassengerPage> {
 
                           const SizedBox(height: 14),
 
-                          _FormLabel(label: "No.KTP/Identitas", required: false),
+                          _FormLabel(
+                              label: "No.KTP/Identitas",
+                              required: false),
                           const SizedBox(height: 6),
                           _InputField(
                             controller: ktpControllers[i],
@@ -280,7 +355,8 @@ class _PassengerPageState extends State<PassengerPage> {
 
                           const SizedBox(height: 14),
 
-                          _FormLabel(label: "No. Telepon", required: false),
+                          _FormLabel(
+                              label: "No. Telepon", required: false),
                           const SizedBox(height: 6),
                           _InputField(
                             controller: phoneControllers[i],
@@ -296,6 +372,15 @@ class _PassengerPageState extends State<PassengerPage> {
                   _PriceSummaryCard(
                     selectedSeats: widget.selectedSeats,
                     pricePerSeat: widget.price,
+                    // 🆕 Kirim data diskon jika ada promo
+                    finalPricePerSeat: widget.promo != null
+                        ? finalPricePerSeat
+                        : null,
+                    discountAmount: widget.promo != null
+                        ? discountPerSeat *
+                            widget.selectedSeats.length
+                        : null,
+                    promo: widget.promo,
                     origin: widget.origin,
                     destination: widget.destination,
                     departureDate: widget.departureDate,
@@ -317,24 +402,30 @@ class _PassengerPageState extends State<PassengerPage> {
                 onPressed: isLoading ? null : bookSeats,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _primary,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
                   elevation: 0,
                 ),
                 child: isLoading
                     ? const SizedBox(
                         width: 22,
                         height: 22,
-                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                        child: CircularProgressIndicator(
+                            color: Colors.white, strokeWidth: 2),
                       )
                     : const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
                             "Lanjutkan",
-                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white),
+                            style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white),
                           ),
                           SizedBox(width: 6),
-                          Icon(Icons.arrow_forward, color: Colors.white, size: 18),
+                          Icon(Icons.arrow_forward,
+                              color: Colors.white, size: 18),
                         ],
                       ),
               ),
@@ -355,27 +446,40 @@ class _StepIndicator extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       color: Colors.white,
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 40),
+      padding:
+          const EdgeInsets.symmetric(vertical: 14, horizontal: 40),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Expanded(child: Container(height: 1.5, color: const Color(0xFF7B2D2D))),
+          Expanded(
+              child: Container(
+                  height: 1.5,
+                  color: const Color(0xFF7B2D2D))),
           Container(
             width: 32,
             height: 32,
-            decoration: const BoxDecoration(color: Color(0xFF7B2D2D), shape: BoxShape.circle),
+            decoration: const BoxDecoration(
+                color: Color(0xFF7B2D2D), shape: BoxShape.circle),
             alignment: Alignment.center,
             child: Text(
               "$currentStep",
-              style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold),
             ),
           ),
           const SizedBox(width: 8),
           const Text(
             "Data Penumpang",
-            style: TextStyle(color: Color(0xFF7B2D2D), fontSize: 13, fontWeight: FontWeight.w600),
+            style: TextStyle(
+                color: Color(0xFF7B2D2D),
+                fontSize: 13,
+                fontWeight: FontWeight.w600),
           ),
-          Expanded(child: Container(height: 1.5, color: Colors.grey.shade300)),
+          Expanded(
+              child: Container(
+                  height: 1.5, color: Colors.grey.shade300)),
         ],
       ),
     );
@@ -393,9 +497,16 @@ class _FormLabel extends StatelessWidget {
     return RichText(
       text: TextSpan(
         text: label,
-        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Colors.black87),
+        style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            color: Colors.black87),
         children: required
-            ? const [TextSpan(text: " *", style: TextStyle(color: Color(0xFF7B2D2D)))]
+            ? const [
+                TextSpan(
+                    text: " *",
+                    style: TextStyle(color: Color(0xFF7B2D2D)))
+              ]
             : [],
       ),
     );
@@ -422,10 +533,14 @@ class _InputField extends StatelessWidget {
       style: const TextStyle(fontSize: 14, color: Colors.black87),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(fontSize: 14, color: Colors.grey),
+        hintStyle:
+            const TextStyle(fontSize: 14, color: Colors.grey),
         filled: true,
-        fillColor: readOnly ? const Color(0xFFEEEEEE) : const Color(0xFFF7F7F7),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        fillColor: readOnly
+            ? const Color(0xFFEEEEEE)
+            : const Color(0xFFF7F7F7),
+        contentPadding: const EdgeInsets.symmetric(
+            horizontal: 14, vertical: 12),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
           borderSide: BorderSide(color: Colors.grey.shade300),
@@ -436,7 +551,8 @@ class _InputField extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: Color(0xFF7B2D2D)),
+          borderSide:
+              const BorderSide(color: Color(0xFF7B2D2D)),
         ),
       ),
     );
@@ -447,6 +563,9 @@ class _InputField extends StatelessWidget {
 class _PriceSummaryCard extends StatelessWidget {
   final List selectedSeats;
   final dynamic pricePerSeat;
+  final double? finalPricePerSeat; // 🆕
+  final double? discountAmount;    // 🆕
+  final Promo? promo;              // 🆕
   final String? origin;
   final String? destination;
   final String? departureDate;
@@ -456,6 +575,9 @@ class _PriceSummaryCard extends StatelessWidget {
     required this.selectedSeats,
     required this.formatPrice,
     this.pricePerSeat,
+    this.finalPricePerSeat, // 🆕
+    this.discountAmount,    // 🆕
+    this.promo,             // 🆕
     this.origin,
     this.destination,
     this.departureDate,
@@ -463,8 +585,13 @@ class _PriceSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final int price = double.tryParse(pricePerSeat?.toString() ?? '0')?.toInt() ?? 0;
-    final int totalPrice = price * selectedSeats.length;
+    final int price =
+        double.tryParse(pricePerSeat?.toString() ?? '0')?.toInt() ??
+            0;
+    final int totalNormal = price * selectedSeats.length;
+    final int totalFinal = finalPricePerSeat != null
+        ? (finalPricePerSeat! * selectedSeats.length).toInt()
+        : totalNormal;
 
     return Container(
       width: double.infinity,
@@ -477,38 +604,107 @@ class _PriceSummaryCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // 🆕 Banner promo aktif
+          if (promo != null) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 10, vertical: 7),
+              margin: const EdgeInsets.only(bottom: 10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFE8F5E9),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.local_offer_rounded,
+                      color: Colors.green, size: 14),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      'Promo "${promo!.title}" diterapkan',
+                      style: const TextStyle(
+                        color: Colors.green,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+
           Text(
             "${selectedSeats.length} Kursi x ${formatPrice(price)}",
             style: const TextStyle(fontSize: 12, color: Colors.black54),
           ),
+
           const SizedBox(height: 8),
+
           Row(
             children: [
               Text(
                 origin ?? '-',
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black87),
+                style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87),
               ),
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 6),
-                child: Icon(Icons.arrow_forward, size: 14, color: Colors.black54),
+                child: Icon(Icons.arrow_forward,
+                    size: 14, color: Colors.black54),
               ),
               Text(
                 destination ?? '-',
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black87),
+                style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87),
               ),
             ],
           ),
+
           const SizedBox(height: 4),
+
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
                 departureDate ?? '',
-                style: const TextStyle(fontSize: 12, color: Colors.black54),
+                style: const TextStyle(
+                    fontSize: 12, color: Colors.black54),
               ),
-              Text(
-                formatPrice(totalPrice),
-                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF7B2D2D)),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  // 🆕 Harga normal dicoret jika ada promo
+                  if (promo != null)
+                    Text(
+                      formatPrice(totalNormal),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey,
+                        decoration: TextDecoration.lineThrough,
+                      ),
+                    ),
+                  // 🆕 Jumlah diskon
+                  if (discountAmount != null)
+                    Text(
+                      '- ${formatPrice(discountAmount!.toInt())}',
+                      style: const TextStyle(
+                          fontSize: 12, color: Colors.green),
+                    ),
+                  // Total final
+                  Text(
+                    formatPrice(totalFinal),
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF7B2D2D),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
