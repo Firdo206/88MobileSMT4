@@ -2,26 +2,34 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../utils/app_color.dart';
 import '../../models/promo_model.dart';
+import '../../services/api_service.dart';
 import '../booking/booking_form_page.dart';
 
 class PaketDetailPage extends StatelessWidget {
   final dynamic data;
-  final Promo? promo; // 👈 TAMBAH
+  final Promo? promo;
 
   const PaketDetailPage({
     super.key,
     required this.data,
-    this.promo, // 👈 TAMBAH
+    this.promo,
   });
 
-  // 👈 TAMBAH
   dynamic _getFinalPrice(dynamic originalPrice) {
     if (promo == null || originalPrice == null) return originalPrice;
     final double price = double.tryParse(originalPrice.toString()) ?? 0;
-    final double discount = promo!.discountType == 'percent'
+    final double discount = promo!.discountType == 'percentage'
         ? price * (promo!.discountValue / 100)
         : promo!.discountValue;
     return (price - discount).clamp(0, double.infinity).toInt();
+  }
+
+  // ✅ gunakan ApiService.storageUrl, ganti IP cukup di ApiService
+  String _getImageUrl(dynamic data) {
+    if (data['image'] != null && data['image'].toString().isNotEmpty) {
+      return '${ApiService.storageUrl}/storage/${data['image']}';
+    }
+    return '';
   }
 
   @override
@@ -56,7 +64,7 @@ class PaketDetailPage extends StatelessWidget {
       }
     }
 
-    String imageUrl = data['image_url'] ?? '';
+    String imageUrl = _getImageUrl(data);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F6FA),
@@ -131,7 +139,7 @@ class PaketDetailPage extends StatelessWidget {
                     MaterialPageRoute(
                       builder: (_) => BookingFormPage(
                         data: data,
-                        promo: promo, // 👈 TAMBAH
+                        promo: promo,
                       ),
                     ),
                   );
@@ -340,53 +348,89 @@ class PaketDetailPage extends StatelessWidget {
                           color: AppColor.primary.withOpacity(0.2),
                         ),
                       ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.local_offer_rounded,
-                            color: AppColor.primary,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 10),
-                          const Text(
-                            "Mulai dari",
-                            style: TextStyle(fontSize: 13, color: Colors.grey),
-                          ),
-                          const Spacer(),
-                          // 👈 BERUBAH - tampilkan harga coret jika ada promo
-                          if (promo != null) ...[
-                            Text(
-                              "Rp ${data['price_per_person'] ?? '-'}",
-                              style: const TextStyle(
-                                fontSize: 13,
-                                color: Colors.grey,
-                                decoration: TextDecoration.lineThrough,
-                              ),
+                      child: promo != null
+                          ? Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.local_offer_rounded,
+                                      color: AppColor.primary,
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: 10),
+                                    const Text(
+                                      "Mulai dari",
+                                      style: TextStyle(
+                                          fontSize: 13, color: Colors.grey),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 6),
+                                Row(
+                                  children: [
+                                    Text(
+                                      "Rp ${data['price_per_person'] ?? '-'}",
+                                      style: const TextStyle(
+                                        fontSize: 13,
+                                        color: Colors.grey,
+                                        decoration: TextDecoration.lineThrough,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        "Rp ${_getFinalPrice(data['price_per_person'])}",
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 20,
+                                          color: AppColor.primary,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    const Text(
+                                      "/orang",
+                                      style: TextStyle(
+                                          fontSize: 12, color: Colors.grey),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            )
+                          : Row(
+                              children: [
+                                Icon(
+                                  Icons.local_offer_rounded,
+                                  color: AppColor.primary,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 10),
+                                const Text(
+                                  "Mulai dari",
+                                  style: TextStyle(
+                                      fontSize: 13, color: Colors.grey),
+                                ),
+                                const Spacer(),
+                                Flexible(
+                                  child: Text(
+                                    "Rp ${data['price_per_person'] ?? '-'}",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18,
+                                      color: AppColor.primary,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                const Text(
+                                  " /orang",
+                                  style: TextStyle(
+                                      fontSize: 12, color: Colors.grey),
+                                ),
+                              ],
                             ),
-                            const SizedBox(width: 8),
-                            Text(
-                              "Rp ${_getFinalPrice(data['price_per_person'])}",
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
-                                color: AppColor.primary,
-                              ),
-                            ),
-                          ] else
-                            Text(
-                              "Rp ${data['price_per_person'] ?? '-'}",
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
-                                color: AppColor.primary,
-                              ),
-                            ),
-                          const Text(
-                            " /orang",
-                            style: TextStyle(fontSize: 12, color: Colors.grey),
-                          ),
-                        ],
-                      ),
                     ),
 
                     const SizedBox(height: 20),

@@ -28,9 +28,6 @@ class _ArmadaPageState extends State<ArmadaPage> {
 
   bool isLoading = false;
 
-  List buses = [];
-  int? selectedBusId;
-
   // ─── Branding warna Bus 88 ─────────────────────────────────
   static const Color kRed = Color(0xFFD32F2F);
   static const Color kRedLight = Color(0xFFFFEBEE);
@@ -44,7 +41,6 @@ class _ArmadaPageState extends State<ArmadaPage> {
   @override
   void initState() {
     super.initState();
-    getBuses();
     loadUserData();
   }
 
@@ -54,18 +50,6 @@ class _ArmadaPageState extends State<ArmadaPage> {
       contactNameController.text = prefs.getString("name") ?? "";
       phoneController.text = prefs.getString("phone") ?? "";
     });
-  }
-
-  Future getBuses() async {
-    try {
-      final res = await http.get(Uri.parse("${ApiService.baseUrl}/buses"));
-      final data = jsonDecode(res.body);
-      if (data["status"] == true) {
-        setState(() => buses = data["data"]);
-      }
-    } catch (e) {
-      print("ERROR BUS: $e");
-    }
   }
 
   Future pickDate(bool isStart) async {
@@ -124,7 +108,7 @@ class _ArmadaPageState extends State<ArmadaPage> {
         destination: destinationController.text,
         contactName: contactNameController.text,
         phone: phoneController.text,
-        busId: selectedBusId,
+        busId: null, // ✅ selalu null, admin yang memilih
         purpose: purposeController.text,
         passengerCount: passengerCount,
       );
@@ -336,6 +320,8 @@ class _ArmadaPageState extends State<ArmadaPage> {
                             _infoItem("Harga disepakati setelah verifikasi"),
                             _infoItem("Pembayaran aman via Midtrans"),
                             _infoItem("Armada terawat & supir berpengalaman"),
+                            // ✅ tambah info bahwa admin yang pilih bus
+                            _infoItem("Armada dipilihkan oleh admin sesuai kebutuhan"),
                           ],
                         ),
                       ),
@@ -455,10 +441,48 @@ class _ArmadaPageState extends State<ArmadaPage> {
 
                                   const SizedBox(height: 18),
 
-                                  // Pilih Bus
-                                  _singleLabel("Pilih Bus (opsional)"),
+                                  // ✅ Bus dipilih admin — tampilkan sebagai info, bukan dropdown
+                                  _singleLabel("Armada Bus"),
                                   const SizedBox(height: 8),
-                                  _dropdownBox(),
+                                  Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 14,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: kRedLight,
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: const Color(0xFFFFCDD2),
+                                      ),
+                                    ),
+                                    child: Row(
+                                      children: const [
+                                        Icon(
+                                          Icons.directions_bus_outlined,
+                                          color: kRed,
+                                          size: 20,
+                                        ),
+                                        SizedBox(width: 10),
+                                        Expanded(
+                                          child: Text(
+                                            "Armada akan dipilihkan oleh admin",
+                                            style: TextStyle(
+                                              fontSize: 13,
+                                              color: kRed,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
+                                        Icon(
+                                          Icons.auto_awesome_outlined,
+                                          color: kRed,
+                                          size: 16,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
 
                                   const SizedBox(height: 18),
 
@@ -758,140 +782,6 @@ class _ArmadaPageState extends State<ArmadaPage> {
           isDense: true,
         ),
       ),
-    );
-  }
-
-  Widget _dropdownBox() {
-    return Theme(
-      data: Theme.of(context).copyWith(
-        focusColor: Colors.transparent,
-        splashColor: Colors.transparent,
-        highlightColor: kRedLight,
-      ),
-      child: DropdownButtonFormField<int?>(
-        value: selectedBusId,
-        isExpanded: true,
-        dropdownColor: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        icon: const Icon(
-          Icons.keyboard_arrow_down_rounded,
-          color: kRed,
-          size: 22,
-        ),
-        style: const TextStyle(
-          fontSize: 14,
-          color: kText,
-          fontWeight: FontWeight.w500,
-        ),
-        decoration: InputDecoration(
-          prefixIcon: const Icon(
-            Icons.directions_bus_outlined,
-            color: kRed,
-            size: 20,
-          ),
-          filled: true,
-          fillColor: Colors.white,
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: kRed, width: 1.5),
-          ),
-          contentPadding: const EdgeInsets.symmetric(
-            vertical: 14,
-            horizontal: 4,
-          ),
-        ),
-        hint: const Text(
-          "Biarkan admin memilih",
-          style: TextStyle(color: kTextMuted, fontSize: 14),
-        ),
-        selectedItemBuilder: (context) => [
-          const Text(
-            "Biarkan admin memilih",
-            style: TextStyle(
-              color: kText,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          ...buses.map<Widget>(
-            (bus) => Text(
-              "${bus["name"]}  ·  ${bus["capacity"]} kursi",
-              style: const TextStyle(
-                color: kText,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-        items: [
-          DropdownMenuItem<int?>(
-            value: null,
-            child: _dropdownItem(
-              icon: Icons.auto_awesome_outlined,
-              label: "Biarkan admin memilih",
-              sub: "Admin akan menyesuaikan armada",
-              isSelected: selectedBusId == null,
-            ),
-          ),
-          ...buses.map<DropdownMenuItem<int>>(
-            (bus) => DropdownMenuItem<int>(
-              value: bus["id"],
-              child: _dropdownItem(
-                icon: Icons.directions_bus_outlined,
-                label: bus["name"],
-                sub: "${bus["capacity"]} kursi",
-                isSelected: selectedBusId == bus["id"],
-              ),
-            ),
-          ),
-        ],
-        onChanged: (val) => setState(() => selectedBusId = val),
-      ),
-    );
-  }
-
-  Widget _dropdownItem({
-    required IconData icon,
-    required String label,
-    required String sub,
-    required bool isSelected,
-  }) {
-    return Row(
-      children: [
-        Icon(icon, size: 18, color: isSelected ? kRed : kTextMuted),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                  color: isSelected ? kRed : kText,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
-              Text(
-                sub,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: isSelected ? kRed.withOpacity(0.6) : kTextMuted,
-                ),
-              ),
-            ],
-          ),
-        ),
-        if (isSelected) const Icon(Icons.check, color: kRed, size: 16),
-      ],
     );
   }
 }

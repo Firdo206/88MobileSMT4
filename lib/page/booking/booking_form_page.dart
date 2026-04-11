@@ -367,10 +367,10 @@ class _BookingFormPageState extends State<BookingFormPage> {
                         int jumlah = int.parse(jumlahController.text);
                         double harga = double.parse(widget.data['price_per_person'].toString());
 
-                        // 👈 BERUBAH - hitung diskon jika ada promo
+                        // 🔥 FIX - hasil ternary sekarang di-assign ke discount
                         double discount = 0;
                         if (widget.promo != null) {
-                          discount = widget.promo!.discountType == 'percent'
+                          discount = widget.promo!.discountType.trim().toLowerCase() == 'percentage'
                               ? harga * (widget.promo!.discountValue / 100)
                               : widget.promo!.discountValue;
                         }

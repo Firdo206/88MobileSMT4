@@ -4,7 +4,8 @@ import 'widgets/promo_card.dart';
 import '../../../services/promo_service.dart';
 import '../../models/promo_model.dart';
 import '../booking/seat_page.dart';
-import '../paket_wisata/paket_detail_page.dart'; // 👈 TAMBAH
+import '../../services/api_service.dart';
+import '../paket_wisata/paket_detail_page.dart'; 
 
 class PromoListPage extends StatefulWidget {
   const PromoListPage({super.key});
@@ -125,8 +126,11 @@ class _PromoListPageState extends State<PromoListPage> {
                               return;
                             }
 
-                            // 👈 BERUBAH - cek target_type promo
+                            // 
                             if (promo.targetType == 'tour_package') {
+                              target['image_url'] = target['image'] != null
+                                ? '${ApiService.storageUrl}/storage/${target['image']}'
+                                : null;
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(

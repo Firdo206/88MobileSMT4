@@ -74,8 +74,10 @@ class _PaketWisataPageState extends State<PaketWisataPage> {
                     itemBuilder: (context, index) {
                       final item = data[index];
 
-                      return PaketCard( // ✅ WAJIB ADA RETURN
-                        image: item['image_url'] ?? '',
+                      return PaketCard( 
+                       image: item['image'] != null && item['image'].toString().isNotEmpty
+                          ? '${ApiService.storageUrl}/storage/${item['image']}'
+                          : '',
                         title: item['name'] ?? '',
                         price: "Rp ${item['price_per_person']}",
                         onTap: () {

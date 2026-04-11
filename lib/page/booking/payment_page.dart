@@ -26,8 +26,8 @@ class _PaymentPageState extends State<PaymentPage> {
   Duration _remaining = Duration.zero;
   bool _isExpired = false;
   bool _isLoadingMidtrans = false;
-  bool _isLoadingCheck = false;      // 🔥 TAMBAHAN
-  bool _sudahBayar = false;          // 🔥 TAMBAHAN
+  bool _isLoadingCheck = false;
+  bool _sudahBayar = false;
 
   // ================= MIDTRANS =================
   Future<String?> getSnapToken(int bookingId) async {
@@ -78,7 +78,7 @@ class _PaymentPageState extends State<PaymentPage> {
 
     setState(() {
       _isLoadingMidtrans = false;
-      _sudahBayar = true; // 🔥 setelah buka midtrans, tampilkan tombol cek status
+      _sudahBayar = true;
     });
   }
 
@@ -98,7 +98,6 @@ class _PaymentPageState extends State<PaymentPage> {
           backgroundColor: Colors.green,
         ),
       );
-      // kembali ke halaman pesanan dan refresh
       Navigator.pop(context, true);
     } else if (status == 'pending') {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -200,13 +199,36 @@ class _PaymentPageState extends State<PaymentPage> {
         ? seats.length
         : (widget.bookingData['seat_count'] ?? 1);
 
-    final totalPrice = int.tryParse(
-          widget.bookingData['total_price']?.toString() ?? "0",
-        ) ??
-        (seatCount *
-            (int.tryParse(widget.bookingData['price']?.toString() ?? "0") ?? 0));
+    // 🔥 FIX - prioritaskan final_price (harga setelah diskon promo) jika ada
+    final int totalPrice = (() {
+      // Cek apakah ada final_price dari promo
+      final finalPriceRaw = widget.bookingData['final_price'];
+      if (finalPriceRaw != null) {
+        final parsed = double.tryParse(finalPriceRaw.toString());
+        if (parsed != null && parsed > 0) return parsed.toInt();
+      }
+      // Fallback ke total_price dari API
+      final totalPriceRaw = int.tryParse(
+        widget.bookingData['total_price']?.toString() ?? "0",
+      );
+      if (totalPriceRaw != null && totalPriceRaw > 0) return totalPriceRaw;
+      // Fallback hitung manual
+      return seatCount *
+          (int.tryParse(widget.bookingData['price']?.toString() ?? "0") ?? 0);
+    })();
 
-    final pricePerSeat = seatCount == 0 ? 0 : (totalPrice ~/ seatCount);
+    // 🔥 Ambil info diskon jika ada
+    final discountAmount = widget.bookingData['discount_amount'];
+    final promoTitle = widget.bookingData['promo_title'];
+    final hasPromo = promoTitle != null && discountAmount != null;
+
+    // Harga normal (sebelum diskon) untuk ditampilkan jika ada promo
+    final int totalNormal = hasPromo
+        ? (totalPrice +
+            (double.tryParse(discountAmount.toString())?.toInt() ?? 0))
+        : totalPrice;
+
+    final pricePerSeat = seatCount == 0 ? 0 : (totalNormal ~/ seatCount);
 
     final bookingId = int.tryParse(
           (widget.bookingData['id'] ?? widget.bookingData['booking_id'])
@@ -382,7 +404,7 @@ class _PaymentPageState extends State<PaymentPage> {
 
                   const SizedBox(height: 14),
 
-                  // Ringkasan Harga
+                  // 🔥 Ringkasan Harga — tampilkan diskon jika ada promo
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(14),
@@ -394,8 +416,74 @@ class _PaymentPageState extends State<PaymentPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text("$seatCount Kursi x ${formatPrice(pricePerSeat)}", style: const TextStyle(fontSize: 12, color: Colors.black54)),
+                        // Banner promo jika ada
+                        if (hasPromo) ...[
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                            margin: const EdgeInsets.only(bottom: 10),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFE8F5E9),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.local_offer_rounded, color: Colors.green, size: 14),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    'Promo "$promoTitle" diterapkan',
+                                    style: const TextStyle(
+                                      color: Colors.green,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+
+                        Text(
+                          "$seatCount Kursi x ${formatPrice(pricePerSeat)}",
+                          style: const TextStyle(fontSize: 12, color: Colors.black54),
+                        ),
+
                         const SizedBox(height: 8),
+
+                        // Harga normal dicoret jika ada promo
+                        if (hasPromo) ...[
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text("Harga Normal", style: TextStyle(fontSize: 13, color: Colors.black54)),
+                              Text(
+                                formatPrice(totalNormal),
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey,
+                                  decoration: TextDecoration.lineThrough,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text('Diskon "$promoTitle"', style: const TextStyle(fontSize: 13, color: Colors.green)),
+                              Text(
+                                '- ${formatPrice(double.tryParse(discountAmount.toString())?.toInt() ?? 0)}',
+                                style: const TextStyle(fontSize: 13, color: Colors.green),
+                              ),
+                            ],
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 8),
+                            child: Divider(height: 1),
+                          ),
+                        ],
+
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [

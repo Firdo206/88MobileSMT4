@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import '../../services/booking_service.dart';
 import '../../services/booking_paket_service.dart';
 import '../../services/rental_service.dart';
-import '../../services/payment_service.dart'; // 🔥 TAMBAHAN
-import '../booking/payment_page.dart'; // 🔥 tiket
-import '../payment/payment_page.dart' as other; // 🔥 paket & rental
+import '../../services/payment_service.dart';
+import '../booking/payment_page.dart';
+import '../payment/payment_page.dart' as other;
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:pdf/pdf.dart';
@@ -53,6 +53,36 @@ class DetailPesananPage extends StatelessWidget {
         .split(',')
         .map((e) => e.trim())
         .toList();
+  }
+
+  // 🔥 Helper ambil data penumpang pertama dari passengers array (untuk tiket)
+  Map? get firstPassenger {
+    final passengers = data["passengers"];
+    if (passengers is List && passengers.isNotEmpty) {
+      return passengers[0] as Map?;
+    }
+    return null;
+  }
+
+  // 🔥 Ambil nama — cek berbagai kemungkinan key
+  String get displayName {
+    // Cek langsung di data
+    final direct = data["name"] ?? data["passenger_name"] ?? data["contact_name"];
+    if (direct != null && direct.toString().isNotEmpty) return direct.toString();
+    // Fallback ke passengers[0]
+    return firstPassenger?["passenger_name"]?.toString() ?? "-";
+  }
+
+  // 🔥 Ambil telepon — cek berbagai kemungkinan key
+  String get displayPhone {
+    final direct = data["phone"] ?? data["contact_phone"];
+    if (direct != null && direct.toString().isNotEmpty) return direct.toString();
+    return firstPassenger?["phone"]?.toString() ?? "-";
+  }
+
+  // 🔥 Ambil email
+  String get displayEmail {
+    return data["email"]?.toString() ?? "-";
   }
 
   /// ================= STATUS =================
@@ -356,6 +386,28 @@ class DetailPesananPage extends StatelessWidget {
   Widget _detailCard() {
 
     if (type == "ticket") {
+      // 🔥 Tampilkan semua penumpang jika ada
+      final passengers = data["passengers"];
+      if (passengers is List && passengers.isNotEmpty) {
+        return Column(
+          children: [
+            _row("Bus", data["bus_name"]),
+            const SizedBox(height: 6),
+            ...passengers.map((p) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 3),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text("Kursi ${p['seat'] ?? '-'}",
+                      style: const TextStyle(color: Colors.grey)),
+                  Text(p['passenger_name'] ?? '-',
+                      style: const TextStyle(fontWeight: FontWeight.w500)),
+                ],
+              ),
+            )),
+          ],
+        );
+      }
       return _row("Bus", data["bus_name"]);
     }
 
@@ -388,7 +440,8 @@ class DetailPesananPage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             const Text("Nama", style: TextStyle(color: Colors.grey)),
-            Text(data["name"] ?? "-",
+            // 🔥 FIX - pakai getter displayName
+            Text(displayName,
                 style: const TextStyle(fontWeight: FontWeight.bold)),
           ],
         ),
@@ -399,7 +452,8 @@ class DetailPesananPage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             const Text("Telp", style: TextStyle(color: Colors.grey)),
-            Text(data["phone"] ?? "-"),
+            // 🔥 FIX - pakai getter displayPhone
+            Text(displayPhone),
           ],
         ),
 
@@ -409,9 +463,10 @@ class DetailPesananPage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             const Text("Email", style: TextStyle(color: Colors.grey)),
+            // 🔥 FIX - pakai getter displayEmail
             Flexible(
               child: Text(
-                data["email"] ?? "-",
+                displayEmail,
                 textAlign: TextAlign.right,
               ),
             ),
@@ -459,7 +514,6 @@ class DetailPesananPage extends StatelessWidget {
 
           const SizedBox(height: 10),
 
-          // 🔥 TAMBAHAN: Tombol Cek Status Pembayaran
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 20),
             width: double.infinity,
@@ -476,7 +530,7 @@ class DetailPesananPage extends StatelessWidget {
                 final bookingId = int.tryParse(data["id"]?.toString() ?? "0") ?? 0;
                 final status = await PaymentService.checkStatus(bookingId);
 
-                Navigator.pop(context); // tutup loading
+                Navigator.pop(context);
 
                 if (status == 'settlement' || status == 'capture') {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -485,7 +539,7 @@ class DetailPesananPage extends StatelessWidget {
                       backgroundColor: Colors.green,
                     ),
                   );
-                  Navigator.pop(context, true); // refresh halaman pesanan
+                  Navigator.pop(context, true);
                 } else if (status == 'pending') {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
@@ -591,17 +645,6 @@ class DetailPesananPage extends StatelessWidget {
             fontSize: 16,
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _outlineButton(String text, VoidCallback onTap) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20),
-      width: double.infinity,
-      child: OutlinedButton(
-        onPressed: onTap,
-        child: Text(text),
       ),
     );
   }
@@ -819,9 +862,10 @@ class DetailPesananPage extends StatelessWidget {
 
                     pw.SizedBox(height: 10),
 
-                    pw.Text("Nama: ${data["name"]}"),
-                    pw.Text("Telp: ${data["phone"]}"),
-                    pw.Text("Email: ${data["email"]}"),
+                    // 🔥 FIX - pakai getter
+                    pw.Text("Nama: $displayName"),
+                    pw.Text("Telp: $displayPhone"),
+                    pw.Text("Email: $displayEmail"),
 
                     pw.SizedBox(height: 20),
 

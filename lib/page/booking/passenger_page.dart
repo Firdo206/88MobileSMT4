@@ -47,7 +47,8 @@ class _PassengerPageState extends State<PassengerPage> {
 
   double get discountPerSeat {
     if (widget.promo == null) return 0;
-    if (widget.promo!.discountType == 'percent') {
+    // 🔥 FIX - tambah .trim().toLowerCase()
+    if (widget.promo!.discountType.trim().toLowerCase() == 'percentage') {
       return pricePerSeat * (widget.promo!.discountValue / 100);
     }
     return widget.promo!.discountValue;

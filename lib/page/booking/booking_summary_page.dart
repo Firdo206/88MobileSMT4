@@ -43,10 +43,10 @@ class BookingSummaryPage extends StatelessWidget {
     String imageUrl = data['image_url'] ?? '';
     double harga = double.parse(data['price_per_person'].toString());
 
-    // 👈 TAMBAH - hitung diskon untuk ditampilkan
+    // 🔥 FIX - tambah .trim().toLowerCase() agar konsisten
     double discount = 0;
     if (promo != null) {
-      discount = promo!.discountType == 'percent'
+      discount = promo!.discountType.trim().toLowerCase() == 'percentage'
           ? harga * (promo!.discountValue / 100)
           : promo!.discountValue;
     }
