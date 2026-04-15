@@ -36,17 +36,17 @@ class _PesananPageState extends State<PesananPage> {
       final prefs = await SharedPreferences.getInstance();
       int userId = prefs.getInt("user_id") ?? 0;
 
-      print("=== USER ID: $userId ==="); // 🔥
+      print("=== USER ID: $userId ==="); 
 
       final bookings = await BookingService.getMyBookings(userId);
-      print("=== BOOKINGS DONE: ${bookings?.length} ==="); // 🔥
+      print("=== BOOKINGS DONE: ${bookings?.length} ==="); 
 
       final tours = await BookingPaketService.getMyTours(userId);
-      print("=== TOURS DONE: ${tours?.length} ==="); // 🔥
-      print("=== TOURS DATA: $tours ==="); // 🔥
+      print("=== TOURS DONE: ${tours?.length} ==="); 
+      print("=== TOURS DATA: $tours ==="); 
 
       final rentals = await RentalService.getMyRentals(userId);
-      print("=== RENTALS DONE: ${rentals?.length} ==="); // 🔥
+      print("=== RENTALS DONE: ${rentals?.length} ==="); 
 
       List temp = [];
 
@@ -78,7 +78,7 @@ class _PesananPageState extends State<PesananPage> {
         ].contains(status);
       }).toList();
 
-      print("=== ACTIVE ORDERS: ${activeOrders.length} ==="); // 🔥
+      print("=== ACTIVE ORDERS: ${activeOrders.length} ==="); 
 
       setState(() {
         orders = activeOrders;
@@ -88,7 +88,7 @@ class _PesananPageState extends State<PesananPage> {
 
     } catch (e, stack) {
       print("ERROR LOAD: $e");
-      print("STACK: $stack"); // 🔥
+      print("STACK: $stack"); 
       setState(() => isLoading = false);
     }
   }
@@ -145,7 +145,7 @@ class _PesananPageState extends State<PesananPage> {
         child: isLoading
             ? const Center(child: CircularProgressIndicator())
 
-            /// 🔥 EMPTY SEMUA
+            /// EMPTY SEMUA
             : orders.isEmpty
             ? _emptyState(
                 title: "Belum Ada Pesanan",
@@ -157,7 +157,7 @@ class _PesananPageState extends State<PesananPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
 
-                  /// 🔥 HEADER
+                  /// HEADER
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 20, 16, 10),
                     child: Column(
@@ -212,7 +212,7 @@ class _PesananPageState extends State<PesananPage> {
 
                   const SizedBox(height: 14),
 
-                  /// 🔥 FILTER
+                  /// FILTER
                   SizedBox(
                     height: 42,
                     child: ListView(
@@ -230,7 +230,7 @@ class _PesananPageState extends State<PesananPage> {
 
                   const SizedBox(height: 12),
 
-                  /// 📋 LIST / EMPTY FILTER
+                  ///  LIST / EMPTY FILTER
                   Expanded(
                     child: filteredOrders.isEmpty
                         ? _buildEmptyByFilter()
@@ -279,7 +279,7 @@ class _PesananPageState extends State<PesananPage> {
     );
   }
 
-  /// ================= EMPTY STATE =================
+  ///  EMPTY STATE 
   Widget _emptyState({
     required String title,
     required String subtitle,
@@ -307,7 +307,7 @@ class _PesananPageState extends State<PesananPage> {
     );
   }
 
-  /// ================= EMPTY FILTER =================
+  ///  EMPTY FILTER
   Widget _buildEmptyByFilter() {
     if (selectedFilter == "ticket") {
       return _emptyState(
