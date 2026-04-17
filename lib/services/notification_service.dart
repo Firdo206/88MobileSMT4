@@ -1,47 +1,53 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../models/notification_model.dart';
-import 'api_service.dart'; 
-
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'api_service.dart';
 
 class NotificationService {
-  
-  // GET NOTIF
-  static Future<List<NotificationModel>> getNotifications(int userId) async {
-    final response = await http.get(
-      Uri.parse("${ApiService.baseUrl}/notifications/$userId"),
-    );
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      List list = data['data']['data'];
-      return list.map((e) => NotificationModel.fromJson(e)).toList();
-    } else {
-      throw Exception("Gagal ambil notifikasi");
+  // 🔥 SIMPAN TOKEN KE LARAVEL
+  static Future<void> saveFcmToken(int userId, {String? token}) async {
+  try {
+    // 🔥 kalau token dikirim dari luar → pakai itu
+    token ??= await FirebaseMessaging.instance.getToken();
+
+    if (token == null) {
+      print("TOKEN NULL, GAGAL KIRIM");
+      return;
     }
-  }
 
-  // UNREAD COUNT
-  static Future<int> getUnreadCount(int userId) async {
-    final response = await http.get(
-      Uri.parse("${ApiService.baseUrl}/notifications/$userId/unread-count"),
+    print("KIRIM TOKEN KE SERVER: $token");
+
+    final response = await http.post(
+      Uri.parse("${ApiService.baseUrl}/save-fcm-token"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "user_id": userId,
+        "fcm_token": token,
+      }),
     );
 
-    final data = jsonDecode(response.body);
-    return data['count'];
+    print("RESPONSE TOKEN: ${response.body}");
+  } catch (e) {
+    print("ERROR KIRIM TOKEN: $e");
   }
+}
 
-  // MARK AS READ
-  static Future<void> markAsRead(int id) async {
-    await http.post(
-      Uri.parse("${ApiService.baseUrl}/notifications/$id/read"),
-    );
-  }
+  // 🔥 LISTENER TOKEN BERUBAH (WAJIB TAMBAHIN)
+  static void listenTokenRefresh() {
+    FirebaseMessaging.instance.onTokenRefresh.listen((newToken) async {
+      print("TOKEN REFRESH: $newToken");
 
-  // READ ALL
-  static Future<void> markAll(int userId) async {
-    await http.post(
-      Uri.parse("${ApiService.baseUrl}/notifications/$userId/read-all"),
-    );
+      try {
+        // Ambil user_id dari local
+        // (biar otomatis update tanpa login ulang)
+        // 👉 pastikan SharedPreferences sudah ada user_id
+        // kalau belum, skip saja
+
+        // OPTIONAL: kalau mau lebih aman bisa panggil API di sini
+      } catch (e) {
+        print("ERROR REFRESH TOKEN: $e");
+      }
+    });
   }
 }

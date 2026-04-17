@@ -4,9 +4,10 @@ import '../../services/auth_service.dart';
 import '../navigation/main_page.dart';
 import '../../services/google_auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import '../../services/notification_service.dart';
 import '../profil/input_phone_page.dart';
 import 'forgot_password_flow_page.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -105,44 +106,55 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> loginUser() async {
-    try {
-      var result = await AuthService.login(
-        emailController.text,
-        passwordController.text,
+  try {
+    var result = await AuthService.login(
+      emailController.text,
+      passwordController.text,
+    );
+
+    if (result['status'] == true) {
+
+      var user = result['data']; // ✅ AMBIL USER DULU
+
+      // 🔥 AMBIL TOKEN TERBARU
+      String? token = await FirebaseMessaging.instance.getToken();
+
+      if (token != null) {
+        await NotificationService.saveFcmToken(user["id"]); // ✅ KIRIM SEKALI
+      }
+
+      showPopup(
+        "Login Berhasil",
+        "Selamat datang 👋",
+        Icons.check_circle,
+        Colors.green,
+        autoClose: true,
       );
 
-      if (result['status'] == true) {
-        showPopup(
-          "Login Berhasil",
-          "Selamat datang 👋",
-          Icons.check_circle,
-          Colors.green,
-          autoClose: true,
+      Future.delayed(const Duration(seconds: 1), () {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const MainPage()),
         );
+      });
 
-        Future.delayed(const Duration(seconds: 1), () {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const MainPage()),
-          );
-        });
-      } else {
-        showPopup(
-          "Login Gagal",
-          result['message'] ?? "Email atau password salah",
-          Icons.error,
-          Colors.red,
-        );
-      }
-    } catch (e) {
+    } else {
       showPopup(
-        "Server Error",
-        "Tidak dapat terhubung ke server",
-        Icons.warning,
-        Colors.orange,
+        "Login Gagal",
+        result['message'] ?? "Email atau password salah",
+        Icons.error,
+        Colors.red,
       );
     }
+  } catch (e) {
+    showPopup(
+      "Server Error",
+      "Tidak dapat terhubung ke server",
+      Icons.warning,
+      Colors.orange,
+    );
   }
+}
 
   /// ORGOT PASSWORD 
   Future<void> forgotPassword() async {
@@ -411,6 +423,7 @@ class _LoginScreenState extends State<LoginScreen> {
         );
 
         if (result["status"] == true) {
+          await NotificationService.saveFcmToken(result["data"]["id"]);
           final prefs = await SharedPreferences.getInstance();
 
           prefs.setInt("user_id", result["data"]["id"]);

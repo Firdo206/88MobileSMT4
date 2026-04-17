@@ -2,8 +2,54 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'page/auth/login_page.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'firebase_options.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'services/notification_service.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-void main() {
+// 🔥 GLOBAL NOTIFICATION
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
+
+// BACKGROUND HANDLER (WAJIB)
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  print("Background Message: ${message.notification?.title}");
+}
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // INIT FIREBASE
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  // 🔥 INIT LOCAL NOTIFICATION
+  const AndroidInitializationSettings initializationSettingsAndroid =
+      AndroidInitializationSettings('@mipmap/ic_launcher');
+
+  const InitializationSettings initializationSettings =
+      InitializationSettings(android: initializationSettingsAndroid);
+
+  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+
+  // 🔥 CHANNEL NOTIF
+  const AndroidNotificationChannel channel = AndroidNotificationChannel(
+    'high_importance_channel',
+    'High Importance Notifications',
+    importance: Importance.high,
+  );
+
+  await flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>()
+      ?.createNotificationChannel(channel);
+
+  // HANDLE BACKGROUND NOTIF
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
   runApp(const MyApp());
 }
 
@@ -12,15 +58,13 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-      return MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
-
       theme: ThemeData(
-        scaffoldBackgroundColor: Color(0xFFF5F5F5),
+        scaffoldBackgroundColor: const Color(0xFFF5F5F5),
         textTheme: GoogleFonts.robotoTextTheme(),
       ),
-
-      home: SplashPage(),
+      home: const SplashPage(),
     );
   }
 }
@@ -32,7 +76,8 @@ class SplashPage extends StatefulWidget {
   State<SplashPage> createState() => _SplashPageState();
 }
 
-class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
+class _SplashPageState extends State<SplashPage>
+    with TickerProviderStateMixin {
   late AnimationController _fadeController;
   late AnimationController _busController;
   late AnimationController _roadController;
@@ -41,52 +86,117 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
   late Animation<double> _busAnimation;
   late Animation<double> _roadAnimation;
 
-  @override
-  void initState() {
-    super.initState();
+  Future<void> setupFCM() async {
+    try {
+      FirebaseMessaging messaging = FirebaseMessaging.instance;
 
-    _fadeController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    );
+      NotificationSettings settings = await messaging.requestPermission();
 
-    _fadeAnimation = CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeIn,
-    );
+      print("PERMISSION: ${settings.authorizationStatus}");
 
-    _busController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    );
+      String? token = await messaging.getToken();
 
-    _busAnimation = Tween<double>(
-      begin: -1.0,
-      end: 1.2,
-    ).animate(CurvedAnimation(parent: _busController, curve: Curves.easeInOut));
-
-    _roadController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 800),
-    )..repeat();
-
-    _roadAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(_roadController);
-
-    _fadeController.forward();
-    _busController.forward();
-
-    Timer(const Duration(seconds: 3), () {
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const LoginPage()),
-        );
-      }
-    });
+      print("FCM TOKEN RESULT: $token");
+    } catch (e) {
+      print("ERROR FCM: $e");
+    }
   }
+
+  @override
+void initState() {
+  super.initState();
+
+  // 🔥 INIT NOTIFIKASI
+  setupFCM();
+
+  // 🔥 WAJIB: Biar notif muncul saat app terbuka (kayak WA)
+  FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+    alert: true,
+    badge: true,
+    sound: true,
+  );
+
+  // 🔥 LISTENER SAAT APP DIBUKA
+  FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+    print("Notif masuk: ${message.notification?.title}");
+
+    RemoteNotification? notification = message.notification;
+    AndroidNotification? android = message.notification?.android;
+
+    if (notification != null && android != null) {
+      flutterLocalNotificationsPlugin.show(
+        0,
+        notification.title,
+        notification.body,
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'high_importance_channel',
+            'High Importance Notifications',
+            importance: Importance.max,
+            priority: Priority.high,
+            playSound: true,
+          ),
+        ),
+      );
+    }
+  });
+
+  // 🔥 FIX TOKEN SELALU UPDATE (INI YANG KAMU BUTUH!)
+  FirebaseMessaging.instance.onTokenRefresh.listen((newToken) async {
+    print("TOKEN BARU: $newToken");
+
+    // ambil user_id dari local
+    final prefs = await SharedPreferences.getInstance();
+    int? userId = prefs.getInt("user_id");
+
+    if (userId != null) {
+      await NotificationService.saveFcmToken(userId);
+    }
+  });
+
+  // ANIMATION (biarkan)
+  _fadeController = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1500),
+  );
+
+  _fadeAnimation = CurvedAnimation(
+    parent: _fadeController,
+    curve: Curves.easeIn,
+  );
+
+  _busController = AnimationController(
+    vsync: this,
+    duration: const Duration(seconds: 2),
+  );
+
+  _busAnimation = Tween<double>(
+    begin: -1.0,
+    end: 1.2,
+  ).animate(CurvedAnimation(parent: _busController, curve: Curves.easeInOut));
+
+  _roadController = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 800),
+  )..repeat();
+
+  _roadAnimation = Tween<double>(
+    begin: 0.0,
+    end: 1.0,
+  ).animate(_roadController);
+
+  _fadeController.forward();
+  _busController.forward();
+
+  Timer(const Duration(seconds: 3), () {
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginPage()),
+      );
+    }
+  });
+}
 
   @override
   void dispose() {
@@ -144,7 +254,8 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
                     const SizedBox(height: 10),
                     const Text(
                       "Explore Your Journey",
-                      style: TextStyle(fontSize: 15, color: Colors.white70),
+                      style:
+                          TextStyle(fontSize: 15, color: Colors.white70),
                     ),
                   ],
                 ),
@@ -159,7 +270,8 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
                 builder: (context, child) {
                   return Transform.translate(
                     offset: Offset(
-                      _busAnimation.value * MediaQuery.of(context).size.width,
+                      _busAnimation.value *
+                          MediaQuery.of(context).size.width,
                       0,
                     ),
                     child: const Center(
@@ -188,7 +300,8 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
                     SizedBox(height: 16),
                     Text(
                       "Memuat aplikasi...",
-                      style: TextStyle(color: Colors.white70, fontSize: 13),
+                      style: TextStyle(
+                          color: Colors.white70, fontSize: 13),
                     ),
                   ],
                 ),
@@ -218,7 +331,8 @@ class RoadPainter extends CustomPainter {
     double startX = -(animationValue * (dashWidth + dashSpace));
 
     while (startX < size.width) {
-      canvas.drawLine(Offset(startX, 0), Offset(startX + dashWidth, 0), paint);
+      canvas.drawLine(
+          Offset(startX, 0), Offset(startX + dashWidth, 0), paint);
       startX += dashWidth + dashSpace;
     }
   }
