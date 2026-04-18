@@ -22,6 +22,10 @@ class _DashboardPageState extends State<DashboardPage>
   DateTime? selectedDate;
   int _activeMenu = 0;
 
+  // 🔥 STATE PULANG PERGI
+  bool _isRoundTrip = false;
+  DateTime? returnDate;
+
   // 🔥 STATE PROMO
   List<Promo> promoList = [];
   bool isLoading = true;
@@ -92,6 +96,41 @@ class _DashboardPageState extends State<DashboardPage>
     if (picked != null) {
       setState(() {
         selectedDate = picked;
+        // Reset tanggal pulang jika lebih awal dari tanggal berangkat
+        if (returnDate != null && returnDate!.isBefore(picked)) {
+          returnDate = null;
+        }
+      });
+    }
+  }
+
+  Future<void> pickReturnDate() async {
+    DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: selectedDate != null
+          ? selectedDate!.add(const Duration(days: 1))
+          : DateTime.now().add(const Duration(days: 1)),
+      firstDate: selectedDate != null
+          ? selectedDate!.add(const Duration(days: 1))
+          : DateTime.now(),
+      lastDate: DateTime(2030),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFF8B0000),
+              onPrimary: Colors.white,
+              surface: Colors.white,
+              onSurface: Color(0xFF1A1A1A),
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null) {
+      setState(() {
+        returnDate = picked;
       });
     }
   }
@@ -271,6 +310,40 @@ class _DashboardPageState extends State<DashboardPage>
       ),
       child: Column(
         children: [
+          // ─── TOGGLE SEKALI JALAN / PULANG PERGI ───────────────────
+          Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF7F3F0),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                _tripTypeTab(
+                  label: "Sekali Jalan",
+                  active: !_isRoundTrip,
+                  onTap: () {
+                    setState(() {
+                      _isRoundTrip = false;
+                      returnDate = null;
+                    });
+                  },
+                ),
+                _tripTypeTab(
+                  label: "Pulang Pergi",
+                  active: _isRoundTrip,
+                  onTap: () {
+                    setState(() {
+                      _isRoundTrip = true;
+                    });
+                  },
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 14),
+
           // Origin
           _buildInputField(
             controller: originController,
@@ -329,73 +402,23 @@ class _DashboardPageState extends State<DashboardPage>
 
           const SizedBox(height: 14),
 
-          // Date Picker
-          GestureDetector(
+          // ─── TANGGAL BERANGKAT ────────────────────────────────────
+          _buildDateField(
+            label: "Tanggal Berangkat",
+            date: selectedDate,
             onTap: pickDate,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF7F3F0),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: selectedDate != null
-                      ? const Color(0xFF8B0000).withOpacity(0.4)
-                      : Colors.transparent,
-                ),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF8B0000).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(
-                      Icons.calendar_month_rounded,
-                      color: Color(0xFF8B0000),
-                      size: 18,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "Tanggal Keberangkatan",
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: Colors.grey[500],
-                            letterSpacing: 0.3,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          selectedDate == null
-                              ? "Pilih tanggal"
-                              : _formatDate(selectedDate!),
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: selectedDate == null
-                                ? Colors.grey[400]
-                                : const Color(0xFF1A1A1A),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Icon(
-                    Icons.chevron_right_rounded,
-                    color: Color(0xFFAAAAAA),
-                    size: 20,
-                  ),
-                ],
-              ),
-            ),
           ),
+
+          // ─── TANGGAL PULANG (hanya muncul jika pulang pergi) ─────
+          if (_isRoundTrip) ...[
+            const SizedBox(height: 8),
+            _buildDateField(
+              label: "Tanggal Pulang",
+              date: returnDate,
+              onTap: pickReturnDate,
+              isDashed: true,
+            ),
+          ],
 
           const SizedBox(height: 16),
 
@@ -450,6 +473,136 @@ class _DashboardPageState extends State<DashboardPage>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // ─── TRIP TYPE TAB ───────────────────────────────────────────────────────────
+
+  Widget _tripTypeTab({
+    required String label,
+    required bool active,
+    required VoidCallback onTap,
+  }) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 9),
+          decoration: BoxDecoration(
+            color: active ? const Color(0xFF8B0000) : Colors.transparent,
+            borderRadius: BorderRadius.circular(9),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                active
+                    ? Icons.check_circle_rounded
+                    : Icons.radio_button_unchecked_rounded,
+                size: 13,
+                color: active ? Colors.white : Colors.grey[500],
+              ),
+              const SizedBox(width: 5),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: active ? Colors.white : Colors.grey[500],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ─── DATE FIELD ──────────────────────────────────────────────────────────────
+
+  Widget _buildDateField({
+    required String label,
+    required DateTime? date,
+    required VoidCallback onTap,
+    bool isDashed = false,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF7F3F0),
+          borderRadius: BorderRadius.circular(14),
+          border: isDashed
+              ? Border.all(
+                  color: date != null
+                      ? const Color(0xFF8B0000).withOpacity(0.4)
+                      : const Color(0xFF8B0000).withOpacity(0.2),
+                  width: 1,
+                  // Note: Flutter tidak support dashed border native,
+                  // ini fallback pakai solid tipis
+                )
+              : Border.all(
+                  color: date != null
+                      ? const Color(0xFF8B0000).withOpacity(0.4)
+                      : Colors.transparent,
+                ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: const Color(0xFF8B0000).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                isDashed
+                    ? Icons.event_available_rounded
+                    : Icons.calendar_month_rounded,
+                color: const Color(0xFF8B0000),
+                size: 18,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: Colors.grey[500],
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    date == null ? "Pilih tanggal" : _formatDate(date),
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: date == null
+                          ? Colors.grey[400]
+                          : const Color(0xFF1A1A1A),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.chevron_right_rounded,
+              color: Color(0xFFAAAAAA),
+              size: 20,
+            ),
+          ],
+        ),
       ),
     );
   }
