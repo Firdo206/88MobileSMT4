@@ -35,15 +35,25 @@ class BookingService {
     return data["data"];
   }
 
-  static Future cancelBooking(int id) async {
+  static Future cancelBooking(dynamic id, {String reason = ""}) async {
   final response = await http.post(
     Uri.parse("${ApiService.baseUrl}/booking/cancel/$id"),
     headers: {
-      "Accept": "application/json"
-    }
+      "Accept": "application/json",
+      "Content-Type": "application/json",
+    },
+    body: jsonEncode({
+      "reason": reason,
+    }),
   );
 
-  return jsonDecode(response.body);
+  final data = jsonDecode(response.body);
+
+  if (response.statusCode != 200) {
+    throw Exception(data["message"] ?? "Gagal membatalkan pesanan");
+  }
+
+  return data;
 }
 
 static Future finish(int id) async {

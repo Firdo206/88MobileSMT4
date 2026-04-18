@@ -15,6 +15,9 @@ class PaketWisataPage extends StatefulWidget {
 class _PaketWisataPageState extends State<PaketWisataPage> {
   late Future<List<dynamic>> tours;
 
+  static const Color _primary = Color(0xFF8B2E2E);
+  static const Color _primaryLight = Color(0xFFB84545);
+
   @override
   void initState() {
     super.initState();
@@ -26,58 +29,226 @@ class _PaketWisataPageState extends State<PaketWisataPage> {
     return Scaffold(
       backgroundColor: AppColor.background,
 
-      appBar: AppBar(
-        title: const Text("Paket Wisata"),
-        backgroundColor: Colors.white,
-        centerTitle: true,
-      ),
+      body: CustomScrollView(
+        slivers: [
 
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
+          /// ===== SLIVER APP BAR =====
+          SliverAppBar(
+            expandedHeight: 180,
+            pinned: true,
+            backgroundColor: _primary,
+            elevation: 0,
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [_primary, _primaryLight],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                child: Stack(
+                  children: [
 
-            /// SEARCH
-            TextField(
-              decoration: InputDecoration(
-                hintText: "Search for a destination...",
-                prefixIcon: const Icon(Icons.search),
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30),
-                  borderSide: BorderSide.none,
+                    /// Dekorasi lingkaran background
+                    Positioned(
+                      top: -30,
+                      right: -30,
+                      child: Container(
+                        width: 160,
+                        height: 160,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withOpacity(0.07),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      bottom: -20,
+                      left: -20,
+                      child: Container(
+                        width: 120,
+                        height: 120,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withOpacity(0.05),
+                        ),
+                      ),
+                    ),
+
+                    /// Teks header
+                    Positioned(
+                      bottom: 24,
+                      left: 20,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: const [
+                          Text(
+                            "Paket Wisata",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            "Temukan perjalanan impianmu 🌴",
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
 
-            const SizedBox(height: 16),
+            /// Title saat di-scroll (collapsed)
+            title: const Text(
+              "Paket Wisata",
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+            centerTitle: true,
+          ),
 
-            /// LIST
-            Expanded(
-              child: FutureBuilder<List<dynamic>>(
-                future: tours,
-                builder: (context, snapshot) {
+          /// ===== SEARCH BAR =====
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.06),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: TextField(
+                  decoration: InputDecoration(
+                    hintText: "Cari destinasi wisata...",
+                    hintStyle: TextStyle(color: Colors.grey[400], fontSize: 13),
+                    prefixIcon: const Icon(Icons.search_rounded, color: Colors.grey),
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                ),
+              ),
+            ),
+          ),
 
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
+          /// ===== LABEL =====
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+              child: Row(
+                children: [
+                  Container(
+                    width: 4,
+                    height: 16,
+                    decoration: BoxDecoration(
+                      color: _primary,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    "Semua Paket",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
 
-                  if (snapshot.hasError) {
-                    return Center(child: Text(snapshot.error.toString()));
-                  }
+          /// ===== LIST =====
+          SliverToBoxAdapter(
+            child: FutureBuilder<List<dynamic>>(
+              future: tours,
+              builder: (context, snapshot) {
 
-                  final data = snapshot.data!;
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Padding(
+                    padding: EdgeInsets.only(top: 80),
+                    child: Center(
+                      child: CircularProgressIndicator(color: _primary),
+                    ),
+                  );
+                }
 
-                                  return ListView.builder(
-                    itemCount: data.length,
-                    itemBuilder: (context, index) {
-                      final item = data[index];
+                if (snapshot.hasError) {
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 80),
+                    child: Center(
+                      child: Column(
+                        children: [
+                          Icon(Icons.wifi_off_rounded, size: 48, color: Colors.grey[400]),
+                          const SizedBox(height: 12),
+                          Text(
+                            snapshot.error.toString(),
+                            style: const TextStyle(color: Colors.grey),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
 
-                      return PaketCard( 
-                       image: item['image'] != null && item['image'].toString().isNotEmpty
-                          ? '${ApiService.storageUrl}/storage/${item['image']}'
-                          : '',
+                final data = snapshot.data!;
+
+                if (data.isEmpty) {
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 80),
+                    child: Center(
+                      child: Column(
+                        children: [
+                          Icon(Icons.travel_explore_rounded, size: 56, color: Colors.grey[300]),
+                          const SizedBox(height: 12),
+                          const Text(
+                            "Belum ada paket wisata",
+                            style: TextStyle(color: Colors.grey, fontSize: 14),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+
+                return ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                  itemCount: data.length,
+                  itemBuilder: (context, index) {
+                    final item = data[index];
+
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: PaketCard(
+                        image: item['image'] != null && item['image'].toString().isNotEmpty
+                            ? '${ApiService.storageUrl}/storage/${item['image']}'
+                            : '',
                         title: item['name'] ?? '',
                         price: "Rp ${item['price_per_person']}",
                         onTap: () {
@@ -88,14 +259,14 @@ class _PaketWisataPageState extends State<PaketWisataPage> {
                             ),
                           );
                         },
-                      );
-                    },
-                  );
-                },
-              ),
-            )
-          ],
-        ),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
