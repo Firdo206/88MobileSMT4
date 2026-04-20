@@ -22,16 +22,15 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // INIT FIREBASE
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   // 🔥 INIT LOCAL NOTIFICATION
   const AndroidInitializationSettings initializationSettingsAndroid =
       AndroidInitializationSettings('@mipmap/ic_launcher');
 
-  const InitializationSettings initializationSettings =
-      InitializationSettings(android: initializationSettingsAndroid);
+  const InitializationSettings initializationSettings = InitializationSettings(
+    android: initializationSettingsAndroid,
+  );
 
   await flutterLocalNotificationsPlugin.initialize(initializationSettings);
 
@@ -44,7 +43,8 @@ void main() async {
 
   await flutterLocalNotificationsPlugin
       .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>()
+        AndroidFlutterLocalNotificationsPlugin
+      >()
       ?.createNotificationChannel(channel);
 
   // HANDLE BACKGROUND NOTIF
@@ -79,8 +79,7 @@ class SplashPage extends StatefulWidget {
   State<SplashPage> createState() => _SplashPageState();
 }
 
-class _SplashPageState extends State<SplashPage>
-    with TickerProviderStateMixin {
+class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
   // Controllers
   late AnimationController _logoController;
   late AnimationController _textController;
@@ -111,17 +110,17 @@ class _SplashPageState extends State<SplashPage>
   void initState() {
     super.initState();
 
-    // 🔥 INIT NOTIFIKASI
+    //  INIT NOTIFIKASI
     setupFCM();
 
-    // 🔥 WAJIB: Biar notif muncul saat app terbuka (kayak WA)
+    // WAJIB: Biar notif muncul saat app terbuka (kayak WA)
     FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
       alert: true,
       badge: true,
       sound: true,
     );
 
-    // 🔥 LISTENER SAAT APP DIBUKA
+    // LISTENER SAAT APP DIBUKA
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       print("Notif masuk: ${message.notification?.title}");
       RemoteNotification? notification = message.notification;
@@ -164,24 +163,24 @@ class _SplashPageState extends State<SplashPage>
     _logoScale = Tween<double>(begin: 0.7, end: 1.0).animate(
       CurvedAnimation(parent: _logoController, curve: Curves.easeOutBack),
     );
-    _logoFade = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _logoController, curve: Curves.easeIn),
-    );
+    _logoFade = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _logoController, curve: Curves.easeIn));
 
     // Brand name: fade + slide up
     _textController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 700),
     );
-    _textFade = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _textController, curve: Curves.easeIn),
-    );
+    _textFade = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _textController, curve: Curves.easeIn));
     _textSlide = Tween<Offset>(
       begin: const Offset(0, 0.3),
       end: Offset.zero,
-    ).animate(
-      CurvedAnimation(parent: _textController, curve: Curves.easeOut),
-    );
+    ).animate(CurvedAnimation(parent: _textController, curve: Curves.easeOut));
 
     // Tagline: fade in after text
     _taglineController = AnimationController(
@@ -241,7 +240,10 @@ class _SplashPageState extends State<SplashPage>
               height: 4,
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Color.fromARGB(255, 255, 255, 255), Color.fromARGB(255, 255, 255, 255)],
+                  colors: [
+                    Color.fromARGB(255, 255, 255, 255),
+                    Color.fromARGB(255, 255, 255, 255),
+                  ],
                 ),
               ),
             ),
@@ -256,7 +258,7 @@ class _SplashPageState extends State<SplashPage>
               height: 260,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color.fromARGB(255, 245, 2, 2).withOpacity(0.05),
+                color: const Color.fromARGB(255, 0, 0, 0).withOpacity(0.05),
               ),
             ),
           ),
@@ -270,7 +272,7 @@ class _SplashPageState extends State<SplashPage>
               height: 200,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color.fromARGB(255, 225, 18, 18).withOpacity(0.07),
+                color: const Color.fromARGB(255, 0, 0, 0).withOpacity(0.07),
               ),
             ),
           ),
@@ -285,16 +287,13 @@ class _SplashPageState extends State<SplashPage>
                   scale: _logoScale,
                   child: FadeTransition(
                     opacity: _logoFade,
-                    child: Image.asset(
-                      'assets/images/logo.png',
-                      width: 140,
-                    ),
+                    child: Image.asset('assets/images/logo.png', width: 140),
                   ),
                 ),
 
                 const SizedBox(height: 32),
 
-               // Brand name: "88" bold + "Trans" light — mirip tacoscafe style
+                // Brand name: "88" bold + "Trans" light — mirip tacoscafe style
                 FadeTransition(
                   opacity: _textFade,
                   child: SlideTransition(
@@ -325,7 +324,7 @@ class _SplashPageState extends State<SplashPage>
                     ),
                   ),
                 ),
- 
+
                 const SizedBox(height: 8),
 
                 // Tagline
@@ -378,20 +377,22 @@ class _SplashPageState extends State<SplashPage>
                           animation: _dotController,
                           builder: (_, __) {
                             // stagger dots
-                            double opacity = (_dotController.value +
-                                        (i * 0.33)) %
-                                    1.0;
+                            double opacity =
+                                (_dotController.value + (i * 0.33)) % 1.0;
                             if (opacity > 0.5) opacity = 1.0 - opacity;
                             opacity = 0.3 + (opacity * 1.4).clamp(0.0, 0.7);
                             return Container(
-                              margin:
-                                  const EdgeInsets.symmetric(horizontal: 4),
+                              margin: const EdgeInsets.symmetric(horizontal: 4),
                               width: 6,
                               height: 6,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: const Color.fromARGB(255, 211, 18, 8)
-                                    .withOpacity(opacity),
+                                color: const Color.fromARGB(
+                                  255,
+                                  211,
+                                  18,
+                                  8,
+                                ).withOpacity(opacity),
                               ),
                             );
                           },
@@ -422,7 +423,10 @@ class _SplashPageState extends State<SplashPage>
               height: 4,
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Color.fromARGB(255, 255, 255, 255), Color.fromARGB(255, 255, 255, 255)],
+                  colors: [
+                    Color.fromARGB(255, 255, 255, 255),
+                    Color.fromARGB(255, 255, 255, 255),
+                  ],
                 ),
               ),
             ),
