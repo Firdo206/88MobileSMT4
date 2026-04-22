@@ -8,11 +8,15 @@ import '../payment/payment_page.dart' as other;
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:pdf/pdf.dart';
+import 'dart:convert';
+import 'package:qr_flutter/qr_flutter.dart';
+import 'package:flutter/rendering.dart';
+import 'dart:ui' as ui;
+import 'dart:typed_data';
 
 class DetailPesananPage extends StatelessWidget {
   final Map data;
   final String type;
-
   const DetailPesananPage({
     super.key,
     required this.data,
@@ -211,6 +215,47 @@ class DetailPesananPage extends StatelessWidget {
 
             const SizedBox(height: 32),
           ],
+        ),
+      ),
+
+      // ===== TOMBOL DOWNLOAD E-TIKET DI BAWAH (STICKY) =====
+      // Hanya muncul jika status paid atau completed
+      bottomNavigationBar: (statusFinal == "paid" || statusFinal == "completed")
+          ? _buildBottomDownloadBar(context)
+          : null,
+    );
+  }
+
+  /// ================= STICKY BOTTOM DOWNLOAD BAR =================
+  Widget _buildBottomDownloadBar(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 16,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
+      child: SizedBox(
+        width: double.infinity,
+        child: ElevatedButton.icon(
+          onPressed: () async => await generateTicketPdf(),
+          icon: const Icon(Icons.download_rounded, size: 20),
+          label: const Text(
+            "Download E-Tiket",
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF1976D2),
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 15),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            elevation: 2,
+          ),
         ),
       ),
     );
@@ -786,31 +831,14 @@ class DetailPesananPage extends StatelessWidget {
       );
     }
 
+    // Status paid: tidak ada tombol di body (tombol download ada di bottom bar)
     if (statusFinal == "paid") {
-      final dateStr = data["departure_date"] ?? data["travel_date"] ?? data["end_date"];
-      final tripDate = DateTime.tryParse(dateStr ?? "");
-      final isDone = tripDate != null && DateTime.now().isAfter(tripDate);
-
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: _primaryButton(
-          text: "Pesanan Selesai",
-          icon: Icons.check_circle_outline_rounded,
-          onTap: isDone ? () async => await finishOrder(context) : null,
-        ),
-      );
+      return const SizedBox();
     }
 
+    // Status completed: tidak ada tombol di body (tombol download ada di bottom bar)
     if (statusFinal == "completed") {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: _primaryButton(
-          text: "Download E-Tiket",
-          icon: Icons.download_rounded,
-          color: const Color(0xFF1976D2),
-          onTap: () async => await generateTicketPdf(),
-        ),
-      );
+      return const SizedBox();
     }
 
     return const SizedBox();
@@ -1101,105 +1129,191 @@ class DetailPesananPage extends StatelessWidget {
     );
   }
 
+  /// ================= QR CODE HELPER =================
+  Future<Uint8List> _generateQrBytes(String qrData) async {
+    final qrPainter = QrPainter(
+      data: qrData,
+      version: QrVersions.auto,
+      gapless: true,
+      color: const Color(0xFF000000),
+      emptyColor: const Color(0xFFFFFFFF),
+    );
+
+    final imageData = await qrPainter.toImageData(200);
+    return imageData!.buffer.asUint8List();
+  }
+
   /// ================= Download PDF =================
   Future<void> generateTicketPdf() async {
     final pdf = pw.Document();
     final price = getPrice();
+    final bookingCode = data["booking_code"] ?? data["rental_code"] ?? "UNKNOWN";
+
+    final qrData = jsonEncode({
+      "code": bookingCode,
+      "type": type,
+      "name": displayName,
+      "phone": displayPhone,
+      "price": price,
+      "status": statusFinal,
+    });
+
+    final qrBytes = await _generateQrBytes(qrData);
+    final qrPdfImage = pw.MemoryImage(qrBytes);
 
     pdf.addPage(
       pw.Page(
         pageFormat: PdfPageFormat.a4,
         build: (context) {
           return pw.Padding(
-            padding: const pw.EdgeInsets.all(20),
-            child: pw.Stack(
+            padding: const pw.EdgeInsets.all(28),
+            child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
 
-                pw.Column(
+                pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        pw.Text(
+                          "BUS 88",
+                          style: pw.TextStyle(
+                            fontSize: 24,
+                            fontWeight: pw.FontWeight.bold,
+                          ),
+                        ),
+                        pw.Text(
+                          "E-TIKET RESMI",
+                          style: pw.TextStyle(fontSize: 11, color: PdfColors.grey600),
+                        ),
+                      ],
+                    ),
+                    pw.Container(
+                      padding: const pw.EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                      decoration: pw.BoxDecoration(
+                        color: PdfColors.green50,
+                        border: pw.Border.all(color: PdfColors.green700, width: 1.5),
+                        borderRadius: pw.BorderRadius.circular(8),
+                      ),
+                      child: pw.Text(
+                        "✓  LUNAS",
+                        style: pw.TextStyle(
+                          color: PdfColors.green900,
+                          fontWeight: pw.FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                pw.SizedBox(height: 6),
+                pw.Divider(color: PdfColors.grey300),
+                pw.SizedBox(height: 10),
+
+                pw.Text(
+                  "Kode Pesanan: $bookingCode",
+                  style: pw.TextStyle(
+                    fontSize: 13,
+                    fontWeight: pw.FontWeight.bold,
+                    letterSpacing: 1,
+                  ),
+                ),
+
+                pw.SizedBox(height: 16),
+
+                pw.Row(
                   crossAxisAlignment: pw.CrossAxisAlignment.start,
                   children: [
 
-                    pw.Text(
-                      "E-TIKET BUS 88",
-                      style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold),
+                    pw.Expanded(
+                      flex: 3,
+                      child: pw.Column(
+                        crossAxisAlignment: pw.CrossAxisAlignment.start,
+                        children: [
+
+                          _pdfSection("Detail Perjalanan", [
+                            if (type == "ticket") ...[
+                              _pdfRow("Rute", "${data["origin"]} -> ${data["destination"]}"),
+                              _pdfRow("Tanggal", data["departure_date"] ?? "-"),
+                              _pdfRow("Berangkat", data["departure_time"] ?? "-"),
+                              _pdfRow("Tiba", data["arrival_time"] ?? "-"),
+                              _pdfRow("Bus", data["bus_name"] ?? "-"),
+                            ],
+                            if (type == "bus") ...[
+                              _pdfRow("Penjemputan", data["pickup_location"] ?? "-"),
+                              _pdfRow("Tujuan", data["destination"] ?? "-"),
+                              _pdfRow("Tanggal", "${data["start_date"]} - ${data["end_date"]}"),
+                              _pdfRow("Durasi", "${data["duration_days"]} hari"),
+                              _pdfRow("Penumpang", "${data["passenger_count"]} orang"),
+                            ],
+                            if (type == "tour") ...[
+                              _pdfRow("Paket", data["package_name"] ?? "-"),
+                              _pdfRow("Tanggal", data["travel_date"] ?? "-"),
+                              _pdfRow("Durasi", "${data["duration_days"]} hari"),
+                              _pdfRow("Penumpang", "${data["passenger_count"]} orang"),
+                            ],
+                          ]),
+
+                          pw.SizedBox(height: 14),
+
+                          _pdfSection("Data Pemesan", [
+                            _pdfRow("Nama", displayName),
+                            _pdfRow("Telepon", displayPhone),
+                            _pdfRow("Email", displayEmail),
+                          ]),
+
+                          pw.SizedBox(height: 14),
+
+                          _pdfSection("Pembayaran", [
+                            _pdfRow("Metode", data["payment_method"] ?? "Transfer"),
+                            _pdfRow("Total", "Rp ${rupiah(price)}"),
+                          ]),
+                        ],
+                      ),
                     ),
 
-                    pw.SizedBox(height: 10),
+                    pw.SizedBox(width: 20),
 
-                    pw.Text("Kode: ${data["booking_code"] ?? data["rental_code"] ?? "-"}"),
-
-                    pw.Divider(),
-
-                    pw.Text("Detail Perjalanan", style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-
-                    pw.SizedBox(height: 10),
-
-                    if (type == "ticket") ...[
-                      pw.Text("${data["origin"]} → ${data["destination"]}"),
-                      pw.Text("Tanggal: ${data["departure_date"]}"),
-                      pw.Text("Jam: ${data["departure_time"]} - ${data["arrival_time"]}"),
-                    ],
-
-                    if (type == "bus") ...[
-                      pw.Text("${data["pickup_location"]} → ${data["destination"]}"),
-                      pw.Text("Tanggal: ${data["start_date"]} - ${data["end_date"]}"),
-                      pw.Text("Durasi: ${data["duration_days"]} hari"),
-                    ],
-
-                    if (type == "tour") ...[
-                      pw.Text("${data["package_name"]}"),
-                      pw.Text("Tanggal: ${data["travel_date"]}"),
-                      pw.Text("Durasi: ${data["duration_days"]} hari"),
-                    ],
-
-                    pw.SizedBox(height: 20),
-
-                    pw.Text("Data Diri", style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-
-                    pw.SizedBox(height: 10),
-
-                    pw.Text("Nama: $displayName"),
-                    pw.Text("Telp: $displayPhone"),
-                    pw.Text("Email: $displayEmail"),
-
-                    pw.SizedBox(height: 20),
-
-                    pw.Text("Pembayaran", style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-
-                    pw.SizedBox(height: 10),
-
-                    pw.Table(
-                      border: pw.TableBorder.all(),
+                    pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.center,
                       children: [
-                        pw.TableRow(children: [_cell("Metode"), _cell(data["payment_method"] ?? "Transfer")]),
-                        pw.TableRow(children: [_cell("Harga"), _cell("Rp ${rupiah(price)}")]),
-                        pw.TableRow(children: [_cell("Total"), _cell("Rp ${rupiah(price)}")]),
+                        pw.Container(
+                          padding: const pw.EdgeInsets.all(10),
+                          decoration: pw.BoxDecoration(
+                            border: pw.Border.all(color: PdfColors.grey300),
+                            borderRadius: pw.BorderRadius.circular(8),
+                          ),
+                          child: pw.Image(qrPdfImage, width: 130, height: 130),
+                        ),
+                        pw.SizedBox(height: 6),
+                        pw.Text(
+                          "Scan untuk verifikasi",
+                          style: pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
+                        ),
+                        pw.SizedBox(height: 4),
+                        pw.Text(
+                          bookingCode,
+                          style: pw.TextStyle(
+                            fontSize: 9,
+                            fontWeight: pw.FontWeight.bold,
+                            letterSpacing: 1,
+                          ),
+                        ),
                       ],
                     ),
                   ],
                 ),
 
-                pw.Positioned(
-                  bottom: 40,
-                  right: 20,
-                  child: pw.Transform.rotate(
-                    angle: -0.3,
-                    child: pw.Container(
-                      padding: const pw.EdgeInsets.all(20),
-                      decoration: pw.BoxDecoration(
-                        border: pw.Border.all(color: PdfColors.green, width: 3),
-                        shape: pw.BoxShape.circle,
-                      ),
-                      child: pw.Text(
-                        "LUNAS",
-                        style: pw.TextStyle(
-                          color: PdfColors.green,
-                          fontSize: 24,
-                          fontWeight: pw.FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
+                pw.Spacer(),
+
+                pw.Divider(color: PdfColors.grey300),
+                pw.SizedBox(height: 6),
+                pw.Text(
+                  "Dokumen ini digenerate otomatis oleh sistem Bus 88. Harap tunjukkan e-tiket ini kepada petugas.",
+                  style: pw.TextStyle(fontSize: 9, color: PdfColors.grey500),
                 ),
               ],
             ),
@@ -1209,6 +1323,45 @@ class DetailPesananPage extends StatelessWidget {
     );
 
     await Printing.layoutPdf(onLayout: (format) async => pdf.save());
+  }
+
+  pw.Widget _pdfSection(String title, List<pw.Widget> rows) {
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        pw.Text(
+          title,
+          style: pw.TextStyle(
+            fontWeight: pw.FontWeight.bold,
+            fontSize: 11,
+            color: PdfColors.red900,
+          ),
+        ),
+        pw.SizedBox(height: 5),
+        pw.Container(
+          padding: const pw.EdgeInsets.all(10),
+          decoration: pw.BoxDecoration(
+            color: PdfColors.grey50,
+            borderRadius: pw.BorderRadius.circular(6),
+            border: pw.Border.all(color: PdfColors.grey200),
+          ),
+          child: pw.Column(children: rows),
+        ),
+      ],
+    );
+  }
+
+  pw.Widget _pdfRow(String label, String value) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.symmetric(vertical: 3),
+      child: pw.Row(
+        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+        children: [
+          pw.Text(label, style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
+          pw.Text(value, style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
+        ],
+      ),
+    );
   }
 
   pw.Widget _cell(String text) {

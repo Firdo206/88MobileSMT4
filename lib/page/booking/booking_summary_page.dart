@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../utils/app_color.dart';
-import '../../models/promo_model.dart'; // 👈 TAMBAH
+import '../../models/promo_model.dart'; 
 import '../../services/booking_paket_service.dart';
 import '../payment/payment_page.dart';
 
@@ -11,7 +11,7 @@ class BookingSummaryPage extends StatelessWidget {
   final int jumlah;
   final double total;
   final String notes;
-  final Promo? promo; // 👈 TAMBAH
+  final Promo? promo; 
 
   const BookingSummaryPage({
     super.key,
@@ -20,7 +20,7 @@ class BookingSummaryPage extends StatelessWidget {
     required this.jumlah,
     required this.total,
     required this.notes,
-    this.promo, // 👈 TAMBAH
+    this.promo, 
   });
 
   String formatDate(DateTime d) {
