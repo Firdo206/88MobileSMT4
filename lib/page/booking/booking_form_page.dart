@@ -19,14 +19,27 @@ class BookingFormPage extends StatefulWidget {
 
 class _BookingFormPageState extends State<BookingFormPage> {
   DateTime? selectedDate;
-  final TextEditingController jumlahController = TextEditingController(text: "1");
+  final TextEditingController jumlahController = TextEditingController(
+    text: "1",
+  );
   final TextEditingController catatanController = TextEditingController();
 
   /// FORMAT DATE
   String formatDate(DateTime date) {
     const months = [
-      '', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
-      'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'
+      '',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'Mei',
+      'Jun',
+      'Jul',
+      'Ags',
+      'Sep',
+      'Okt',
+      'Nov',
+      'Des',
     ];
     return "${date.day} ${months[date.month]} ${date.year}";
   }
@@ -80,7 +93,6 @@ class _BookingFormPageState extends State<BookingFormPage> {
 
       body: CustomScrollView(
         slivers: [
-
           /// 🔥 SLIVER APP BAR
           SliverAppBar(
             expandedHeight: 180,
@@ -133,7 +145,10 @@ class _BookingFormPageState extends State<BookingFormPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(20),
@@ -160,10 +175,7 @@ class _BookingFormPageState extends State<BookingFormPage> {
                         const SizedBox(height: 4),
                         const Text(
                           "Lengkapi data perjalanan anda",
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 13,
-                          ),
+                          style: TextStyle(color: Colors.white70, fontSize: 13),
                         ),
                       ],
                     ),
@@ -178,7 +190,6 @@ class _BookingFormPageState extends State<BookingFormPage> {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-
                   /// 🔥 CARD TANGGAL
                   _sectionCard(
                     icon: Icons.calendar_month_rounded,
@@ -188,7 +199,10 @@ class _BookingFormPageState extends State<BookingFormPage> {
                       onTap: pickDate,
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 200),
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 16,
+                        ),
                         decoration: BoxDecoration(
                           color: selectedDate != null
                               ? const Color(0xFF8B2E2E).withOpacity(0.06)
@@ -365,16 +379,23 @@ class _BookingFormPageState extends State<BookingFormPage> {
                         }
 
                         int jumlah = int.parse(jumlahController.text);
-                        double harga = double.parse(widget.data['price_per_person'].toString());
+                        double harga = double.parse(
+                          widget.data['price_per_person'].toString(),
+                        );
 
                         // 🔥 FIX - hasil ternary sekarang di-assign ke discount
                         double discount = 0;
                         if (widget.promo != null) {
-                          discount = widget.promo!.discountType.trim().toLowerCase() == 'percentage'
+                          discount =
+                              widget.promo!.discountType.trim().toLowerCase() ==
+                                  'percentage'
                               ? harga * (widget.promo!.discountValue / 100)
                               : widget.promo!.discountValue;
                         }
-                        double hargaFinal = (harga - discount).clamp(0, double.infinity);
+                        double hargaFinal = (harga - discount).clamp(
+                          0,
+                          double.infinity,
+                        );
                         double total = jumlah * hargaFinal;
 
                         Navigator.push(
@@ -403,7 +424,11 @@ class _BookingFormPageState extends State<BookingFormPage> {
                             ),
                           ),
                           SizedBox(width: 8),
-                          Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 20),
+                          Icon(
+                            Icons.arrow_forward_rounded,
+                            color: Colors.white,
+                            size: 20,
+                          ),
                         ],
                       ),
                     ),
@@ -466,9 +491,12 @@ class _BookingFormPageState extends State<BookingFormPage> {
                 const SizedBox(width: 4),
                 const Text(
                   "*",
-                  style: TextStyle(color: Color(0xFF8B2E2E), fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    color: Color(0xFF8B2E2E),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ]
+              ],
             ],
           ),
           const SizedBox(height: 14),
