@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import '../../utils/app_color.dart';
 import '../../models/promo_model.dart'; // 👈 TAMBAH
 import 'booking_summary_page.dart';
+import 'widgets/map_picker_page.dart'; // 👈 TAMBAH
 
 class BookingFormPage extends StatefulWidget {
   final dynamic data;
@@ -23,6 +26,10 @@ class _BookingFormPageState extends State<BookingFormPage> {
     text: "1",
   );
   final TextEditingController catatanController = TextEditingController();
+
+  // 👇 TAMBAH - untuk maps
+  LatLng? selectedLocation;
+  String? selectedAddress;
 
   /// FORMAT DATE
   String formatDate(DateTime date) {
@@ -83,6 +90,24 @@ class _BookingFormPageState extends State<BookingFormPage> {
     int val = int.tryParse(jumlahController.text) ?? 1;
     if (val > 1) {
       setState(() => jumlahController.text = (val - 1).toString());
+    }
+  }
+
+  // 👇 TAMBAH - buka halaman map picker
+  Future<void> _openMapPicker() async {
+    final result = await Navigator.push<Map<String, dynamic>>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => MapPickerPage(initialLocation: selectedLocation),
+      ),
+    );
+
+    if (result != null) {
+      setState(() {
+        selectedLocation = LatLng(result['lat'], result['lon']);
+        selectedAddress = result['address'];
+        catatanController.text = result['address'];
+      });
     }
   }
 
@@ -319,40 +344,147 @@ class _BookingFormPageState extends State<BookingFormPage> {
 
                   const SizedBox(height: 14),
 
-                  /// 🔥 CARD CATATAN
+                  /// 🔥 CARD LOKASI PENJEMPUTAN (MAPS)
                   _sectionCard(
-                    icon: Icons.edit_note_rounded,
-                    title: "Alamat Penjemputan / Catatan",
+                    icon: Icons.location_on_rounded,
+                    title: "Lokasi Penjemputan",
                     required: false,
-                    child: TextField(
-                      controller: catatanController,
-                      maxLines: 4,
-                      style: const TextStyle(fontSize: 14),
-                      decoration: InputDecoration(
-                        hintText: "Misal: Jemput di hotel Aston Seminyak",
-                        hintStyle: TextStyle(
-                          color: Colors.grey.shade400,
-                          fontSize: 13,
-                        ),
-                        filled: true,
-                        fillColor: const Color(0xFFF8F8F8),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.grey.shade200),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.grey.shade200),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFF8B2E2E),
-                            width: 1.5,
+                    child: Column(
+                      children: [
+                        // Tombol buka map picker
+                        GestureDetector(
+                          onTap: _openMapPicker,
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 14,
+                            ),
+                            decoration: BoxDecoration(
+                              color: selectedLocation != null
+                                  ? const Color(0xFF8B2E2E).withOpacity(0.06)
+                                  : const Color(0xFFF8F8F8),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: selectedLocation != null
+                                    ? const Color(0xFF8B2E2E).withOpacity(0.4)
+                                    : Colors.grey.shade200,
+                                width: 1.5,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.map_rounded,
+                                  color: selectedLocation != null
+                                      ? const Color(0xFF8B2E2E)
+                                      : Colors.grey,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    selectedAddress ?? "Pilih lokasi di peta",
+                                    style: TextStyle(
+                                      color: selectedLocation != null
+                                          ? const Color(0xFF8B2E2E)
+                                          : Colors.grey,
+                                      fontWeight: selectedLocation != null
+                                          ? FontWeight.w600
+                                          : FontWeight.normal,
+                                      fontSize: 13,
+                                    ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                Icon(
+                                  Icons.chevron_right_rounded,
+                                  color: Colors.grey.shade400,
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                        contentPadding: const EdgeInsets.all(14),
-                      ),
+
+                        // Preview mini map setelah lokasi dipilih
+                        if (selectedLocation != null) ...[
+                          const SizedBox(height: 10),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: SizedBox(
+                              height: 140,
+                              child: FlutterMap(
+                                options: MapOptions(
+                                  initialCenter: selectedLocation!,
+                                  initialZoom: 15,
+                                  interactionOptions:
+                                      const InteractionOptions(
+                                    flags: InteractiveFlag.none,
+                                  ),
+                                ),
+                                children: [
+                                  TileLayer(
+                                    urlTemplate:
+                                        'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                                    userAgentPackageName:
+                                        'com.example.app88trans',
+                                  ),
+                                  MarkerLayer(
+                                    markers: [
+                                      Marker(
+                                        point: selectedLocation!,
+                                        width: 40,
+                                        height: 40,
+                                        child: const Icon(
+                                          Icons.location_pin,
+                                          color: Color(0xFF8B2E2E),
+                                          size: 40,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+
+                        // Catatan tambahan
+                        const SizedBox(height: 10),
+                        TextField(
+                          controller: catatanController,
+                          maxLines: 2,
+                          style: const TextStyle(fontSize: 13),
+                          decoration: InputDecoration(
+                            hintText: "Catatan tambahan (opsional)",
+                            hintStyle: TextStyle(
+                              color: Colors.grey.shade400,
+                              fontSize: 13,
+                            ),
+                            filled: true,
+                            fillColor: const Color(0xFFF8F8F8),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide:
+                                  BorderSide(color: Colors.grey.shade200),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide:
+                                  BorderSide(color: Colors.grey.shade200),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(
+                                color: Color(0xFF8B2E2E),
+                                width: 1.5,
+                              ),
+                            ),
+                            contentPadding: const EdgeInsets.all(12),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
 

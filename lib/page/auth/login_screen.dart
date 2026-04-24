@@ -305,8 +305,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFFCC1F1F),
-                          disabledBackgroundColor:
-                              const Color(0xFFCC1F1F).withOpacity(0.6),
+                          disabledBackgroundColor: const Color(
+                            0xFFCC1F1F,
+                          ).withOpacity(0.6),
                           foregroundColor: Colors.white,
                           elevation: 0,
                           shape: RoundedRectangleBorder(
@@ -825,7 +826,10 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: const Text.rich(
                           TextSpan(
                             text: "Belum punya akun? ",
-                            style: TextStyle(color: Colors.black45, fontSize: 14),
+                            style: TextStyle(
+                              color: Colors.black45,
+                              fontSize: 14,
+                            ),
                             children: [
                               TextSpan(
                                 text: "Buat akun",
