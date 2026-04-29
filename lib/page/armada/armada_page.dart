@@ -7,6 +7,9 @@ import '../../utils/app_color.dart';
 import 'dart:convert';
 import '../navigation/main_page.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+import '../booking/widgets/map_picker_page.dart';
 
 class ArmadaPage extends StatefulWidget {
   const ArmadaPage({super.key});
@@ -25,6 +28,9 @@ class _ArmadaPageState extends State<ArmadaPage> {
 
   DateTime? startDate;
   DateTime? endDate;
+
+  LatLng? pickupLocation;
+  LatLng? destinationLocation;
 
   bool isLoading = false;
 
@@ -78,6 +84,29 @@ class _ArmadaPageState extends State<ArmadaPage> {
           startDate = picked;
         else
           endDate = picked;
+      });
+    }
+  }
+
+  Future<void> _openMapPicker(bool isPickup) async {
+    final result = await Navigator.push<Map<String, dynamic>>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => MapPickerPage(
+          initialLocation: isPickup ? pickupLocation : destinationLocation,
+        ),
+      ),
+    );
+
+    if (result != null) {
+      setState(() {
+        if (isPickup) {
+          pickupLocation = LatLng(result['lat'], result['lon']);
+          pickupController.text = result['address'];
+        } else {
+          destinationLocation = LatLng(result['lat'], result['lon']);
+          destinationController.text = result['address'];
+        }
       });
     }
   }
@@ -424,20 +453,44 @@ class _ArmadaPageState extends State<ArmadaPage> {
                                       Expanded(
                                         child: _inputBox(
                                           controller: pickupController,
-                                          hint: "Contoh: Hotel Grand, Jkt",
+                                          hint: "Pilih di peta",
                                           icon: Icons.location_on_outlined,
+                                          readOnly: true,
+                                          onTap: () => _openMapPicker(true),
                                         ),
                                       ),
                                       const SizedBox(width: 12),
                                       Expanded(
                                         child: _inputBox(
                                           controller: destinationController,
-                                          hint: "Contoh: Bandung",
+                                          hint: "Pilih di peta",
                                           icon: Icons.flag_outlined,
+                                          readOnly: true,
+                                          onTap: () => _openMapPicker(false),
                                         ),
                                       ),
                                     ],
                                   ),
+                                  if (pickupLocation != null || destinationLocation != null)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 12),
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            child: pickupLocation != null
+                                                ? _miniMap(pickupLocation!)
+                                                : const SizedBox.shrink(),
+                                          ),
+                                          if (pickupLocation != null && destinationLocation != null)
+                                            const SizedBox(width: 12),
+                                          Expanded(
+                                            child: destinationLocation != null
+                                                ? _miniMap(destinationLocation!)
+                                                : const SizedBox.shrink(),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
 
                                   const SizedBox(height: 18),
 
@@ -753,6 +806,8 @@ class _ArmadaPageState extends State<ArmadaPage> {
     required IconData icon,
     TextInputType keyboardType = TextInputType.text,
     List<TextInputFormatter>? inputFormatters,
+    bool readOnly = false,
+    VoidCallback? onTap,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -764,6 +819,8 @@ class _ArmadaPageState extends State<ArmadaPage> {
         controller: controller,
         keyboardType: keyboardType,
         inputFormatters: inputFormatters,
+        readOnly: readOnly,
+        onTap: onTap,
         style: const TextStyle(fontSize: 13, color: kText),
         decoration: InputDecoration(
           hintText: hint,
@@ -780,6 +837,44 @@ class _ArmadaPageState extends State<ArmadaPage> {
             horizontal: 4,
           ),
           isDense: true,
+        ),
+      ),
+    );
+  }
+
+  Widget _miniMap(LatLng location) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(10),
+      child: SizedBox(
+        height: 120,
+        child: FlutterMap(
+          options: MapOptions(
+            initialCenter: location,
+            initialZoom: 15,
+            interactionOptions: const InteractionOptions(
+              flags: InteractiveFlag.none,
+            ),
+          ),
+          children: [
+            TileLayer(
+              urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+              userAgentPackageName: 'com.example.app88trans',
+            ),
+            MarkerLayer(
+              markers: [
+                Marker(
+                  point: location,
+                  width: 30,
+                  height: 30,
+                  child: const Icon(
+                    Icons.location_pin,
+                    color: kRed,
+                    size: 30,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
