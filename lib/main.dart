@@ -41,12 +41,8 @@ void main() async {
     importance: Importance.high,
   );
 
-  await flutterLocalNotificationsPlugin
-      .resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin
-      >()
-      ?.createNotificationChannel(channel);
-
+  await flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()?.createNotificationChannel(channel);
+  
   // HANDLE BACKGROUND NOTIF
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
@@ -106,11 +102,26 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
     }
   }
 
+  // 🆕 HANDLE KLIK NOTIF — navigasi sesuai tipe
+  void _handleNotifClick(Map<String, dynamic> data) {
+    if (!mounted) return;
+    if (data['type'] == 'flash_sale') {
+      print("Buka halaman flash sale ID: ${data['id']}");
+      // Navigator.push(context, MaterialPageRoute(builder: (_) => PromoPage()));
+    } else if (data['type'] == 'booking') {
+      print("Buka halaman booking");
+      // Navigator.push(context, MaterialPageRoute(builder: (_) => BookingPage()));
+    } else if (data['type'] == 'tour') {
+      print("Buka halaman tour");
+      // Navigator.push(context, MaterialPageRoute(builder: (_) => TourPage()));
+    }
+  }
+
   @override
   void initState() {
     super.initState();
 
-    //  INIT NOTIFIKASI
+    // INIT NOTIFIKASI
     setupFCM();
 
     // WAJIB: Biar notif muncul saat app terbuka (kayak WA)
@@ -120,14 +131,14 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
       sound: true,
     );
 
-    // LISTENER SAAT APP DIBUKA
+    // LISTENER SAAT APP DIBUKA (FOREGROUND)
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       print("Notif masuk: ${message.notification?.title}");
       RemoteNotification? notification = message.notification;
       AndroidNotification? android = message.notification?.android;
       if (notification != null && android != null) {
         flutterLocalNotificationsPlugin.show(
-          0,
+          message.hashCode, // 🆕 pakai hashCode biar notif tidak saling override
           notification.title,
           notification.body,
           const NotificationDetails(
@@ -141,6 +152,11 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
           ),
         );
       }
+
+      // 🆕 Handle tipe flash_sale saat app terbuka
+      if (message.data['type'] == 'flash_sale') {
+        print("Ada flash sale baru! ID: ${message.data['id']}");
+      }
     });
 
     // 🔥 FIX TOKEN SELALU UPDATE
@@ -150,6 +166,20 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
       int? userId = prefs.getInt("user_id");
       if (userId != null) {
         await NotificationService.saveFcmToken(userId);
+      }
+    });
+
+    // 🆕 SAAT NOTIF DIKLIK & APP DI BACKGROUND
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      print("Notif diklik dari background: ${message.data}");
+      _handleNotifClick(message.data);
+    });
+
+    // 🆕 SAAT NOTIF DIKLIK & APP MATI (TERMINATED)
+    FirebaseMessaging.instance.getInitialMessage().then((RemoteMessage? message) {
+      if (message != null) {
+        print("Notif diklik dari terminated: ${message.data}");
+        _handleNotifClick(message.data);
       }
     });
 
@@ -205,7 +235,7 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
       });
     });
 
-    // Navigate after 3 seconds
+    // Navigate after 5 seconds
     Timer(const Duration(seconds: 5), () {
       if (mounted) {
         Navigator.pushReplacement(
