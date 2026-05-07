@@ -15,8 +15,8 @@ class PaketWisataPage extends StatefulWidget {
 class _PaketWisataPageState extends State<PaketWisataPage> {
   late Future<List<dynamic>> tours;
 
-  static const Color _primary = Color(0xFF8B2E2E);
-  static const Color _primaryLight = Color(0xFFB84545);
+  static const Color _primary      = Color(0xFF6B0000);
+  static const Color _primaryLight = Color(0xFFCC2222);
 
   @override
   void initState() {
@@ -27,36 +27,43 @@ class _PaketWisataPageState extends State<PaketWisataPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColor.background,
-
+      backgroundColor: const Color(0xFFF7F3F0),
       body: CustomScrollView(
         slivers: [
 
-          /// ===== SLIVER APP BAR =====
+          // ── SLIVER APP BAR ──────────────────────────────────────
           SliverAppBar(
-            expandedHeight: 180,
+            expandedHeight: 200,
             pinned: true,
             backgroundColor: _primary,
             elevation: 0,
+            iconTheme: const IconThemeData(color: Colors.white),
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
                 decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [_primary, _primaryLight],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+                  color: _primary,
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(32),
+                    bottomRight: Radius.circular(32),
                   ),
                 ),
                 child: Stack(
                   children: [
-
-                    /// Dekorasi lingkaran background
+                    // Dekorasi lingkaran
                     Positioned(
-                      top: -30,
-                      right: -30,
+                      top: -30, right: -20,
                       child: Container(
-                        width: 160,
-                        height: 160,
+                        width: 160, height: 160,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withOpacity(0.05),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      top: 40, right: 30,
+                      child: Container(
+                        width: 80, height: 80,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: Colors.white.withOpacity(0.07),
@@ -64,38 +71,64 @@ class _PaketWisataPageState extends State<PaketWisataPage> {
                       ),
                     ),
                     Positioned(
-                      bottom: -20,
-                      left: -20,
+                      bottom: -20, left: -20,
                       child: Container(
-                        width: 120,
-                        height: 120,
+                        width: 120, height: 120,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Colors.white.withOpacity(0.05),
+                          color: Colors.white.withOpacity(0.04),
                         ),
                       ),
                     ),
 
-                    /// Teks header
+                    // Konten header
                     Positioned(
-                      bottom: 24,
-                      left: 20,
+                      bottom: 36,
+                      left: 24,
+                      right: 24,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
-                          Text(
+                        children: [
+                          // Icon + label kecil
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.travel_explore_rounded,
+                                    color: Colors.white, size: 13),
+                                const SizedBox(width: 5),
+                                Text(
+                                  'Jelajahi Destinasi',
+                                  style: TextStyle(
+                                    color: Colors.white.withOpacity(0.9),
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          const Text(
                             "Paket Wisata",
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
+                              fontSize: 26,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.3,
                             ),
                           ),
-                          SizedBox(height: 4),
+                          const SizedBox(height: 4),
                           Text(
                             "Temukan perjalanan impianmu 🌴",
                             style: TextStyle(
-                              color: Colors.white70,
+                              color: Colors.white.withOpacity(0.75),
                               fontSize: 13,
                             ),
                           ),
@@ -106,27 +139,25 @@ class _PaketWisataPageState extends State<PaketWisataPage> {
                 ),
               ),
             ),
-
-            /// Title saat di-scroll (collapsed)
             title: const Text(
               "Paket Wisata",
               style: TextStyle(
                 color: Colors.white,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w800,
                 fontSize: 16,
               ),
             ),
             centerTitle: true,
           ),
 
-          /// ===== SEARCH BAR =====
+          // ── SEARCH BAR ─────────────────────────────────────────
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
               child: Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.06),
@@ -138,75 +169,107 @@ class _PaketWisataPageState extends State<PaketWisataPage> {
                 child: TextField(
                   decoration: InputDecoration(
                     hintText: "Cari destinasi wisata...",
-                    hintStyle: TextStyle(color: Colors.grey[400], fontSize: 13),
-                    prefixIcon: const Icon(Icons.search_rounded, color: Colors.grey),
+                    hintStyle: TextStyle(
+                        color: Colors.grey[400], fontSize: 13),
+                    prefixIcon: const Icon(Icons.search_rounded,
+                        color: Color(0xFF8B0000), size: 20),
                     filled: true,
                     fillColor: Colors.white,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(16),
                       borderSide: BorderSide.none,
                     ),
-                    contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                    contentPadding:
+                        const EdgeInsets.symmetric(vertical: 14),
                   ),
                 ),
               ),
             ),
           ),
 
-          /// ===== LABEL =====
+          // ── LABEL SEMUA PAKET ──────────────────────────────────
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
               child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Container(
-                    width: 4,
-                    height: 16,
-                    decoration: BoxDecoration(
-                      color: _primary,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  const Text(
-                    "Semua Paket",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                      color: Colors.black87,
-                    ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        "Semua Paket",
+                        style: TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 16,
+                          color: Color(0xFF1A1A1A),
+                          letterSpacing: -0.3,
+                        ),
+                      ),
+                      Container(
+                        margin: const EdgeInsets.only(top: 4),
+                        width: 32, height: 3,
+                        decoration: BoxDecoration(
+                          color: _primary,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
           ),
 
-          /// ===== LIST =====
+          // ── LIST PAKET ─────────────────────────────────────────
           SliverToBoxAdapter(
             child: FutureBuilder<List<dynamic>>(
               future: tours,
               builder: (context, snapshot) {
 
+                // Loading
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Padding(
                     padding: EdgeInsets.only(top: 80),
                     child: Center(
-                      child: CircularProgressIndicator(color: _primary),
+                      child: CircularProgressIndicator(
+                        color: _primary,
+                        strokeWidth: 2.5,
+                      ),
                     ),
                   );
                 }
 
+                // Error
                 if (snapshot.hasError) {
                   return Padding(
                     padding: const EdgeInsets.only(top: 80),
                     child: Center(
                       child: Column(
                         children: [
-                          Icon(Icons.wifi_off_rounded, size: 48, color: Colors.grey[400]),
-                          const SizedBox(height: 12),
+                          Container(
+                            width: 64, height: 64,
+                            decoration: BoxDecoration(
+                              color: _primary.withOpacity(0.07),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: const Icon(Icons.wifi_off_rounded,
+                                size: 30, color: _primary),
+                          ),
+                          const SizedBox(height: 14),
+                          const Text(
+                            'Gagal memuat data',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF1A1A1A),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
                           Text(
                             snapshot.error.toString(),
-                            style: const TextStyle(color: Colors.grey),
+                            style: TextStyle(
+                                color: Colors.grey[500], fontSize: 12),
                             textAlign: TextAlign.center,
                           ),
                         ],
@@ -217,17 +280,38 @@ class _PaketWisataPageState extends State<PaketWisataPage> {
 
                 final data = snapshot.data!;
 
+                // Empty
                 if (data.isEmpty) {
                   return Padding(
                     padding: const EdgeInsets.only(top: 80),
                     child: Center(
                       child: Column(
                         children: [
-                          Icon(Icons.travel_explore_rounded, size: 56, color: Colors.grey[300]),
-                          const SizedBox(height: 12),
+                          Container(
+                            width: 64, height: 64,
+                            decoration: BoxDecoration(
+                              color: _primary.withOpacity(0.07),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: const Icon(
+                              Icons.travel_explore_rounded,
+                              size: 30, color: _primary,
+                            ),
+                          ),
+                          const SizedBox(height: 14),
                           const Text(
-                            "Belum ada paket wisata",
-                            style: TextStyle(color: Colors.grey, fontSize: 14),
+                            'Belum ada paket wisata',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF1A1A1A),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Pantau terus untuk penawaran terbaru',
+                            style: TextStyle(
+                                color: Colors.grey[500], fontSize: 12),
                           ),
                         ],
                       ),
@@ -235,18 +319,19 @@ class _PaketWisataPageState extends State<PaketWisataPage> {
                   );
                 }
 
+                // List
                 return ListView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
                   itemCount: data.length,
                   itemBuilder: (context, index) {
                     final item = data[index];
-
                     return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.only(bottom: 14),
                       child: PaketCard(
-                        image: item['image'] != null && item['image'].toString().isNotEmpty
+                        image: item['image'] != null &&
+                                item['image'].toString().isNotEmpty
                             ? '${ApiService.storageUrl}/storage/${item['image']}'
                             : '',
                         title: item['name'] ?? '',

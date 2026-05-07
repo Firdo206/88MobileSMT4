@@ -1,63 +1,108 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../../../utils/app_color.dart';
 
 class PromoCard extends StatelessWidget {
   final String title;
+  final String? description;
   final String discountType;
   final double discountValue;
-  final DateTime startTime;
-  final DateTime endTime;
+  final double? minTransaction;
+  final double? maxDiscount;
+  final String? startDate;
+  final String? endDate;
   final int quota;
   final int usedQuota;
   final bool isActive;
+  final String? promoCode;
+  final String? targetType;
   final VoidCallback? onTap;
 
   const PromoCard({
     super.key,
     required this.title,
+    this.description,
     required this.discountType,
     required this.discountValue,
-    required this.startTime,
-    required this.endTime,
+    this.minTransaction,
+    this.maxDiscount,
+    this.startDate,
+    this.endDate,
     required this.quota,
     required this.usedQuota,
     required this.isActive,
+    this.promoCode,
+    this.targetType,
     this.onTap,
   });
 
+  // ── Format Rupiah: 100000 → Rp 100.000 ──────────────────────
+  String _rp(double amount) {
+    final str = amount.toInt().toString();
+    final buf = StringBuffer();
+    for (int i = 0; i < str.length; i++) {
+      if (i > 0 && (str.length - i) % 3 == 0) buf.write('.');
+      buf.write(str[i]);
+    }
+    return 'Rp ${buf.toString()}';
+  }
+
   String get discountLabel => discountType == 'fixed'
-      ? 'Hemat Rp ${discountValue.toInt()}'
+      ? 'Hemat ${_rp(discountValue)}'
       : 'Hemat ${discountValue.toInt()}%';
 
   String get discountBadge => discountType == 'fixed'
-      ? 'Rp ${discountValue.toInt()}'
+      ? _rp(discountValue)
       : '${discountValue.toInt()}%';
 
-  String _formatDate(DateTime dt) {
-    const months = [
-      'Jan','Feb','Mar','Apr','Mei','Jun',
-      'Jul','Agu','Sep','Okt','Nov','Des'
-    ];
-    return '${dt.day} ${months[dt.month - 1]} ${dt.year}';
+  int get sisaKuota => quota > 0 ? quota - usedQuota : 999;
+  bool get isUnlimited => quota == 0;
+
+  String _formatDateStr(String? dateStr) {
+    if (dateStr == null || dateStr.isEmpty) return '-';
+    try {
+      final dt = DateTime.parse(dateStr);
+      const months = [
+        'Jan','Feb','Mar','Apr','Mei','Jun',
+        'Jul','Agu','Sep','Okt','Nov','Des'
+      ];
+      return '${dt.day} ${months[dt.month - 1]} ${dt.year}';
+    } catch (_) {
+      return dateStr;
+    }
   }
 
-  int get sisaKuota => quota - usedQuota;
+  String _targetLabel() {
+    switch (targetType) {
+      case 'ticket': return 'pembelian tiket bus';
+      case 'rental': return 'sewa armada';
+      case 'tour':   return 'paket wisata';
+      default:       return 'semua layanan';
+    }
+  }
+
+  String _targetBadge() {
+    switch (targetType) {
+      case 'ticket': return 'Tiket Bus';
+      case 'rental': return 'Sewa Bus';
+      case 'tour':   return 'Wisata';
+      default:       return 'Semua';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(                              // ← BERUBAH
-      onTap: onTap,                              // ← BERUBAH
-      borderRadius: BorderRadius.circular(20),   // ← BERUBAH
-      child: Container(                          // ← BERUBAH
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
         width: double.infinity,
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 12,
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 16,
               offset: const Offset(0, 4),
             ),
           ],
@@ -65,154 +110,222 @@ class PromoCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── TOP: gradient banner ──────────────────────────────
+
+            // ── HEADER GRADIENT ──────────────────────────────────
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF6B0000), Color(0xFFCC2222)],
+              padding: const EdgeInsets.all(20),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFF6B0000), Color(0xFFB01010)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(20),
-                ),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          title,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w800,
-                            fontSize: 15,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          discountLabel,
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.85),
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      discountBadge,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w900,
-                        fontSize: 22,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // ── BOTTOM: info ─────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Periode
+
+                  // Baris: target chip + badge diskon
                   Row(
-                    children: [
-                      const Icon(Icons.calendar_today_rounded,
-                          size: 14, color: Color(0xFF8B0000)),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Berlaku: ${_formatDate(startTime)} – ${_formatDate(endTime)}',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFF555555),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  // Kuota
-                  Row(
-                    children: [
-                      const Icon(Icons.people_outline_rounded,
-                          size: 14, color: Color(0xFF8B0000)),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Sisa kuota: $sisaKuota dari $quota',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFF555555),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      // Progress bar kuota
-                      Expanded(
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(4),
-                          child: LinearProgressIndicator(
-                            value: quota > 0 ? usedQuota / quota : 0,
-                            backgroundColor: const Color(0xFFEEE),
-                            color: sisaKuota <= (quota * 0.2)
-                                ? Colors.orange
-                                : const Color(0xFF8B0000),
-                            minHeight: 5,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // Status aktif / tidak
-                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.18),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          _targetBadge(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                      ),
+
+                      const Spacer(),
+
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.25),
+                          ),
+                        ),
+                        child: Text(
+                          discountBadge,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 22,
+                            height: 1,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 16,
+                    ),
+                  ),
+
+                  const SizedBox(height: 4),
+
+                  Text(
+                    discountLabel,
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.8),
+                      fontSize: 12,
+                    ),
+                  ),
+
+                  if (promoCode != null) ...[
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Icon(Icons.confirmation_number_outlined,
+                            size: 13, color: Colors.white.withOpacity(0.7)),
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.3),
+                            ),
+                          ),
+                          child: Text(
+                            promoCode!,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 2,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+
+            // ── BODY INFO ────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+
+                  _infoRow(
+                    icon: Icons.calendar_today_rounded,
+                    label: startDate == null && endDate == null
+                        ? 'Berlaku setiap saat'
+                        : '${_formatDateStr(startDate)} – ${_formatDateStr(endDate)}',
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  Row(
+                    children: [
+                      const Icon(Icons.people_outline_rounded,
+                          size: 14, color: Color(0xFF8B0000)),
+                      const SizedBox(width: 8),
+                      Text(
+                        isUnlimited
+                            ? 'Kuota tidak terbatas'
+                            : 'Sisa $sisaKuota dari $quota kuota',
+                        style: const TextStyle(
+                            fontSize: 12, color: Color(0xFF555555)),
+                      ),
+                      if (!isUnlimited) ...[
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: LinearProgressIndicator(
+                              value: quota > 0 ? usedQuota / quota : 0,
+                              backgroundColor: const Color(0xFFEEEEEE),
+                              color: sisaKuota <= (quota * 0.2)
+                                  ? Colors.orange
+                                  : const Color(0xFF8B0000),
+                              minHeight: 5,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+
+                  if (minTransaction != null && minTransaction! > 0) ...[
+                    const SizedBox(height: 8),
+                    _infoRow(
+                      icon: Icons.payments_outlined,
+                      label: 'Min. transaksi ${_rp(minTransaction!)}',
+                    ),
+                  ],
+
+                  if (maxDiscount != null && maxDiscount! > 0 &&
+                      discountType == 'percentage') ...[
+                    const SizedBox(height: 6),
+                    _infoRow(
+                      icon: Icons.info_outline_rounded,
+                      label: 'Maks. diskon ${_rp(maxDiscount!)}',
+                    ),
+                  ],
+
+                  const SizedBox(height: 14),
+                  const Divider(height: 1, color: Color(0xFFF0EBE8)),
+                  const SizedBox(height: 14),
+
+                  // Status + tombol salin
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
                           color: isActive
-                              ? const Color(0xFFE8F5E9)
-                              : const Color(0xFFFFEBEE),
+                              ? Colors.green.withOpacity(0.1)
+                              : Colors.red.withOpacity(0.08),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Row(
                           children: [
-                            Icon(
-                              isActive
-                                  ? Icons.check_circle_rounded
-                                  : Icons.cancel_rounded,
-                              size: 12,
-                              color: isActive
-                                  ? Colors.green
-                                  : Colors.red,
+                            Container(
+                              width: 6, height: 6,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: isActive ? Colors.green : Colors.red,
+                              ),
                             ),
-                            const SizedBox(width: 4),
+                            const SizedBox(width: 6),
                             Text(
                               isActive ? 'Aktif' : 'Tidak Aktif',
                               style: TextStyle(
                                 fontSize: 11,
-                                fontWeight: FontWeight.w600,
+                                fontWeight: FontWeight.w700,
                                 color: isActive
-                                    ? Colors.green
-                                    : Colors.red,
+                                    ? Colors.green[700]
+                                    : Colors.red[700],
                               ),
                             ),
                           ],
@@ -221,65 +334,99 @@ class PromoCard extends StatelessWidget {
 
                       const Spacer(),
 
-                      // Tombol salin diskon label
                       GestureDetector(
                         onTap: () {
-                          Clipboard.setData(
-                              ClipboardData(text: discountBadge));
+                          final teks = promoCode ?? discountBadge;
+                          Clipboard.setData(ClipboardData(text: teks));
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Info diskon disalin!'),
-                              duration: Duration(seconds: 1),
+                            SnackBar(
+                              content: Text(promoCode != null
+                                  ? 'Kode "$promoCode" disalin!'
+                                  : 'Info diskon disalin!'),
+                              duration: const Duration(seconds: 1),
+                              backgroundColor: const Color(0xFF8B0000),
                             ),
                           );
                         },
-                        child: Row(
-                          children: const [
-                            Icon(Icons.copy_rounded,
-                                size: 14, color: Color(0xFF8B0000)),
-                            SizedBox(width: 4),
-                            Text(
-                              'Salin',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Color(0xFF8B0000),
-                                fontWeight: FontWeight.w600,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF8B0000).withOpacity(0.07),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Row(
+                            children: [
+                              Icon(Icons.copy_rounded,
+                                  size: 13, color: Color(0xFF8B0000)),
+                              SizedBox(width: 5),
+                              Text(
+                                'Salin',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Color(0xFF8B0000),
+                                  fontWeight: FontWeight.w700,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ],
                   ),
 
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 14),
 
-                  // Syarat dinamis
+                  // Syarat & Ketentuan
                   Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
                       color: const Color(0xFFF7F3F0),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(14),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Syarat & Ketentuan',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 12,
-                            color: Color(0xFF1A1A1A),
-                          ),
+                        Row(
+                          children: [
+                            Container(
+                              width: 20, height: 20,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF8B0000).withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: const Icon(
+                                Icons.info_outline_rounded,
+                                size: 12,
+                                color: Color(0xFF8B0000),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            const Text(
+                              'Syarat & Ketentuan',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 12,
+                                color: Color(0xFF1A1A1A),
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 6),
-                        _syaratItem(
-                            'Berlaku ${_formatDate(startTime)} s/d ${_formatDate(endTime)}'),
-                        _syaratItem('Kuota terbatas ($quota pengguna)'),
+                        const SizedBox(height: 10),
+                        if (startDate != null || endDate != null)
+                          _syaratItem(
+                            'Berlaku ${_formatDateStr(startDate)} s/d ${_formatDateStr(endDate)}',
+                          ),
+                        if (!isUnlimited)
+                          _syaratItem('Kuota terbatas ($quota pengguna)'),
                         _syaratItem(
                             'Diskon $discountLabel untuk ${_targetLabel()}'),
-                        _syaratItem(
-                            'Tidak dapat digabung dengan promo lain'),
+                        if (minTransaction != null && minTransaction! > 0)
+                          _syaratItem('Min. transaksi ${_rp(minTransaction!)}'),
+                        if (maxDiscount != null && maxDiscount! > 0 &&
+                            discountType == 'percentage')
+                          _syaratItem('Maks. diskon ${_rp(maxDiscount!)}'),
+                        _syaratItem('Tidak dapat digabung dengan promo lain'),
                       ],
                     ),
                   ),
@@ -288,26 +435,44 @@ class PromoCard extends StatelessWidget {
             ),
           ],
         ),
-      ),    // ← tutup Container
-    );      // ← tutup InkWell
+      ),
+    );
   }
 
-  String _targetLabel() {
-    return 'pengguna terpilih';
+  Widget _infoRow({required IconData icon, required String label}) {
+    return Row(
+      children: [
+        Icon(icon, size: 14, color: const Color(0xFF8B0000)),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            label,
+            style: const TextStyle(fontSize: 12, color: Color(0xFF555555)),
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _syaratItem(String text) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 3),
+      padding: const EdgeInsets.only(bottom: 4),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('• ',
-              style: TextStyle(fontSize: 11, color: Color(0xFF8B0000))),
+          Container(
+            margin: const EdgeInsets.only(top: 4),
+            width: 4, height: 4,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: Color(0xFF8B0000),
+            ),
+          ),
+          const SizedBox(width: 8),
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(fontSize: 11, color: Color(0xFF555555)),
+              style: const TextStyle(fontSize: 11, color: Color(0xFF666666)),
             ),
           ),
         ],

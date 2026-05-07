@@ -308,6 +308,9 @@ class BookingSummaryPage extends StatelessWidget {
                               qty: jumlah,
                               total: total,
                               notes: notes,
+                              promoId: promo?.id,
+                              discountAmount: promo != null ? discount * jumlah : null, 
+                              promoTitle: promo?.title,                                  
                             );
 
                             print(result);

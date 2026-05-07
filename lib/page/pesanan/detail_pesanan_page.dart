@@ -35,6 +35,13 @@ class DetailPesananPage extends StatelessWidget {
   }
 
   int getPrice() {
+    // 🔥 Prioritaskan final_price jika ada (setelah diskon promo)
+    final finalPriceRaw = data["final_price"];
+    if (finalPriceRaw != null) {
+      final parsed = double.tryParse(finalPriceRaw.toString());
+      if (parsed != null && parsed > 0) return parsed.toInt();
+    }
+
     dynamic val =
         data["total_price"] ??
         data["amount"] ??
@@ -118,6 +125,13 @@ class DetailPesananPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final price = getPrice();
 
+    // 🔥 Info promo
+    final promoTitle = data["promo_title"];
+    final discountAmountRaw = data["discount_amount"];
+    final hasPromo = promoTitle != null && discountAmountRaw != null;
+    final discountAmount = double.tryParse(discountAmountRaw?.toString() ?? '0')?.toInt() ?? 0;
+    final totalNormal = hasPromo ? price + discountAmount : price;
+
     return Scaffold(
       backgroundColor: _bgColor,
       appBar: AppBar(
@@ -178,6 +192,70 @@ class DetailPesananPage extends StatelessWidget {
                   data["payment_method"] ?? "Transfer",
                 ),
                 const SizedBox(height: 8),
+
+                // 🔥 Banner promo jika ada
+                if (hasPromo) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                    margin: const EdgeInsets.only(bottom: 8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE8F5E9),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.local_offer_rounded,
+                            color: Colors.green, size: 14),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            'Promo "$promoTitle" diterapkan',
+                            style: const TextStyle(
+                              color: Colors.green,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text("Harga Normal",
+                          style: TextStyle(
+                              color: Colors.grey[600], fontSize: 13)),
+                      Text(
+                        "Rp ${rupiah(totalNormal)}",
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey,
+                          decoration: TextDecoration.lineThrough,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Diskon "$promoTitle"',
+                          style: const TextStyle(
+                              color: Colors.green, fontSize: 13)),
+                      Text(
+                        '- Rp ${rupiah(discountAmount)}',
+                        style: const TextStyle(
+                            color: Colors.green, fontSize: 13),
+                      ),
+                    ],
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 8),
+                    child: Divider(height: 1),
+                  ),
+                ],
+
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
@@ -218,8 +296,6 @@ class DetailPesananPage extends StatelessWidget {
         ),
       ),
 
-      // ===== TOMBOL DOWNLOAD E-TIKET DI BAWAH (STICKY) =====
-      // Hanya muncul jika status paid atau completed
       bottomNavigationBar: (statusFinal == "paid" || statusFinal == "completed")
           ? _buildBottomDownloadBar(context)
           : null,
@@ -511,7 +587,6 @@ class DetailPesananPage extends StatelessWidget {
           child: Column(
             children: [
 
-              /// Header kode + status
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
                 decoration: BoxDecoration(
@@ -540,7 +615,6 @@ class DetailPesananPage extends StatelessWidget {
                 ),
               ),
 
-              /// Dashed divider
               _dashedDivider(),
 
               Padding(
@@ -561,31 +635,23 @@ class DetailPesananPage extends StatelessWidget {
           ),
         ),
 
-        // Notch kiri
         Positioned(
           left: 4,
           top: 78,
           child: Container(
             width: 22,
             height: 22,
-            decoration: BoxDecoration(
-              color: _bgColor,
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: _bgColor, shape: BoxShape.circle),
           ),
         ),
 
-        // Notch kanan
         Positioned(
           right: 4,
           top: 78,
           child: Container(
             width: 22,
             height: 22,
-            decoration: BoxDecoration(
-              color: _bgColor,
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: _bgColor, shape: BoxShape.circle),
           ),
         ),
       ],
@@ -831,16 +897,8 @@ class DetailPesananPage extends StatelessWidget {
       );
     }
 
-    // Status paid: tidak ada tombol di body (tombol download ada di bottom bar)
-    if (statusFinal == "paid") {
-      return const SizedBox();
-    }
-
-    // Status completed: tidak ada tombol di body (tombol download ada di bottom bar)
-    if (statusFinal == "completed") {
-      return const SizedBox();
-    }
-
+    if (statusFinal == "paid") return const SizedBox();
+    if (statusFinal == "completed") return const SizedBox();
     return const SizedBox();
   }
 

@@ -25,45 +25,51 @@ class BookingService {
 
   }
 
-    static Future<Map> getBookingDetail(int id) async {
+  static Future<Map> getBookingDetail(int id) async {
     final res = await http.get(
       Uri.parse("${ApiService.baseUrl}/booking-detail/$id"),
       headers: {"Accept": "application/json"},
     );
 
     final data = jsonDecode(res.body);
-    return data["data"];
+
+    // 🔥 FIX: flatten booking + passengers jadi satu map
+    final booking = Map<String, dynamic>.from(data["data"]["booking"] ?? {});
+    booking["passengers"] = data["data"]["passengers"] ?? [];
+    booking["seats"] = data["data"]["seats"] ?? [];
+
+    return booking;
   }
 
   static Future cancelBooking(dynamic id, {String reason = ""}) async {
-  final response = await http.post(
-    Uri.parse("${ApiService.baseUrl}/booking/cancel/$id"),
-    headers: {
-      "Accept": "application/json",
-      "Content-Type": "application/json",
-    },
-    body: jsonEncode({
-      "reason": reason,
-    }),
-  );
+    final response = await http.post(
+      Uri.parse("${ApiService.baseUrl}/booking/cancel/$id"),
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+      },
+      body: jsonEncode({
+        "reason": reason,
+      }),
+    );
 
-  final data = jsonDecode(response.body);
+    final data = jsonDecode(response.body);
 
-  if (response.statusCode != 200) {
-    throw Exception(data["message"] ?? "Gagal membatalkan pesanan");
+    if (response.statusCode != 200) {
+      throw Exception(data["message"] ?? "Gagal membatalkan pesanan");
+    }
+
+    return data;
   }
 
-  return data;
-}
+  static Future finish(int id) async {
+    final url = Uri.parse("${ApiService.baseUrl}/finish-booking/$id");
 
-static Future finish(int id) async {
-  final url = Uri.parse("${ApiService.baseUrl}/finish-booking/$id");
+    final res = await http.post(url);
 
-  final res = await http.post(url);
-
-  if (res.statusCode != 200) {
-    throw Exception("Gagal finish booking");
+    if (res.statusCode != 200) {
+      throw Exception("Gagal finish booking");
+    }
   }
-}
 
-} 
+}
