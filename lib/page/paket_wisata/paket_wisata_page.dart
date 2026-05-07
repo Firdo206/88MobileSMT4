@@ -15,7 +15,7 @@ class PaketWisataPage extends StatefulWidget {
 class _PaketWisataPageState extends State<PaketWisataPage> {
   late Future<List<dynamic>> tours;
 
-  static const Color _primary      = Color(0xFF6B0000);
+  static const Color _primary = Color(0xFF6B0000);
   static const Color _primaryLight = Color(0xFFCC2222);
 
   @override
@@ -30,7 +30,6 @@ class _PaketWisataPageState extends State<PaketWisataPage> {
       backgroundColor: const Color(0xFFF7F3F0),
       body: CustomScrollView(
         slivers: [
-
           // ── SLIVER APP BAR ──────────────────────────────────────
           SliverAppBar(
             expandedHeight: 200,
@@ -51,9 +50,11 @@ class _PaketWisataPageState extends State<PaketWisataPage> {
                   children: [
                     // Dekorasi lingkaran
                     Positioned(
-                      top: -30, right: -20,
+                      top: -30,
+                      right: -20,
                       child: Container(
-                        width: 160, height: 160,
+                        width: 160,
+                        height: 160,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: Colors.white.withOpacity(0.05),
@@ -61,9 +62,11 @@ class _PaketWisataPageState extends State<PaketWisataPage> {
                       ),
                     ),
                     Positioned(
-                      top: 40, right: 30,
+                      top: 40,
+                      right: 30,
                       child: Container(
-                        width: 80, height: 80,
+                        width: 80,
+                        height: 80,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: Colors.white.withOpacity(0.07),
@@ -71,9 +74,11 @@ class _PaketWisataPageState extends State<PaketWisataPage> {
                       ),
                     ),
                     Positioned(
-                      bottom: -20, left: -20,
+                      bottom: -20,
+                      left: -20,
                       child: Container(
-                        width: 120, height: 120,
+                        width: 120,
+                        height: 120,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: Colors.white.withOpacity(0.04),
@@ -92,7 +97,9 @@ class _PaketWisataPageState extends State<PaketWisataPage> {
                           // Icon + label kecil
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 4),
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.white.withOpacity(0.15),
                               borderRadius: BorderRadius.circular(20),
@@ -100,8 +107,11 @@ class _PaketWisataPageState extends State<PaketWisataPage> {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.travel_explore_rounded,
-                                    color: Colors.white, size: 13),
+                                const Icon(
+                                  Icons.travel_explore_rounded,
+                                  color: Colors.white,
+                                  size: 13,
+                                ),
                                 const SizedBox(width: 5),
                                 Text(
                                   'Jelajahi Destinasi',
@@ -169,18 +179,19 @@ class _PaketWisataPageState extends State<PaketWisataPage> {
                 child: TextField(
                   decoration: InputDecoration(
                     hintText: "Cari destinasi wisata...",
-                    hintStyle: TextStyle(
-                        color: Colors.grey[400], fontSize: 13),
-                    prefixIcon: const Icon(Icons.search_rounded,
-                        color: Color(0xFF8B0000), size: 20),
+                    hintStyle: TextStyle(color: Colors.grey[400], fontSize: 13),
+                    prefixIcon: const Icon(
+                      Icons.search_rounded,
+                      color: Color(0xFF8B0000),
+                      size: 20,
+                    ),
                     filled: true,
                     fillColor: Colors.white,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
                       borderSide: BorderSide.none,
                     ),
-                    contentPadding:
-                        const EdgeInsets.symmetric(vertical: 14),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 14),
                   ),
                 ),
               ),
@@ -208,7 +219,8 @@ class _PaketWisataPageState extends State<PaketWisataPage> {
                       ),
                       Container(
                         margin: const EdgeInsets.only(top: 4),
-                        width: 32, height: 3,
+                        width: 32,
+                        height: 3,
                         decoration: BoxDecoration(
                           color: _primary,
                           borderRadius: BorderRadius.circular(4),
@@ -226,7 +238,6 @@ class _PaketWisataPageState extends State<PaketWisataPage> {
             child: FutureBuilder<List<dynamic>>(
               future: tours,
               builder: (context, snapshot) {
-
                 // Loading
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Padding(
@@ -248,13 +259,17 @@ class _PaketWisataPageState extends State<PaketWisataPage> {
                       child: Column(
                         children: [
                           Container(
-                            width: 64, height: 64,
+                            width: 64,
+                            height: 64,
                             decoration: BoxDecoration(
                               color: _primary.withOpacity(0.07),
                               borderRadius: BorderRadius.circular(20),
                             ),
-                            child: const Icon(Icons.wifi_off_rounded,
-                                size: 30, color: _primary),
+                            child: const Icon(
+                              Icons.wifi_off_rounded,
+                              size: 30,
+                              color: _primary,
+                            ),
                           ),
                           const SizedBox(height: 14),
                           const Text(
@@ -269,7 +284,9 @@ class _PaketWisataPageState extends State<PaketWisataPage> {
                           Text(
                             snapshot.error.toString(),
                             style: TextStyle(
-                                color: Colors.grey[500], fontSize: 12),
+                              color: Colors.grey[500],
+                              fontSize: 12,
+                            ),
                             textAlign: TextAlign.center,
                           ),
                         ],
@@ -288,14 +305,16 @@ class _PaketWisataPageState extends State<PaketWisataPage> {
                       child: Column(
                         children: [
                           Container(
-                            width: 64, height: 64,
+                            width: 64,
+                            height: 64,
                             decoration: BoxDecoration(
                               color: _primary.withOpacity(0.07),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: const Icon(
                               Icons.travel_explore_rounded,
-                              size: 30, color: _primary,
+                              size: 30,
+                              color: _primary,
                             ),
                           ),
                           const SizedBox(height: 14),
@@ -311,7 +330,9 @@ class _PaketWisataPageState extends State<PaketWisataPage> {
                           Text(
                             'Pantau terus untuk penawaran terbaru',
                             style: TextStyle(
-                                color: Colors.grey[500], fontSize: 12),
+                              color: Colors.grey[500],
+                              fontSize: 12,
+                            ),
                           ),
                         ],
                       ),
@@ -330,7 +351,8 @@ class _PaketWisataPageState extends State<PaketWisataPage> {
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 14),
                       child: PaketCard(
-                        image: item['image'] != null &&
+                        image:
+                            item['image'] != null &&
                                 item['image'].toString().isNotEmpty
                             ? '${ApiService.storageUrl}/storage/${item['image']}'
                             : '',

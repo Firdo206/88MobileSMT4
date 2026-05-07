@@ -9,32 +9,23 @@ import 'services/notification_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-// 🔥 GLOBAL NOTIFICATION
+
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
-
-// BACKGROUND HANDLER (WAJIB)
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   print("Background Message: ${message.notification?.title}");
 }
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // INIT FIREBASE
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
-  // 🔥 INIT LOCAL NOTIFICATION
   const AndroidInitializationSettings initializationSettingsAndroid =
       AndroidInitializationSettings('@mipmap/ic_launcher');
-
   const InitializationSettings initializationSettings = InitializationSettings(
     android: initializationSettingsAndroid,
   );
 
   await flutterLocalNotificationsPlugin.initialize(initializationSettings);
-
-  // 🔥 CHANNEL NOTIF
   const AndroidNotificationChannel channel = AndroidNotificationChannel(
     'high_importance_channel',
     'High Importance Notifications',
@@ -64,10 +55,7 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
-// ============================================================
 // SPLASH PAGE — Elegant White Version (88Trans)
-// ============================================================
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
 
@@ -102,43 +90,33 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
     }
   }
 
-  // 🆕 HANDLE KLIK NOTIF — navigasi sesuai tipe
   void _handleNotifClick(Map<String, dynamic> data) {
     if (!mounted) return;
     if (data['type'] == 'flash_sale') {
       print("Buka halaman flash sale ID: ${data['id']}");
-      // Navigator.push(context, MaterialPageRoute(builder: (_) => PromoPage()));
     } else if (data['type'] == 'booking') {
       print("Buka halaman booking");
-      // Navigator.push(context, MaterialPageRoute(builder: (_) => BookingPage()));
     } else if (data['type'] == 'tour') {
       print("Buka halaman tour");
-      // Navigator.push(context, MaterialPageRoute(builder: (_) => TourPage()));
     }
   }
 
   @override
   void initState() {
     super.initState();
-
-    // INIT NOTIFIKASI
     setupFCM();
-
-    // WAJIB: Biar notif muncul saat app terbuka (kayak WA)
     FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
       alert: true,
       badge: true,
       sound: true,
     );
-
-    // LISTENER SAAT APP DIBUKA (FOREGROUND)
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       print("Notif masuk: ${message.notification?.title}");
       RemoteNotification? notification = message.notification;
       AndroidNotification? android = message.notification?.android;
       if (notification != null && android != null) {
         flutterLocalNotificationsPlugin.show(
-          message.hashCode, // 🆕 pakai hashCode biar notif tidak saling override
+          message.hashCode, 
           notification.title,
           notification.body,
           const NotificationDetails(
