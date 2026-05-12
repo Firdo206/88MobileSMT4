@@ -134,28 +134,68 @@ class _ProfilPageState extends State<ProfilPage> {
     );
   }
 
+  // 🔥 BUKA FOTO FULLSCREEN
+  void openAvatarFullscreen(String imageUrl) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => Scaffold(
+          backgroundColor: Colors.black,
+          appBar: AppBar(
+            backgroundColor: Colors.black,
+            iconTheme: const IconThemeData(color: Colors.white),
+            title: const Text(
+              "Foto Profil",
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+          body: Center(
+            child: InteractiveViewer(
+              minScale: 0.5,
+              maxScale: 4.0,
+              child: Image.network(
+                imageUrl,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  return const Icon(
+                    Icons.broken_image,
+                    color: Colors.white54,
+                    size: 80,
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget buildAvatar() {
     String imageUrl = avatar.isNotEmpty
         ? "${ApiService.storageUrl}/avatar/$avatar"
         : "https://randomuser.me/api/portraits/women/44.jpg";
 
-    return Container(
-      width: 90,
-      height: 90,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 3),
-      ),
-      child: ClipOval(
-        child: Image.network(
-          imageUrl,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) {
-            return Image.network(
-              "https://randomuser.me/api/portraits/women/44.jpg",
-              fit: BoxFit.cover,
-            );
-          },
+    return GestureDetector(
+      onTap: () => openAvatarFullscreen(imageUrl),
+      child: Container(
+        width: 90,
+        height: 90,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white, width: 3),
+        ),
+        child: ClipOval(
+          child: Image.network(
+            imageUrl,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return Image.network(
+                "https://randomuser.me/api/portraits/women/44.jpg",
+                fit: BoxFit.cover,
+              );
+            },
+          ),
         ),
       ),
     );
@@ -245,7 +285,6 @@ class _ProfilPageState extends State<ProfilPage> {
                           ),
                         ),
                         children: [
-                          /// 🎫 TIKET
                           ListTile(
                             contentPadding: const EdgeInsets.only(
                               left: 56,
@@ -265,8 +304,6 @@ class _ProfilPageState extends State<ProfilPage> {
                               );
                             },
                           ),
-
-                          /// 🚐 BUS
                           ListTile(
                             contentPadding: const EdgeInsets.only(
                               left: 56,
@@ -286,8 +323,6 @@ class _ProfilPageState extends State<ProfilPage> {
                               );
                             },
                           ),
-
-                          /// 🧳 TOUR
                           ListTile(
                             contentPadding: const EdgeInsets.only(
                               left: 56,

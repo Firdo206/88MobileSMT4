@@ -23,14 +23,11 @@ class PaketCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColor.card,
         borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(color: Colors.black12, blurRadius: 6),
-        ],
+        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 6)],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
           /// 🔥 IMAGE
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
@@ -71,19 +68,13 @@ class PaketCard extends StatelessWidget {
           /// TITLE
           Text(
             title,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
 
           const SizedBox(height: 4),
 
           /// PRICE
-          Text(
-            price,
-            style: const TextStyle(color: Colors.grey),
-          ),
+          Text(price, style: const TextStyle(color: Colors.grey)),
 
           const SizedBox(height: 10),
 
@@ -95,7 +86,9 @@ class PaketCard extends StatelessWidget {
                 onTap: onTap,
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 20, vertical: 8),
+                    horizontal: 20,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColor.primary,
                     borderRadius: BorderRadius.circular(20),
@@ -106,9 +99,9 @@ class PaketCard extends StatelessWidget {
                   ),
                 ),
               ),
-              const Icon(Icons.favorite_border, color: Colors.red)
+              const Icon(Icons.favorite_border, color: Colors.red),
             ],
-          )
+          ),
         ],
       ),
     );

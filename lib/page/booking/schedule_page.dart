@@ -33,6 +33,9 @@ class _SchedulePageState extends State<SchedulePage> {
     try {
       final data = await ScheduleService.getSchedules();
       schedules = data;
+
+      final now = DateTime.now();
+
       filteredSchedules = schedules.where((item) {
         bool matchOrigin = widget.origin == null ||
             item['origin']
@@ -47,8 +50,31 @@ class _SchedulePageState extends State<SchedulePage> {
         bool matchDate = widget.date == null ||
             item['departure_date'] ==
                 widget.date.toString().substring(0, 10);
-        return matchOrigin && matchDestination && matchDate;
+
+        // ── Filter jadwal yang sudah lewat ──────────────────────────────
+        final depDateStr = item['departure_date']?.toString() ?? '';
+        final depTimeStr = item['departure_time']?.toString() ?? '';
+
+        bool isExpired = false;
+        if (depDateStr.isNotEmpty && depTimeStr.isNotEmpty) {
+          try {
+            final parts = depTimeStr.split(':');
+            final depDateTime = DateTime(
+              int.parse(depDateStr.substring(0, 4)),
+              int.parse(depDateStr.substring(5, 7)),
+              int.parse(depDateStr.substring(8, 10)),
+              int.parse(parts[0]),
+              int.parse(parts[1]),
+            );
+            isExpired = depDateTime.isBefore(now);
+          } catch (_) {
+            isExpired = false;
+          }
+        }
+
+        return matchOrigin && matchDestination && matchDate && !isExpired;
       }).toList();
+
       setState(() => isLoading = false);
     } catch (e) {
       setState(() => isLoading = false);

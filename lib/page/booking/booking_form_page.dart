@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import '../../utils/app_color.dart';
 import '../../models/promo_model.dart'; // 👈 TAMBAH
 import 'booking_summary_page.dart';
+import 'widgets/map_picker_page.dart'; // 👈 TAMBAH
 
 class BookingFormPage extends StatefulWidget {
   final dynamic data;
@@ -19,14 +22,31 @@ class BookingFormPage extends StatefulWidget {
 
 class _BookingFormPageState extends State<BookingFormPage> {
   DateTime? selectedDate;
-  final TextEditingController jumlahController = TextEditingController(text: "1");
+  final TextEditingController jumlahController = TextEditingController(
+    text: "1",
+  );
   final TextEditingController catatanController = TextEditingController();
+
+  // 👇 TAMBAH - untuk maps
+  LatLng? selectedLocation;
+  String? selectedAddress;
 
   /// FORMAT DATE
   String formatDate(DateTime date) {
     const months = [
-      '', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
-      'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'
+      '',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'Mei',
+      'Jun',
+      'Jul',
+      'Ags',
+      'Sep',
+      'Okt',
+      'Nov',
+      'Des',
     ];
     return "${date.day} ${months[date.month]} ${date.year}";
   }
@@ -73,6 +93,24 @@ class _BookingFormPageState extends State<BookingFormPage> {
     }
   }
 
+  // 👇 TAMBAH - buka halaman map picker
+  Future<void> _openMapPicker() async {
+    final result = await Navigator.push<Map<String, dynamic>>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => MapPickerPage(initialLocation: selectedLocation),
+      ),
+    );
+
+    if (result != null) {
+      setState(() {
+        selectedLocation = LatLng(result['lat'], result['lon']);
+        selectedAddress = result['address'];
+        catatanController.text = result['address'];
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -80,7 +118,6 @@ class _BookingFormPageState extends State<BookingFormPage> {
 
       body: CustomScrollView(
         slivers: [
-
           /// 🔥 SLIVER APP BAR
           SliverAppBar(
             expandedHeight: 180,
@@ -133,7 +170,10 @@ class _BookingFormPageState extends State<BookingFormPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(20),
@@ -160,10 +200,7 @@ class _BookingFormPageState extends State<BookingFormPage> {
                         const SizedBox(height: 4),
                         const Text(
                           "Lengkapi data perjalanan anda",
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 13,
-                          ),
+                          style: TextStyle(color: Colors.white70, fontSize: 13),
                         ),
                       ],
                     ),
@@ -178,7 +215,6 @@ class _BookingFormPageState extends State<BookingFormPage> {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-
                   /// 🔥 CARD TANGGAL
                   _sectionCard(
                     icon: Icons.calendar_month_rounded,
@@ -188,7 +224,10 @@ class _BookingFormPageState extends State<BookingFormPage> {
                       onTap: pickDate,
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 200),
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 16,
+                        ),
                         decoration: BoxDecoration(
                           color: selectedDate != null
                               ? const Color(0xFF8B2E2E).withOpacity(0.06)
@@ -305,40 +344,147 @@ class _BookingFormPageState extends State<BookingFormPage> {
 
                   const SizedBox(height: 14),
 
-                  /// 🔥 CARD CATATAN
+                  /// 🔥 CARD LOKASI PENJEMPUTAN (MAPS)
                   _sectionCard(
-                    icon: Icons.edit_note_rounded,
-                    title: "Alamat Penjemputan / Catatan",
+                    icon: Icons.location_on_rounded,
+                    title: "Lokasi Penjemputan",
                     required: false,
-                    child: TextField(
-                      controller: catatanController,
-                      maxLines: 4,
-                      style: const TextStyle(fontSize: 14),
-                      decoration: InputDecoration(
-                        hintText: "Misal: Jemput di hotel Aston Seminyak",
-                        hintStyle: TextStyle(
-                          color: Colors.grey.shade400,
-                          fontSize: 13,
-                        ),
-                        filled: true,
-                        fillColor: const Color(0xFFF8F8F8),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.grey.shade200),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.grey.shade200),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFF8B2E2E),
-                            width: 1.5,
+                    child: Column(
+                      children: [
+                        // Tombol buka map picker
+                        GestureDetector(
+                          onTap: _openMapPicker,
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 14,
+                            ),
+                            decoration: BoxDecoration(
+                              color: selectedLocation != null
+                                  ? const Color(0xFF8B2E2E).withOpacity(0.06)
+                                  : const Color(0xFFF8F8F8),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: selectedLocation != null
+                                    ? const Color(0xFF8B2E2E).withOpacity(0.4)
+                                    : Colors.grey.shade200,
+                                width: 1.5,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.map_rounded,
+                                  color: selectedLocation != null
+                                      ? const Color(0xFF8B2E2E)
+                                      : Colors.grey,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    selectedAddress ?? "Pilih lokasi di peta",
+                                    style: TextStyle(
+                                      color: selectedLocation != null
+                                          ? const Color(0xFF8B2E2E)
+                                          : Colors.grey,
+                                      fontWeight: selectedLocation != null
+                                          ? FontWeight.w600
+                                          : FontWeight.normal,
+                                      fontSize: 13,
+                                    ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                Icon(
+                                  Icons.chevron_right_rounded,
+                                  color: Colors.grey.shade400,
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                        contentPadding: const EdgeInsets.all(14),
-                      ),
+
+                        // Preview mini map setelah lokasi dipilih
+                        if (selectedLocation != null) ...[
+                          const SizedBox(height: 10),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: SizedBox(
+                              height: 140,
+                              child: FlutterMap(
+                                options: MapOptions(
+                                  initialCenter: selectedLocation!,
+                                  initialZoom: 15,
+                                  interactionOptions:
+                                      const InteractionOptions(
+                                    flags: InteractiveFlag.none,
+                                  ),
+                                ),
+                                children: [
+                                  TileLayer(
+                                    urlTemplate:
+                                        'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                                    userAgentPackageName:
+                                        'com.example.app88trans',
+                                  ),
+                                  MarkerLayer(
+                                    markers: [
+                                      Marker(
+                                        point: selectedLocation!,
+                                        width: 40,
+                                        height: 40,
+                                        child: const Icon(
+                                          Icons.location_pin,
+                                          color: Color(0xFF8B2E2E),
+                                          size: 40,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+
+                        // Catatan tambahan
+                        const SizedBox(height: 10),
+                        TextField(
+                          controller: catatanController,
+                          maxLines: 2,
+                          style: const TextStyle(fontSize: 13),
+                          decoration: InputDecoration(
+                            hintText: "Catatan tambahan (opsional)",
+                            hintStyle: TextStyle(
+                              color: Colors.grey.shade400,
+                              fontSize: 13,
+                            ),
+                            filled: true,
+                            fillColor: const Color(0xFFF8F8F8),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide:
+                                  BorderSide(color: Colors.grey.shade200),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide:
+                                  BorderSide(color: Colors.grey.shade200),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(
+                                color: Color(0xFF8B2E2E),
+                                width: 1.5,
+                              ),
+                            ),
+                            contentPadding: const EdgeInsets.all(12),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
 
@@ -365,16 +511,23 @@ class _BookingFormPageState extends State<BookingFormPage> {
                         }
 
                         int jumlah = int.parse(jumlahController.text);
-                        double harga = double.parse(widget.data['price_per_person'].toString());
+                        double harga = double.parse(
+                          widget.data['price_per_person'].toString(),
+                        );
 
-                        // 👈 BERUBAH - hitung diskon jika ada promo
+                        // 🔥 FIX - hasil ternary sekarang di-assign ke discount
                         double discount = 0;
                         if (widget.promo != null) {
-                          discount = widget.promo!.discountType == 'percent'
+                          discount =
+                              widget.promo!.discountType.trim().toLowerCase() ==
+                                  'percentage'
                               ? harga * (widget.promo!.discountValue / 100)
                               : widget.promo!.discountValue;
                         }
-                        double hargaFinal = (harga - discount).clamp(0, double.infinity);
+                        double hargaFinal = (harga - discount).clamp(
+                          0,
+                          double.infinity,
+                        );
                         double total = jumlah * hargaFinal;
 
                         Navigator.push(
@@ -403,7 +556,11 @@ class _BookingFormPageState extends State<BookingFormPage> {
                             ),
                           ),
                           SizedBox(width: 8),
-                          Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 20),
+                          Icon(
+                            Icons.arrow_forward_rounded,
+                            color: Colors.white,
+                            size: 20,
+                          ),
                         ],
                       ),
                     ),
@@ -466,9 +623,12 @@ class _BookingFormPageState extends State<BookingFormPage> {
                 const SizedBox(width: 4),
                 const Text(
                   "*",
-                  style: TextStyle(color: Color(0xFF8B2E2E), fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    color: Color(0xFF8B2E2E),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ]
+              ],
             ],
           ),
           const SizedBox(height: 14),

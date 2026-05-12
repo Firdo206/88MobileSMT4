@@ -66,18 +66,27 @@ class RentalService {
     return data["status"] == true;
   }
 
-  /// ================= CANCEL RENTAL =================
-  static Future cancelRental(int id) async {
+  // CANCEL RENTAL 
+      static Future cancelRental(dynamic id, {String reason = ""}) async {
+      final response = await http.post(
+        Uri.parse("${ApiService.baseUrl}/cancel-rental/$id"),
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+        },
+        body: jsonEncode({
+          "reason": reason,
+        }),
+      );
 
-    final response = await http.post(
-      Uri.parse("${ApiService.baseUrl}/cancel-rental/$id"),
-      headers: {
-        "Accept": "application/json"
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode != 200) {
+        throw Exception(data["message"] ?? "Gagal membatalkan rental");
       }
-    );
 
-    return jsonDecode(response.body);
-  }
+      return data;
+    }
 
   /// ================= FINISH RENTAL =================
   static Future finish(int id) async {

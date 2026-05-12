@@ -7,6 +7,9 @@ import '../../utils/app_color.dart';
 import 'dart:convert';
 import '../navigation/main_page.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+import '../booking/widgets/map_picker_page.dart';
 
 class ArmadaPage extends StatefulWidget {
   const ArmadaPage({super.key});
@@ -26,10 +29,10 @@ class _ArmadaPageState extends State<ArmadaPage> {
   DateTime? startDate;
   DateTime? endDate;
 
-  bool isLoading = false;
+  LatLng? pickupLocation;
+  LatLng? destinationLocation;
 
-  List buses = [];
-  int? selectedBusId;
+  bool isLoading = false;
 
   // ─── Branding warna Bus 88 ─────────────────────────────────
   static const Color kRed = Color(0xFFD32F2F);
@@ -44,7 +47,6 @@ class _ArmadaPageState extends State<ArmadaPage> {
   @override
   void initState() {
     super.initState();
-    getBuses();
     loadUserData();
   }
 
@@ -54,18 +56,6 @@ class _ArmadaPageState extends State<ArmadaPage> {
       contactNameController.text = prefs.getString("name") ?? "";
       phoneController.text = prefs.getString("phone") ?? "";
     });
-  }
-
-  Future getBuses() async {
-    try {
-      final res = await http.get(Uri.parse("${ApiService.baseUrl}/buses"));
-      final data = jsonDecode(res.body);
-      if (data["status"] == true) {
-        setState(() => buses = data["data"]);
-      }
-    } catch (e) {
-      print("ERROR BUS: $e");
-    }
   }
 
   Future pickDate(bool isStart) async {
@@ -98,6 +88,29 @@ class _ArmadaPageState extends State<ArmadaPage> {
     }
   }
 
+  Future<void> _openMapPicker(bool isPickup) async {
+    final result = await Navigator.push<Map<String, dynamic>>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => MapPickerPage(
+          initialLocation: isPickup ? pickupLocation : destinationLocation,
+        ),
+      ),
+    );
+
+    if (result != null) {
+      setState(() {
+        if (isPickup) {
+          pickupLocation = LatLng(result['lat'], result['lon']);
+          pickupController.text = result['address'];
+        } else {
+          destinationLocation = LatLng(result['lat'], result['lon']);
+          destinationController.text = result['address'];
+        }
+      });
+    }
+  }
+
   Future<void> submit() async {
     if (startDate == null || endDate == null)
       return _show("Tanggal wajib diisi");
@@ -124,7 +137,7 @@ class _ArmadaPageState extends State<ArmadaPage> {
         destination: destinationController.text,
         contactName: contactNameController.text,
         phone: phoneController.text,
-        busId: selectedBusId,
+        busId: null, // ✅ selalu null, admin yang memilih
         purpose: purposeController.text,
         passengerCount: passengerCount,
       );
@@ -336,6 +349,8 @@ class _ArmadaPageState extends State<ArmadaPage> {
                             _infoItem("Harga disepakati setelah verifikasi"),
                             _infoItem("Pembayaran aman via Midtrans"),
                             _infoItem("Armada terawat & supir berpengalaman"),
+                            // ✅ tambah info bahwa admin yang pilih bus
+                            _infoItem("Armada dipilihkan oleh admin sesuai kebutuhan"),
                           ],
                         ),
                       ),
@@ -438,27 +453,89 @@ class _ArmadaPageState extends State<ArmadaPage> {
                                       Expanded(
                                         child: _inputBox(
                                           controller: pickupController,
-                                          hint: "Contoh: Hotel Grand, Jkt",
+                                          hint: "Pilih di peta",
                                           icon: Icons.location_on_outlined,
+                                          readOnly: true,
+                                          onTap: () => _openMapPicker(true),
                                         ),
                                       ),
                                       const SizedBox(width: 12),
                                       Expanded(
                                         child: _inputBox(
                                           controller: destinationController,
-                                          hint: "Contoh: Bandung",
+                                          hint: "Pilih di peta",
                                           icon: Icons.flag_outlined,
+                                          readOnly: true,
+                                          onTap: () => _openMapPicker(false),
                                         ),
                                       ),
                                     ],
                                   ),
+                                  if (pickupLocation != null || destinationLocation != null)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 12),
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            child: pickupLocation != null
+                                                ? _miniMap(pickupLocation!)
+                                                : const SizedBox.shrink(),
+                                          ),
+                                          if (pickupLocation != null && destinationLocation != null)
+                                            const SizedBox(width: 12),
+                                          Expanded(
+                                            child: destinationLocation != null
+                                                ? _miniMap(destinationLocation!)
+                                                : const SizedBox.shrink(),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
 
                                   const SizedBox(height: 18),
 
-                                  // Pilih Bus
-                                  _singleLabel("Pilih Bus (opsional)"),
+                                  // ✅ Bus dipilih admin — tampilkan sebagai info, bukan dropdown
+                                  _singleLabel("Armada Bus"),
                                   const SizedBox(height: 8),
-                                  _dropdownBox(),
+                                  Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 14,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: kRedLight,
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: const Color(0xFFFFCDD2),
+                                      ),
+                                    ),
+                                    child: Row(
+                                      children: const [
+                                        Icon(
+                                          Icons.directions_bus_outlined,
+                                          color: kRed,
+                                          size: 20,
+                                        ),
+                                        SizedBox(width: 10),
+                                        Expanded(
+                                          child: Text(
+                                            "Armada akan dipilihkan oleh admin",
+                                            style: TextStyle(
+                                              fontSize: 13,
+                                              color: kRed,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
+                                        Icon(
+                                          Icons.auto_awesome_outlined,
+                                          color: kRed,
+                                          size: 16,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
 
                                   const SizedBox(height: 18),
 
@@ -729,6 +806,8 @@ class _ArmadaPageState extends State<ArmadaPage> {
     required IconData icon,
     TextInputType keyboardType = TextInputType.text,
     List<TextInputFormatter>? inputFormatters,
+    bool readOnly = false,
+    VoidCallback? onTap,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -740,6 +819,8 @@ class _ArmadaPageState extends State<ArmadaPage> {
         controller: controller,
         keyboardType: keyboardType,
         inputFormatters: inputFormatters,
+        readOnly: readOnly,
+        onTap: onTap,
         style: const TextStyle(fontSize: 13, color: kText),
         decoration: InputDecoration(
           hintText: hint,
@@ -761,137 +842,41 @@ class _ArmadaPageState extends State<ArmadaPage> {
     );
   }
 
-  Widget _dropdownBox() {
-    return Theme(
-      data: Theme.of(context).copyWith(
-        focusColor: Colors.transparent,
-        splashColor: Colors.transparent,
-        highlightColor: kRedLight,
-      ),
-      child: DropdownButtonFormField<int?>(
-        value: selectedBusId,
-        isExpanded: true,
-        dropdownColor: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        icon: const Icon(
-          Icons.keyboard_arrow_down_rounded,
-          color: kRed,
-          size: 22,
-        ),
-        style: const TextStyle(
-          fontSize: 14,
-          color: kText,
-          fontWeight: FontWeight.w500,
-        ),
-        decoration: InputDecoration(
-          prefixIcon: const Icon(
-            Icons.directions_bus_outlined,
-            color: kRed,
-            size: 20,
-          ),
-          filled: true,
-          fillColor: Colors.white,
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: kRed, width: 1.5),
-          ),
-          contentPadding: const EdgeInsets.symmetric(
-            vertical: 14,
-            horizontal: 4,
-          ),
-        ),
-        hint: const Text(
-          "Biarkan admin memilih",
-          style: TextStyle(color: kTextMuted, fontSize: 14),
-        ),
-        selectedItemBuilder: (context) => [
-          const Text(
-            "Biarkan admin memilih",
-            style: TextStyle(
-              color: kText,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
+  Widget _miniMap(LatLng location) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(10),
+      child: SizedBox(
+        height: 120,
+        child: FlutterMap(
+          options: MapOptions(
+            initialCenter: location,
+            initialZoom: 15,
+            interactionOptions: const InteractionOptions(
+              flags: InteractiveFlag.none,
             ),
           ),
-          ...buses.map<Widget>(
-            (bus) => Text(
-              "${bus["name"]}  ·  ${bus["capacity"]} kursi",
-              style: const TextStyle(
-                color: kText,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-              overflow: TextOverflow.ellipsis,
+          children: [
+            TileLayer(
+              urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+              userAgentPackageName: 'com.example.app88trans',
             ),
-          ),
-        ],
-        items: [
-          DropdownMenuItem<int?>(
-            value: null,
-            child: _dropdownItem(
-              icon: Icons.auto_awesome_outlined,
-              label: "Biarkan admin memilih",
-              sub: "Admin akan menyesuaikan armada",
-              isSelected: selectedBusId == null,
-            ),
-          ),
-          ...buses.map<DropdownMenuItem<int>>(
-            (bus) => DropdownMenuItem<int>(
-              value: bus["id"],
-              child: _dropdownItem(
-                icon: Icons.directions_bus_outlined,
-                label: bus["name"],
-                sub: "${bus["capacity"]} kursi",
-                isSelected: selectedBusId == bus["id"],
-              ),
-            ),
-          ),
-        ],
-        onChanged: (val) => setState(() => selectedBusId = val),
-      ),
-    );
-  }
-
-  Widget _dropdownItem({
-    required IconData icon,
-    required String label,
-    required String sub,
-    required bool isSelected,
-  }) {
-    return Row(
-      children: [
-        Icon(icon, size: 18, color: isSelected ? kRed : kTextMuted),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                  color: isSelected ? kRed : kText,
+            MarkerLayer(
+              markers: [
+                Marker(
+                  point: location,
+                  width: 30,
+                  height: 30,
+                  child: const Icon(
+                    Icons.location_pin,
+                    color: kRed,
+                    size: 30,
+                  ),
                 ),
-                overflow: TextOverflow.ellipsis,
-              ),
-              Text(
-                sub,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: isSelected ? kRed.withOpacity(0.6) : kTextMuted,
-                ),
-              ),
-            ],
-          ),
+              ],
+            ),
+          ],
         ),
-        if (isSelected) const Icon(Icons.check, color: kRed, size: 16),
-      ],
+      ),
     );
   }
 }
