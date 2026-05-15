@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:http/http.dart' as http;
+import 'package:app_links/app_links.dart'; // ← TAMBAH
 import '../../services/api_service.dart';
 import '../../services/payment_service.dart';
 import 'transfer_page.dart';
@@ -28,6 +29,9 @@ class _PaymentPageState extends State<PaymentPage> {
   bool _isLoadingMidtrans = false;
   bool _isLoadingCheck = false;
   bool _sudahBayar = false;
+
+  final _appLinks = AppLinks(); // ← TAMBAH
+  StreamSubscription? _linkSub; // ← TAMBAH
 
   // ================= MIDTRANS =================
   Future<String?> getSnapToken(int bookingId) async {
@@ -91,7 +95,9 @@ class _PaymentPageState extends State<PaymentPage> {
 
     setState(() => _isLoadingCheck = false);
 
-    if (status == 'settlement' || status == 'capture') {
+    if (!mounted) return;
+
+    if (status == 'paid') {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("✅ Pembayaran berhasil dikonfirmasi!"),
@@ -116,16 +122,51 @@ class _PaymentPageState extends State<PaymentPage> {
       );
     }
   }
+
+  // ================= DEEP LINK ================= ← TAMBAH SEMUA INI
+  void _listenDeepLink() {
+  final bookingId = int.tryParse(
+    (widget.bookingData['id'] ?? widget.bookingData['booking_id'])
+        ?.toString() ?? "0",
+  ) ?? 0;
+
+  _linkSub = _appLinks.uriLinkStream.listen((uri) {
+    debugPrint("DEEP LINK RECEIVED: $uri");
+
+    if (uri.scheme == 'app88trans') {
+      final transactionStatus = uri.queryParameters['transaction_status'];
+      debugPrint("TRANSACTION STATUS: $transactionStatus");
+
+      if (transactionStatus == 'settlement' || transactionStatus == 'capture') {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("✅ Pembayaran berhasil!"),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.pop(context, true);
+        }
+      } else {
+        Future.delayed(const Duration(seconds: 2), () {
+          if (mounted) _checkStatus(bookingId);
+        });
+      }
+    }
+  });
+}
   // ============================================
 
   @override
   void initState() {
     super.initState();
     _startCountdown();
+    _listenDeepLink(); // ← TAMBAH
   }
 
   @override
   void dispose() {
+    _linkSub?.cancel(); // ← TAMBAH
     _timer?.cancel();
     super.dispose();
   }
@@ -199,30 +240,24 @@ class _PaymentPageState extends State<PaymentPage> {
         ? seats.length
         : (widget.bookingData['seat_count'] ?? 1);
 
-    // 🔥 FIX - prioritaskan final_price (harga setelah diskon promo) jika ada
     final int totalPrice = (() {
-      // Cek apakah ada final_price dari promo
       final finalPriceRaw = widget.bookingData['final_price'];
       if (finalPriceRaw != null) {
         final parsed = double.tryParse(finalPriceRaw.toString());
         if (parsed != null && parsed > 0) return parsed.toInt();
       }
-      // Fallback ke total_price dari API
       final totalPriceRaw = int.tryParse(
         widget.bookingData['total_price']?.toString() ?? "0",
       );
       if (totalPriceRaw != null && totalPriceRaw > 0) return totalPriceRaw;
-      // Fallback hitung manual
       return seatCount *
           (int.tryParse(widget.bookingData['price']?.toString() ?? "0") ?? 0);
     })();
 
-    // 🔥 Ambil info diskon jika ada
     final discountAmount = widget.bookingData['discount_amount'];
     final promoTitle = widget.bookingData['promo_title'];
     final hasPromo = promoTitle != null && discountAmount != null;
 
-    // Harga normal (sebelum diskon) untuk ditampilkan jika ada promo
     final int totalNormal = hasPromo
         ? (totalPrice +
             (double.tryParse(discountAmount.toString())?.toInt() ?? 0))
@@ -251,7 +286,6 @@ class _PaymentPageState extends State<PaymentPage> {
       ),
       body: Column(
         children: [
-          // Step indicator
           Container(
             color: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 40),
@@ -277,7 +311,6 @@ class _PaymentPageState extends State<PaymentPage> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Column(
                 children: [
-                  // Timer countdown
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                     decoration: BoxDecoration(
@@ -327,7 +360,6 @@ class _PaymentPageState extends State<PaymentPage> {
 
                   const SizedBox(height: 14),
 
-                  // Detail Pesanan
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(16),
@@ -404,7 +436,6 @@ class _PaymentPageState extends State<PaymentPage> {
 
                   const SizedBox(height: 14),
 
-                  // 🔥 Ringkasan Harga — tampilkan diskon jika ada promo
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(14),
@@ -416,7 +447,6 @@ class _PaymentPageState extends State<PaymentPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Banner promo jika ada
                         if (hasPromo) ...[
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
@@ -451,7 +481,6 @@ class _PaymentPageState extends State<PaymentPage> {
 
                         const SizedBox(height: 8),
 
-                        // Harga normal dicoret jika ada promo
                         if (hasPromo) ...[
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -507,13 +536,11 @@ class _PaymentPageState extends State<PaymentPage> {
             ),
           ),
 
-          // ================= TOMBOL BAYAR =================
           Container(
             color: Colors.white,
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
             child: Column(
               children: [
-                // 🔴 Tombol Midtrans
                 SizedBox(
                   width: double.infinity,
                   height: 52,
@@ -537,7 +564,6 @@ class _PaymentPageState extends State<PaymentPage> {
 
                 const SizedBox(height: 10),
 
-                // ⚪ Tombol Transfer Manual
                 SizedBox(
                   width: double.infinity,
                   height: 52,
@@ -568,7 +594,6 @@ class _PaymentPageState extends State<PaymentPage> {
                   ),
                 ),
 
-                // 🟢 Tombol Cek Status — muncul SETELAH user buka Midtrans
                 if (_sudahBayar) ...[
                   const SizedBox(height: 10),
                   SizedBox(

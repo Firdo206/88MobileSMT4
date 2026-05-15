@@ -24,8 +24,9 @@ class _AkunKeamananPageState extends State<AkunKeamananPage> {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
-  final TextEditingController passwordController =
-      TextEditingController(text: "********");
+  final TextEditingController passwordController = TextEditingController(
+    text: "********",
+  );
 
   int userId = 0;
 
@@ -138,8 +139,9 @@ class _AkunKeamananPageState extends State<AkunKeamananPage> {
   }
 
   Future<void> pickImage() async {
-    final XFile? pickedFile =
-        await _picker.pickImage(source: ImageSource.gallery);
+    final XFile? pickedFile = await _picker.pickImage(
+      source: ImageSource.gallery,
+    );
 
     if (pickedFile != null) {
       File imageFile = File(pickedFile.path);
@@ -153,11 +155,9 @@ class _AkunKeamananPageState extends State<AkunKeamananPage> {
 
         loadProfile();
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Foto berhasil diupdate"),
-          ),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Foto berhasil diupdate")));
       }
     }
   }
@@ -203,7 +203,9 @@ class _AkunKeamananPageState extends State<AkunKeamananPage> {
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 border: Border.all(
-                                    color: Colors.white, width: 3),
+                                  color: Colors.white,
+                                  width: 3,
+                                ),
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.black.withOpacity(0.2),
@@ -216,14 +218,14 @@ class _AkunKeamananPageState extends State<AkunKeamananPage> {
                                 child: _image != null
                                     ? Image.file(_image!, fit: BoxFit.cover)
                                     : avatar.isNotEmpty
-                                        ? Image.network(
-                                            "${ApiService.storageUrl}/avatar/$avatar?${DateTime.now().millisecondsSinceEpoch}",
-                                            fit: BoxFit.cover,
-                                          )
-                                        : Image.network(
-                                            "https://randomuser.me/api/portraits/women/44.jpg",
-                                            fit: BoxFit.cover,
-                                          ),
+                                    ? Image.network(
+                                        "${ApiService.storageUrl}/avatar/$avatar?${DateTime.now().millisecondsSinceEpoch}",
+                                        fit: BoxFit.cover,
+                                      )
+                                    : Image.network(
+                                        "https://randomuser.me/api/portraits/women/44.jpg",
+                                        fit: BoxFit.cover,
+                                      ),
                               ),
                             ),
                             Positioned(
@@ -241,8 +243,11 @@ class _AkunKeamananPageState extends State<AkunKeamananPage> {
                                     ),
                                   ],
                                 ),
-                                child: const Icon(Icons.camera_alt_rounded,
-                                    size: 14, color: _primary),
+                                child: const Icon(
+                                  Icons.camera_alt_rounded,
+                                  size: 14,
+                                  color: _primary,
+                                ),
                               ),
                             ),
                           ],
@@ -272,8 +277,11 @@ class _AkunKeamananPageState extends State<AkunKeamananPage> {
                                 color: Colors.white.withOpacity(0.2),
                                 borderRadius: BorderRadius.circular(6),
                               ),
-                              child: const Icon(Icons.edit_rounded,
-                                  size: 12, color: Colors.white),
+                              child: const Icon(
+                                Icons.edit_rounded,
+                                size: 12,
+                                color: Colors.white,
+                              ),
                             ),
                           ],
                         ),
@@ -285,7 +293,9 @@ class _AkunKeamananPageState extends State<AkunKeamananPage> {
                             ? ""
                             : emailController.text,
                         style: const TextStyle(
-                            color: Colors.white70, fontSize: 12),
+                          color: Colors.white70,
+                          fontSize: 12,
+                        ),
                       ),
                     ],
                   ),
@@ -305,40 +315,41 @@ class _AkunKeamananPageState extends State<AkunKeamananPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-
                   // Section: Informasi Akun
                   _sectionLabel("Informasi Akun"),
                   const SizedBox(height: 10),
 
-                  _infoCard(children: [
-                    _fieldTile(
-                      icon: Icons.email_outlined,
-                      label: "Email",
-                      value: emailController.text.isEmpty
-                          ? "Memuat..."
-                          : emailController.text,
-                      isReadOnly: true,
-                    ),
-                    _divider(),
-                    _fieldTile(
-                      icon: Icons.phone_outlined,
-                      label: "No. Telepon",
-                      value: phoneController.text.isEmpty
-                          ? "Belum diisi"
-                          : phoneController.text,
-                      trailingText: phoneController.text.isEmpty
-                          ? "Tambah"
-                          : "Ubah",
-                      onTap: () async {
-                        final result = await showDialog(
-                          context: context,
-                          builder: (context) =>
-                              EditPhoneDialog(userId: userId),
-                        );
-                        if (result != null) loadProfile();
-                      },
-                    ),
-                  ]),
+                  _infoCard(
+                    children: [
+                      _fieldTile(
+                        icon: Icons.email_outlined,
+                        label: "Email",
+                        value: emailController.text.isEmpty
+                            ? "Memuat..."
+                            : emailController.text,
+                        isReadOnly: true,
+                      ),
+                      _divider(),
+                      _fieldTile(
+                        icon: Icons.phone_outlined,
+                        label: "No. Telepon",
+                        value: phoneController.text.isEmpty
+                            ? "Belum diisi"
+                            : phoneController.text,
+                        trailingText: phoneController.text.isEmpty
+                            ? "Tambah"
+                            : "Ubah",
+                        onTap: () async {
+                          final result = await showDialog(
+                            context: context,
+                            builder: (context) =>
+                                EditPhoneDialog(userId: userId),
+                          );
+                          if (result != null) loadProfile();
+                        },
+                      ),
+                    ],
+                  ),
 
                   const SizedBox(height: 20),
 
@@ -346,24 +357,25 @@ class _AkunKeamananPageState extends State<AkunKeamananPage> {
                   _sectionLabel("Keamanan"),
                   const SizedBox(height: 10),
 
-                  _infoCard(children: [
-                    _fieldTile(
-                      icon: Icons.lock_outline_rounded,
-                      label: "Password",
-                      value: "••••••••",
-                      isReadOnly: true,
-                      trailingText: "Ubah",
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                const GantiPasswordPage(),
-                          ),
-                        );
-                      },
-                    ),
-                  ]),
+                  _infoCard(
+                    children: [
+                      _fieldTile(
+                        icon: Icons.lock_outline_rounded,
+                        label: "Password",
+                        value: "••••••••",
+                        isReadOnly: true,
+                        trailingText: "Ubah",
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const GantiPasswordPage(),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
 
                   const SizedBox(height: 32),
                 ],
@@ -435,9 +447,10 @@ class _AkunKeamananPageState extends State<AkunKeamananPage> {
                   Text(
                     label,
                     style: const TextStyle(
-                        fontSize: 11,
-                        color: Colors.grey,
-                        fontWeight: FontWeight.w500),
+                      fontSize: 11,
+                      color: Colors.grey,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                   const SizedBox(height: 2),
                   Text(
@@ -455,8 +468,10 @@ class _AkunKeamananPageState extends State<AkunKeamananPage> {
             ),
             if (trailingText != null)
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 5,
+                ),
                 decoration: BoxDecoration(
                   color: _primary.withOpacity(0.08),
                   borderRadius: BorderRadius.circular(20),
@@ -471,8 +486,11 @@ class _AkunKeamananPageState extends State<AkunKeamananPage> {
                 ),
               )
             else if (!isReadOnly)
-              const Icon(Icons.chevron_right_rounded,
-                  color: Colors.grey, size: 20),
+              const Icon(
+                Icons.chevron_right_rounded,
+                color: Colors.grey,
+                size: 20,
+              ),
           ],
         ),
       ),

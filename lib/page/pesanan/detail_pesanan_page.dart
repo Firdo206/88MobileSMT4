@@ -832,7 +832,7 @@ class DetailPesananPage extends StatelessWidget {
 
                   Navigator.pop(context);
 
-                  if (status == 'settlement' || status == 'capture') {
+                  if (status == 'paid') {
                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                       content: Text("✅ Pembayaran berhasil dikonfirmasi!"),
                       backgroundColor: Colors.green,
