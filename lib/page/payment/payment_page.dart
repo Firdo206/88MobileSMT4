@@ -13,11 +13,7 @@ class PaymentPage extends StatefulWidget {
   final Map data;
   final String type;
 
-  const PaymentPage({
-    super.key,
-    required this.data,
-    required this.type,
-  });
+  const PaymentPage({super.key, required this.data, required this.type});
 
   @override
   State<PaymentPage> createState() => _PaymentPageState();
@@ -43,14 +39,12 @@ class _PaymentPageState extends State<PaymentPage> {
   String safe(dynamic val) => val?.toString() ?? "-";
 
   String formatPrice(int price) {
-    return "Rp ${price.toString().replaceAllMapped(
-      RegExp(r'\B(?=(\d{3})+(?!\d))'),
-      (m) => ".",
-    )}";
+    return "Rp ${price.toString().replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (m) => ".")}";
   }
 
   int getTotal() {
-    final val = widget.data["total_price"] ??
+    final val =
+        widget.data["total_price"] ??
         widget.data["amount"] ??
         widget.data["price"] ??
         0;
@@ -60,7 +54,8 @@ class _PaymentPageState extends State<PaymentPage> {
   }
 
   int get bookingId {
-    final raw = widget.data['id'] ??
+    final raw =
+        widget.data['id'] ??
         widget.data['booking_id'] ??
         widget.data['tour_booking_id'] ??
         0;
@@ -95,30 +90,32 @@ class _PaymentPageState extends State<PaymentPage> {
   // DEEP LINK ← TAMBAH SEMUA INI
   // ─────────────────────────────────────────
 
- void _listenDeepLink() {
-  _linkSub = _appLinks.uriLinkStream.listen((uri) {
-    debugPrint("DEEP LINK RECEIVED: $uri");
-    if (uri.scheme == 'app88trans') {
-      
-      final transactionStatus = uri.queryParameters['transaction_status'];
-      debugPrint("TRANSACTION STATUS FROM URL: $transactionStatus");
-      
-      if (transactionStatus == 'settlement' || transactionStatus == 'capture') {
-        // Langsung cek & update status tanpa delay
-        if (mounted) _checkStatus();
-      } else {
-        // Kalau bukan settlement, tetap navigate ke pesanan
-        if (mounted) {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (_) => const MainPage(initialIndex: 2)),
-            (route) => false,
-          );
+  void _listenDeepLink() {
+    _linkSub = _appLinks.uriLinkStream.listen((uri) {
+      debugPrint("DEEP LINK RECEIVED: $uri");
+      if (uri.scheme == 'app88trans') {
+        final transactionStatus = uri.queryParameters['transaction_status'];
+        debugPrint("TRANSACTION STATUS FROM URL: $transactionStatus");
+
+        if (transactionStatus == 'settlement' ||
+            transactionStatus == 'capture') {
+          // Langsung cek & update status tanpa delay
+          if (mounted) _checkStatus();
+        } else {
+          // Kalau bukan settlement, tetap navigate ke pesanan
+          if (mounted) {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const MainPage(initialIndex: 2),
+              ),
+              (route) => false,
+            );
+          }
         }
       }
-    }
-  });
-}
+    });
+  }
 
   void _startCountdown() {
     final expiredAt = widget.data['expired_at'];
@@ -199,12 +196,12 @@ class _PaymentPageState extends State<PaymentPage> {
     }
   }
 
-  bool _tokenRequested = false; 
+  bool _tokenRequested = false;
 
   Future<void> _openMidtrans() async {
-    if (_isLoadingMidtrans || _tokenRequested) return; 
+    if (_isLoadingMidtrans || _tokenRequested) return;
     setState(() => _isLoadingMidtrans = true);
-    _tokenRequested = true; 
+    _tokenRequested = true;
     final token = await _getSnapToken(bookingId);
 
     if (token == null) {
@@ -246,15 +243,19 @@ class _PaymentPageState extends State<PaymentPage> {
     if (!mounted) return;
 
     if (status == 'settlement') {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text("✅ Pembayaran berhasil dikonfirmasi!"),
-        backgroundColor: Colors.green,
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("✅ Pembayaran berhasil dikonfirmasi!"),
+          backgroundColor: Colors.green,
+        ),
+      );
     } else if (status == 'pending') {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text("⏳ Pembayaran masih pending, harap tunggu..."),
-        backgroundColor: Colors.orange,
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("⏳ Pembayaran masih pending, harap tunggu..."),
+          backgroundColor: Colors.orange,
+        ),
+      );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Status: ${status ?? 'gagal cek'}")),
@@ -295,8 +296,11 @@ class _PaymentPageState extends State<PaymentPage> {
                       color: Colors.orange.shade50,
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(Icons.logout_rounded,
-                        color: Colors.orange.shade700, size: 30),
+                    child: Icon(
+                      Icons.logout_rounded,
+                      color: Colors.orange.shade700,
+                      size: 30,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   const Text(
@@ -308,7 +312,10 @@ class _PaymentPageState extends State<PaymentPage> {
                     "Tenang, pesananmu tetap tersimpan dan bisa dilanjutkan di menu Pesanan.",
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                        color: Colors.grey, fontSize: 13, height: 1.6),
+                      color: Colors.grey,
+                      fontSize: 13,
+                      height: 1.6,
+                    ),
                   ),
                   const SizedBox(height: 24),
                   Row(
@@ -319,7 +326,8 @@ class _PaymentPageState extends State<PaymentPage> {
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14)),
+                              borderRadius: BorderRadius.circular(14),
+                            ),
                           ),
                           child: const Text("Tidak"),
                         ),
@@ -333,10 +341,13 @@ class _PaymentPageState extends State<PaymentPage> {
                             backgroundColor: primary,
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14)),
+                              borderRadius: BorderRadius.circular(14),
+                            ),
                           ),
-                          child: const Text("Ya, Keluar",
-                              style: TextStyle(color: Colors.white)),
+                          child: const Text(
+                            "Ya, Keluar",
+                            style: TextStyle(color: Colors.white),
+                          ),
                         ),
                       ),
                     ],
@@ -377,9 +388,10 @@ class _PaymentPageState extends State<PaymentPage> {
       child: Scaffold(
         backgroundColor: const Color(0xFFF5F0F0),
         appBar: AppBar(
-          title: Text(title,
-              style: const TextStyle(
-                  fontWeight: FontWeight.bold, fontSize: 16)),
+          title: Text(
+            title,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          ),
           backgroundColor: primary,
           foregroundColor: Colors.white,
           elevation: 0,
@@ -408,7 +420,9 @@ class _PaymentPageState extends State<PaymentPage> {
                             label: "Kode",
                             valueWidget: Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 4),
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
                               decoration: BoxDecoration(
                                 color: primary.withOpacity(0.08),
                                 borderRadius: BorderRadius.circular(8),
@@ -429,45 +443,55 @@ class _PaymentPageState extends State<PaymentPage> {
                               icon: Icons.location_on_rounded,
                               label: "Pickup",
                               valueWidget: _valueText(
-                                  safe(widget.data['pickup_location'])),
+                                safe(widget.data['pickup_location']),
+                              ),
                             ),
                             const SizedBox(height: 12),
                             _infoRow(
                               icon: Icons.flag_rounded,
                               label: "Tujuan",
-                              valueWidget:
-                                  _valueText(safe(widget.data['destination'])),
+                              valueWidget: _valueText(
+                                safe(widget.data['destination']),
+                              ),
                             ),
                             const SizedBox(height: 12),
                             _infoRow(
                               icon: Icons.calendar_today_rounded,
                               label: "Tanggal",
                               valueWidget: _valueText(
-                                  "${safe(widget.data['start_date'])} - ${safe(widget.data['end_date'])}"),
+                                "${safe(widget.data['start_date'])} - ${safe(widget.data['end_date'])}",
+                              ),
                             ),
                           ] else ...[
                             const SizedBox(height: 12),
                             _infoRow(
                               icon: Icons.map_rounded,
                               label: "Paket",
-                              valueWidget: _valueText(safe(
+                              valueWidget: _valueText(
+                                safe(
                                   widget.data['tour_name'] ??
-                                      widget.data['package_name'])),
+                                      widget.data['package_name'],
+                                ),
+                              ),
                             ),
                             const SizedBox(height: 12),
                             _infoRow(
                               icon: Icons.calendar_today_rounded,
                               label: "Tanggal",
-                              valueWidget:
-                                  _valueText(safe(widget.data['travel_date'])),
+                              valueWidget: _valueText(
+                                safe(widget.data['travel_date']),
+                              ),
                             ),
                             const SizedBox(height: 12),
                             _infoRow(
                               icon: Icons.people_rounded,
                               label: "Peserta",
-                              valueWidget: _valueText(safe(
+                              valueWidget: _valueText(
+                                safe(
                                   widget.data['participants'] ??
-                                      widget.data['pax'])),
+                                      widget.data['pax'],
+                                ),
+                              ),
                             ),
                           ],
                         ],
@@ -482,10 +506,13 @@ class _PaymentPageState extends State<PaymentPage> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text("Total Pembayaran",
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 15)),
+                              const Text(
+                                "Total Pembayaran",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                ),
+                              ),
                               Text(
                                 formatPrice(total),
                                 style: const TextStyle(
@@ -502,19 +529,25 @@ class _PaymentPageState extends State<PaymentPage> {
                             decoration: BoxDecoration(
                               color: primary.withOpacity(0.06),
                               borderRadius: BorderRadius.circular(10),
-                              border:
-                                  Border.all(color: primary.withOpacity(0.15)),
+                              border: Border.all(
+                                color: primary.withOpacity(0.15),
+                              ),
                             ),
                             child: const Row(
                               children: [
-                                Icon(Icons.info_outline_rounded,
-                                    color: primary, size: 16),
+                                Icon(
+                                  Icons.info_outline_rounded,
+                                  color: primary,
+                                  size: 16,
+                                ),
                                 SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
                                     "Lakukan pembayaran sesuai nominal di atas",
-                                    style:
-                                        TextStyle(fontSize: 12, color: primary),
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: primary,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -556,7 +589,8 @@ class _PaymentPageState extends State<PaymentPage> {
                         backgroundColor: primary,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14)),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
                         disabledBackgroundColor: Colors.grey.shade300,
                       ),
                       child: _isLoadingMidtrans
@@ -564,8 +598,11 @@ class _PaymentPageState extends State<PaymentPage> {
                           : const Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(Icons.payment_rounded,
-                                    color: Colors.white, size: 20),
+                                Icon(
+                                  Icons.payment_rounded,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
                                 SizedBox(width: 10),
                                 Text(
                                   "Bayar Sekarang",
@@ -590,14 +627,17 @@ class _PaymentPageState extends State<PaymentPage> {
                         style: OutlinedButton.styleFrom(
                           side: const BorderSide(color: primary, width: 1.5),
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14)),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
                         ),
                         child: _isLoadingCheck
                             ? const SizedBox(
                                 width: 22,
                                 height: 22,
                                 child: CircularProgressIndicator(
-                                    strokeWidth: 2, color: primary),
+                                  strokeWidth: 2,
+                                  color: primary,
+                                ),
                               )
                             : const Text(
                                 "Lihat Pesanan Saya",
@@ -628,9 +668,7 @@ class _PaymentPageState extends State<PaymentPage> {
         color: _isExpired ? const Color(0xFFFFEBEE) : Colors.orange.shade50,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: _isExpired
-              ? const Color(0xFFEF9A9A)
-              : Colors.orange.shade200,
+          color: _isExpired ? const Color(0xFFEF9A9A) : Colors.orange.shade200,
         ),
       ),
       child: Row(
@@ -638,7 +676,9 @@ class _PaymentPageState extends State<PaymentPage> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: (_isExpired ? Colors.red : Colors.orange).withOpacity(0.15),
+              color: (_isExpired ? Colors.red : Colors.orange).withOpacity(
+                0.15,
+              ),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
@@ -653,21 +693,23 @@ class _PaymentPageState extends State<PaymentPage> {
                 ? const Text(
                     "Waktu pembayaran habis. Pesanan telah dibatalkan.",
                     style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.red,
-                        fontWeight: FontWeight.w600),
+                      fontSize: 13,
+                      color: Colors.red,
+                      fontWeight: FontWeight.w600,
+                    ),
                   )
                 : Text(
                     "Selesaikan pembayaran sebelum waktu habis",
-                    style:
-                        TextStyle(fontSize: 13, color: Colors.orange.shade800),
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.orange.shade800,
+                    ),
                   ),
           ),
           if (!_isExpired) ...[
             const SizedBox(width: 8),
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
                 color: Colors.orange.shade700,
                 borderRadius: BorderRadius.circular(8),
@@ -720,11 +762,14 @@ class _PaymentPageState extends State<PaymentPage> {
                 child: Icon(icon, color: primary, size: 18),
               ),
               const SizedBox(width: 10),
-              Text(title,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 14,
-                      color: Colors.black87)),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                  color: Colors.black87,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 16),
