@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:http/http.dart' as http;
+import 'package:app_links/app_links.dart'; // ← TAMBAH
 import '../../services/api_service.dart';
 import '../../services/payment_service.dart';
 import '../pesanan/pesanan_page.dart';
@@ -10,7 +11,7 @@ import '../navigation/main_page.dart';
 
 class PaymentPage extends StatefulWidget {
   final Map data;
-  final String type; 
+  final String type;
 
   const PaymentPage({
     super.key,
@@ -31,6 +32,9 @@ class _PaymentPageState extends State<PaymentPage> {
   bool _isLoadingMidtrans = false;
   bool _isLoadingCheck = false;
   bool _sudahBayar = false;
+
+  final _appLinks = AppLinks(); // ← TAMBAH
+  StreamSubscription? _linkSub; // ← TAMBAH
 
   // ─────────────────────────────────────────
   // HELPERS
@@ -55,7 +59,6 @@ class _PaymentPageState extends State<PaymentPage> {
     return int.tryParse(str) ?? 0;
   }
 
-  /// ID booking — sesuaikan field-nya jika berbeda
   int get bookingId {
     final raw = widget.data['id'] ??
         widget.data['booking_id'] ??
@@ -78,13 +81,44 @@ class _PaymentPageState extends State<PaymentPage> {
   void initState() {
     super.initState();
     _startCountdown();
+    _listenDeepLink(); // ← TAMBAH
   }
 
   @override
   void dispose() {
+    _linkSub?.cancel(); // ← TAMBAH
     _timer?.cancel();
     super.dispose();
   }
+
+  // ─────────────────────────────────────────
+  // DEEP LINK ← TAMBAH SEMUA INI
+  // ─────────────────────────────────────────
+
+ void _listenDeepLink() {
+  _linkSub = _appLinks.uriLinkStream.listen((uri) {
+    debugPrint("DEEP LINK RECEIVED: $uri");
+    if (uri.scheme == 'app88trans') {
+      
+      final transactionStatus = uri.queryParameters['transaction_status'];
+      debugPrint("TRANSACTION STATUS FROM URL: $transactionStatus");
+      
+      if (transactionStatus == 'settlement' || transactionStatus == 'capture') {
+        // Langsung cek & update status tanpa delay
+        if (mounted) _checkStatus();
+      } else {
+        // Kalau bukan settlement, tetap navigate ke pesanan
+        if (mounted) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const MainPage(initialIndex: 2)),
+            (route) => false,
+          );
+        }
+      }
+    }
+  });
+}
 
   void _startCountdown() {
     final expiredAt = widget.data['expired_at'];
@@ -94,6 +128,7 @@ class _PaymentPageState extends State<PaymentPage> {
     if (rawString.isEmpty) return;
 
     DateTime? expiry;
+
     if (!rawString.contains('+') && !rawString.toUpperCase().contains('Z')) {
       expiry = DateTime.tryParse('${rawString}Z')?.toLocal();
     } else {
@@ -134,7 +169,6 @@ class _PaymentPageState extends State<PaymentPage> {
 
   Future<String?> _getSnapToken(int id) async {
     try {
-      // ← Pilih endpoint sesuai type
       final endpoint = type == "tour"
           ? ApiService.midtransPaymentTour
           : ApiService.midtransPayment;
@@ -165,10 +199,12 @@ class _PaymentPageState extends State<PaymentPage> {
     }
   }
 
-  Future<void> _openMidtrans() async {
-    if (_isLoadingMidtrans) return;
-    setState(() => _isLoadingMidtrans = true);
+  bool _tokenRequested = false; 
 
+  Future<void> _openMidtrans() async {
+    if (_isLoadingMidtrans || _tokenRequested) return; 
+    setState(() => _isLoadingMidtrans = true);
+    _tokenRequested = true; 
     final token = await _getSnapToken(bookingId);
 
     if (token == null) {
@@ -191,24 +227,41 @@ class _PaymentPageState extends State<PaymentPage> {
 
     setState(() {
       _isLoadingMidtrans = false;
-      _sudahBayar = true; // tampilkan tombol "Lihat Pesanan"
+      _sudahBayar = true;
     });
   }
 
   // ─────────────────────────────────────────
-  // CEK STATUS PEMBAYARAN
+  // CEK STATUS PEMBAYARAN ← FIX
   // ─────────────────────────────────────────
 
   Future<void> _checkStatus() async {
     if (_isLoadingCheck) return;
     setState(() => _isLoadingCheck = true);
 
-    await PaymentService.checkStatus(bookingId);
+    final status = await PaymentService.checkStatus(bookingId);
 
     setState(() => _isLoadingCheck = false);
 
     if (!mounted) return;
 
+    if (status == 'settlement') {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text("✅ Pembayaran berhasil dikonfirmasi!"),
+        backgroundColor: Colors.green,
+      ));
+    } else if (status == 'pending') {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text("⏳ Pembayaran masih pending, harap tunggu..."),
+        backgroundColor: Colors.orange,
+      ));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Status: ${status ?? 'gagal cek'}")),
+      );
+    }
+
+    // Selalu navigate ke halaman pesanan setelah cek
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (_) => const MainPage(initialIndex: 2)),
@@ -248,8 +301,7 @@ class _PaymentPageState extends State<PaymentPage> {
                   const SizedBox(height: 16),
                   const Text(
                     "Keluar Pembayaran?",
-                    style:
-                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   const Text(
@@ -265,8 +317,7 @@ class _PaymentPageState extends State<PaymentPage> {
                         child: OutlinedButton(
                           onPressed: () => Navigator.pop(context, false),
                           style: OutlinedButton.styleFrom(
-                            padding:
-                                const EdgeInsets.symmetric(vertical: 14),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(14)),
                           ),
@@ -280,8 +331,7 @@ class _PaymentPageState extends State<PaymentPage> {
                           onPressed: () => Navigator.pop(context, true),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: primary,
-                            padding:
-                                const EdgeInsets.symmetric(vertical: 14),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(14)),
                           ),
@@ -304,7 +354,7 @@ class _PaymentPageState extends State<PaymentPage> {
     if (keluar && mounted) {
       Navigator.pushAndRemoveUntil(
         context,
-         MaterialPageRoute(builder: (_) => const MainPage(initialIndex: 2)),
+        MaterialPageRoute(builder: (_) => const MainPage(initialIndex: 2)),
         (route) => false,
       );
     }
@@ -341,18 +391,13 @@ class _PaymentPageState extends State<PaymentPage> {
         ),
         body: Column(
           children: [
-            // ── SCROLLABLE CONTENT ──
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   children: [
-                    // ── TIMER ──
                     _buildTimer(),
-
                     const SizedBox(height: 14),
-
-                    // ── DETAIL PESANAN ──
                     _card(
                       title: "Detail Pesanan",
                       icon: Icons.luggage_rounded,
@@ -390,8 +435,8 @@ class _PaymentPageState extends State<PaymentPage> {
                             _infoRow(
                               icon: Icons.flag_rounded,
                               label: "Tujuan",
-                              valueWidget: _valueText(
-                                  safe(widget.data['destination'])),
+                              valueWidget:
+                                  _valueText(safe(widget.data['destination'])),
                             ),
                             const SizedBox(height: 12),
                             _infoRow(
@@ -405,39 +450,37 @@ class _PaymentPageState extends State<PaymentPage> {
                             _infoRow(
                               icon: Icons.map_rounded,
                               label: "Paket",
-                              valueWidget:
-                                  _valueText(safe(widget.data['tour_name'] ?? widget.data['package_name'])),
+                              valueWidget: _valueText(safe(
+                                  widget.data['tour_name'] ??
+                                      widget.data['package_name'])),
                             ),
                             const SizedBox(height: 12),
                             _infoRow(
                               icon: Icons.calendar_today_rounded,
                               label: "Tanggal",
-                              valueWidget: _valueText(
-                                  safe(widget.data['travel_date'])),
+                              valueWidget:
+                                  _valueText(safe(widget.data['travel_date'])),
                             ),
                             const SizedBox(height: 12),
                             _infoRow(
                               icon: Icons.people_rounded,
                               label: "Peserta",
-                              valueWidget: _valueText(
-                                  safe(widget.data['participants'] ?? widget.data['pax'])),
+                              valueWidget: _valueText(safe(
+                                  widget.data['participants'] ??
+                                      widget.data['pax'])),
                             ),
                           ],
                         ],
                       ),
                     ),
-
                     const SizedBox(height: 14),
-
-                    // ── RINCIAN HARGA ──
                     _card(
                       title: "Rincian Harga",
                       icon: Icons.receipt_long_rounded,
                       child: Column(
                         children: [
                           Row(
-                            mainAxisAlignment:
-                                MainAxisAlignment.spaceBetween,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               const Text("Total Pembayaran",
                                   style: TextStyle(
@@ -459,8 +502,8 @@ class _PaymentPageState extends State<PaymentPage> {
                             decoration: BoxDecoration(
                               color: primary.withOpacity(0.06),
                               borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                  color: primary.withOpacity(0.15)),
+                              border:
+                                  Border.all(color: primary.withOpacity(0.15)),
                             ),
                             child: const Row(
                               children: [
@@ -470,8 +513,8 @@ class _PaymentPageState extends State<PaymentPage> {
                                 Expanded(
                                   child: Text(
                                     "Lakukan pembayaran sesuai nominal di atas",
-                                    style: TextStyle(
-                                        fontSize: 12, color: primary),
+                                    style:
+                                        TextStyle(fontSize: 12, color: primary),
                                   ),
                                 ),
                               ],
@@ -480,7 +523,6 @@ class _PaymentPageState extends State<PaymentPage> {
                         ],
                       ),
                     ),
-
                     const SizedBox(height: 24),
                   ],
                 ),
@@ -503,29 +545,24 @@ class _PaymentPageState extends State<PaymentPage> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // 🔴 Tombol Bayar Midtrans
                   SizedBox(
                     width: double.infinity,
                     height: 54,
                     child: ElevatedButton(
-                      onPressed:
-                          (_isExpired || _isLoadingMidtrans)
-                              ? null
-                              : _openMidtrans,
+                      onPressed: (_isExpired || _isLoadingMidtrans)
+                          ? null
+                          : _openMidtrans,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primary,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14)),
-                        disabledBackgroundColor:
-                            Colors.grey.shade300,
+                        disabledBackgroundColor: Colors.grey.shade300,
                       ),
                       child: _isLoadingMidtrans
-                          ? const CircularProgressIndicator(
-                              color: Colors.white)
+                          ? const CircularProgressIndicator(color: Colors.white)
                           : const Row(
-                              mainAxisAlignment:
-                                  MainAxisAlignment.center,
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Icon(Icons.payment_rounded,
                                     color: Colors.white, size: 20),
@@ -543,7 +580,6 @@ class _PaymentPageState extends State<PaymentPage> {
                     ),
                   ),
 
-                  // Tombol Lihat Pesanan — muncul setelah user buka Midtrans
                   if (_sudahBayar) ...[
                     const SizedBox(height: 10),
                     SizedBox(
@@ -552,8 +588,7 @@ class _PaymentPageState extends State<PaymentPage> {
                       child: OutlinedButton(
                         onPressed: _isLoadingCheck ? null : _checkStatus,
                         style: OutlinedButton.styleFrom(
-                          side: const BorderSide(
-                              color: primary, width: 1.5),
+                          side: const BorderSide(color: primary, width: 1.5),
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(14)),
                         ),
@@ -590,9 +625,7 @@ class _PaymentPageState extends State<PaymentPage> {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: _isExpired
-            ? const Color(0xFFFFEBEE)
-            : Colors.orange.shade50,
+        color: _isExpired ? const Color(0xFFFFEBEE) : Colors.orange.shade50,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: _isExpired
@@ -605,17 +638,12 @@ class _PaymentPageState extends State<PaymentPage> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: (_isExpired ? Colors.red : Colors.orange)
-                  .withOpacity(0.15),
+              color: (_isExpired ? Colors.red : Colors.orange).withOpacity(0.15),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
-              _isExpired
-                  ? Icons.cancel_rounded
-                  : Icons.access_time_rounded,
-              color: _isExpired
-                  ? Colors.red
-                  : Colors.orange.shade700,
+              _isExpired ? Icons.cancel_rounded : Icons.access_time_rounded,
+              color: _isExpired ? Colors.red : Colors.orange.shade700,
               size: 18,
             ),
           ),
@@ -631,15 +659,15 @@ class _PaymentPageState extends State<PaymentPage> {
                   )
                 : Text(
                     "Selesaikan pembayaran sebelum waktu habis",
-                    style: TextStyle(
-                        fontSize: 13, color: Colors.orange.shade800),
+                    style:
+                        TextStyle(fontSize: 13, color: Colors.orange.shade800),
                   ),
           ),
           if (!_isExpired) ...[
             const SizedBox(width: 8),
             Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 10, vertical: 4),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
                 color: Colors.orange.shade700,
                 borderRadius: BorderRadius.circular(8),
@@ -716,8 +744,7 @@ class _PaymentPageState extends State<PaymentPage> {
       children: [
         Icon(icon, size: 16, color: Colors.grey),
         const SizedBox(width: 10),
-        Text(label,
-            style: const TextStyle(color: Colors.grey, fontSize: 13)),
+        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 13)),
         const Spacer(),
         valueWidget,
       ],

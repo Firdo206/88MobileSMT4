@@ -3,10 +3,11 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:http/http.dart' as http;
-import 'package:app_links/app_links.dart'; // ← TAMBAH
+import 'package:app_links/app_links.dart';
 import '../../services/api_service.dart';
 import '../../services/payment_service.dart';
 import 'transfer_page.dart';
+import 'package:app_88trans/page/navigation/main_page.dart'; 
 
 class PaymentPage extends StatefulWidget {
   final Map bookingData;
@@ -20,7 +21,8 @@ class PaymentPage extends StatefulWidget {
   State<PaymentPage> createState() => _PaymentPageState();
 }
 
-class _PaymentPageState extends State<PaymentPage> {
+class _PaymentPageState extends State<PaymentPage>
+    with WidgetsBindingObserver {  
   static const Color _primary = Color(0xFF7B2D2D);
 
   Timer? _timer;
@@ -29,9 +31,10 @@ class _PaymentPageState extends State<PaymentPage> {
   bool _isLoadingMidtrans = false;
   bool _isLoadingCheck = false;
   bool _sudahBayar = false;
+  bool _tokenRequested = false; 
 
-  final _appLinks = AppLinks(); // ← TAMBAH
-  StreamSubscription? _linkSub; // ← TAMBAH
+  final _appLinks = AppLinks();
+  StreamSubscription? _linkSub;
 
   // ================= MIDTRANS =================
   Future<String?> getSnapToken(int bookingId) async {
@@ -58,14 +61,19 @@ class _PaymentPageState extends State<PaymentPage> {
   }
 
   Future<void> openMidtrans(int bookingId) async {
-    if (_isLoadingMidtrans) return;
-
-    setState(() => _isLoadingMidtrans = true);
+    if (_isLoadingMidtrans || _tokenRequested) return; 
+    setState(() {
+      _isLoadingMidtrans = true;
+      _tokenRequested = true; 
+    });
 
     final token = await getSnapToken(bookingId);
 
     if (token == null) {
-      setState(() => _isLoadingMidtrans = false);
+      setState(() {
+        _isLoadingMidtrans = false;
+        _tokenRequested = false; 
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Gagal membuka pembayaran")),
       );
@@ -97,14 +105,19 @@ class _PaymentPageState extends State<PaymentPage> {
 
     if (!mounted) return;
 
-    if (status == 'paid') {
+    if (status == 'settlement' || status == 'paid') {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("✅ Pembayaran berhasil dikonfirmasi!"),
           backgroundColor: Colors.green,
         ),
       );
-      Navigator.pop(context, true);
+      Navigator.of(context).pushAndRemoveUntil(
+    MaterialPageRoute(
+      builder: (_) => const MainPage(initialIndex: 2),
+    ),
+    (route) => false,
+        );
     } else if (status == 'pending') {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -123,50 +136,55 @@ class _PaymentPageState extends State<PaymentPage> {
     }
   }
 
-  // ================= DEEP LINK ================= ← TAMBAH SEMUA INI
-  void _listenDeepLink() {
-  final bookingId = int.tryParse(
-    (widget.bookingData['id'] ?? widget.bookingData['booking_id'])
-        ?.toString() ?? "0",
-  ) ?? 0;
-
-  _linkSub = _appLinks.uriLinkStream.listen((uri) {
-    debugPrint("DEEP LINK RECEIVED: $uri");
-
-    if (uri.scheme == 'app88trans') {
-      final transactionStatus = uri.queryParameters['transaction_status'];
-      debugPrint("TRANSACTION STATUS: $transactionStatus");
-
-      if (transactionStatus == 'settlement' || transactionStatus == 'capture') {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text("✅ Pembayaran berhasil!"),
-              backgroundColor: Colors.green,
-            ),
-          );
-          Navigator.pop(context, true);
-        }
-      } else {
-        Future.delayed(const Duration(seconds: 2), () {
-          if (mounted) _checkStatus(bookingId);
-        });
-      }
+  // ================= APP LIFECYCLE ================= ← TAMBAH
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _sudahBayar) {
+      final bookingId = int.tryParse(
+        (widget.bookingData['id'] ?? widget.bookingData['booking_id'])
+            ?.toString() ?? "0",
+      ) ?? 0;
+      // Auto cek status saat balik ke app
+      Future.delayed(const Duration(seconds: 1), () {
+        if (mounted) _checkStatus(bookingId);
+      });
     }
-  });
-}
-  // ============================================
+  }
+
+  // ================= DEEP LINK =================
+  void _listenDeepLink() {
+    final bookingId = int.tryParse(
+      (widget.bookingData['id'] ?? widget.bookingData['booking_id'])
+          ?.toString() ?? "0",
+    ) ?? 0;
+
+    _linkSub = _appLinks.uriLinkStream.listen((uri) {
+      debugPrint("DEEP LINK RECEIVED: $uri");
+      if (uri.scheme == 'app88trans') {
+        final transactionStatus = uri.queryParameters['transaction_status'];
+        debugPrint("TRANSACTION STATUS FROM URL: $transactionStatus");
+
+        if (transactionStatus == 'settlement' || transactionStatus == 'capture') {
+          if (mounted) _checkStatus(bookingId);
+        } else {
+          if (mounted) Navigator.pop(context);
+        }
+      }
+    });
+  }
 
   @override
   void initState() {
     super.initState();
     _startCountdown();
-    _listenDeepLink(); // ← TAMBAH
+    _listenDeepLink();
+    WidgetsBinding.instance.addObserver(this); 
   }
 
   @override
   void dispose() {
-    _linkSub?.cancel(); // ← TAMBAH
+    WidgetsBinding.instance.removeObserver(this);
+    _linkSub?.cancel();
     _timer?.cancel();
     super.dispose();
   }
@@ -545,7 +563,7 @@ class _PaymentPageState extends State<PaymentPage> {
                   width: double.infinity,
                   height: 52,
                   child: ElevatedButton(
-                    onPressed: (_isExpired || _isLoadingMidtrans)
+                    onPressed: (_isExpired || _isLoadingMidtrans || _tokenRequested)
                         ? null
                         : () async => await openMidtrans(bookingId),
                     style: ElevatedButton.styleFrom(
