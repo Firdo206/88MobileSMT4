@@ -12,6 +12,7 @@ class DetailPesananPdf {
   final String displayName;
   final String displayPhone;
   final String displayEmail;
+  
 
   const DetailPesananPdf({
     required this.data,
@@ -47,7 +48,8 @@ class DetailPesananPdf {
 
   Future<void> generate(int price) async {
     final pdf = pw.Document();
-    final bookingCode = data["booking_code"] ?? data["rental_code"] ?? "UNKNOWN";
+    final bookingCode =
+        data["booking_code"] ?? data["rental_code"] ?? "UNKNOWN";
 
     final qrData = jsonEncode({
       "code": bookingCode,
@@ -79,7 +81,10 @@ class DetailPesananPdf {
             _buildInfoBar(),
             // ── Konten utama ─────────────────────────────────────────────
             pw.Padding(
-              padding: const pw.EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              padding: const pw.EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: 16,
+              ),
               child: pw.Column(
                 crossAxisAlignment: pw.CrossAxisAlignment.stretch,
                 children: [
@@ -99,8 +104,13 @@ class DetailPesananPdf {
                       pw.Expanded(child: _buildTripCard()),
                       pw.SizedBox(width: 12),
                       pw.Expanded(
-                          child: _buildPassengerCard(
-                              price, bookingCode, printTime, qrPdfImage)),
+                        child: _buildPassengerCard(
+                          price,
+                          bookingCode,
+                          printTime,
+                          qrPdfImage,
+                        ),
+                      ),
                     ],
                   ),
                   pw.SizedBox(height: 12),
@@ -179,9 +189,10 @@ class DetailPesananPdf {
               pw.Text(
                 "Kantor Pusat Bus 88",
                 style: pw.TextStyle(
-                    fontSize: 9,
-                    fontWeight: pw.FontWeight.bold,
-                    color: PdfColors.white),
+                  fontSize: 9,
+                  fontWeight: pw.FontWeight.bold,
+                  color: PdfColors.white,
+                ),
               ),
               pw.Text(
                 "Jl. Brawijaya, Darungan, Jubung, Kec. Sukorambi,",
@@ -219,11 +230,14 @@ class DetailPesananPdf {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
-        pw.Text(label,
-            style: pw.TextStyle(fontSize: 7, color: PdfColors.grey600)),
-        pw.Text(value,
-            style:
-                pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold)),
+        pw.Text(
+          label,
+          style: pw.TextStyle(fontSize: 7, color: PdfColors.grey600),
+        ),
+        pw.Text(
+          value,
+          style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold),
+        ),
       ],
     );
   }
@@ -239,11 +253,14 @@ class DetailPesananPdf {
       ),
       child: pw.Row(
         children: [
-          pw.Text("PENTING  ",
-              style: pw.TextStyle(
-                  fontSize: 8,
-                  fontWeight: pw.FontWeight.bold,
-                  color: PdfColor.fromHex("#E65100"))),
+          pw.Text(
+            "PENTING  ",
+            style: pw.TextStyle(
+              fontSize: 8,
+              fontWeight: pw.FontWeight.bold,
+              color: PdfColor.fromHex("#E65100"),
+            ),
+          ),
           pw.Text(
             "Kode QR anda harus dipindai saat naik.",
             style: pw.TextStyle(fontSize: 8, color: PdfColors.grey800),
@@ -288,26 +305,35 @@ class DetailPesananPdf {
           child: pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              pw.Text(origin,
-                  style: pw.TextStyle(
-                      fontSize: 18, fontWeight: pw.FontWeight.bold)),
-              pw.Text(depDate,
-                  style:
-                      pw.TextStyle(fontSize: 9, color: PdfColors.grey600)),
-              pw.Text(depTime,
-                  style:
-                      pw.TextStyle(fontSize: 9, color: PdfColors.grey600)),
+              pw.Text(
+                origin,
+                style: pw.TextStyle(
+                  fontSize: 18,
+                  fontWeight: pw.FontWeight.bold,
+                ),
+              ),
+              pw.Text(
+                depDate,
+                style: pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
+              ),
+              pw.Text(
+                depTime,
+                style: pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
+              ),
             ],
           ),
         ),
         // Panah
         pw.Padding(
           padding: const pw.EdgeInsets.only(top: 6),
-          child: pw.Text("->",
-              style: pw.TextStyle(
-                  fontSize: 14,
-                  fontWeight: pw.FontWeight.bold,
-                  color: PdfColors.grey500)),
+          child: pw.Text(
+            "->",
+            style: pw.TextStyle(
+              fontSize: 14,
+              fontWeight: pw.FontWeight.bold,
+              color: PdfColors.grey500,
+            ),
+          ),
         ),
         // Tujuan
         pw.Expanded(
@@ -316,23 +342,28 @@ class DetailPesananPdf {
             child: pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
-                pw.Text(destination,
-                    style: pw.TextStyle(
-                        fontSize: 18, fontWeight: pw.FontWeight.bold)),
-                pw.Text(arrDate,
-                    style: pw.TextStyle(
-                        fontSize: 9, color: PdfColors.grey600)),
-                pw.Text(arrTime,
-                    style: pw.TextStyle(
-                        fontSize: 9, color: PdfColors.grey600)),
+                pw.Text(
+                  destination,
+                  style: pw.TextStyle(
+                    fontSize: 18,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                ),
+                pw.Text(
+                  arrDate,
+                  style: pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
+                ),
+                pw.Text(
+                  arrTime,
+                  style: pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
+                ),
               ],
             ),
           ),
         ),
         // Badge kode booking
         pw.Container(
-          padding:
-              const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          padding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: pw.BoxDecoration(
             border: pw.Border.all(color: PdfColors.grey400),
             borderRadius: pw.BorderRadius.circular(6),
@@ -340,16 +371,20 @@ class DetailPesananPdf {
           child: pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.center,
             children: [
-              pw.Text("Kode Booking",
-                  style:
-                      pw.TextStyle(fontSize: 7, color: PdfColors.grey600)),
+              pw.Text(
+                "Kode Booking",
+                style: pw.TextStyle(fontSize: 7, color: PdfColors.grey600),
+              ),
               pw.SizedBox(height: 2),
-              pw.Text(bookingCode,
-                  style: pw.TextStyle(
-                      fontSize: 9,
-                      fontWeight: pw.FontWeight.bold,
-                      color: PdfColors.red800,
-                      letterSpacing: 1)),
+              pw.Text(
+                bookingCode,
+                style: pw.TextStyle(
+                  fontSize: 9,
+                  fontWeight: pw.FontWeight.bold,
+                  color: PdfColors.red800,
+                  letterSpacing: 1,
+                ),
+              ),
             ],
           ),
         ),
@@ -370,8 +405,7 @@ class DetailPesananPdf {
         children: [
           pw.Text(
             "Total Harga : Rp ${rupiah(price)}",
-            style: pw.TextStyle(
-                fontSize: 13, fontWeight: pw.FontWeight.bold),
+            style: pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold),
           ),
           pw.SizedBox(height: 3),
           pw.Text(
@@ -394,11 +428,14 @@ class DetailPesananPdf {
       child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
-          pw.Text("Rincian Perjalanan",
-              style: pw.TextStyle(
-                  fontSize: 10,
-                  fontWeight: pw.FontWeight.bold,
-                  color: PdfColors.grey700)),
+          pw.Text(
+            "Rincian Perjalanan",
+            style: pw.TextStyle(
+              fontSize: 10,
+              fontWeight: pw.FontWeight.bold,
+              color: PdfColors.grey700,
+            ),
+          ),
           pw.SizedBox(height: 10),
           _buildTripSection(),
         ],
@@ -424,19 +461,17 @@ class DetailPesananPdf {
       return pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
-          _dotRow(PdfColors.blue700, "Penjemputan",
-              data["pickup_location"] ?? "-"),
-          pw.SizedBox(height: 8),
           _dotRow(
-              PdfColors.red700, "Tujuan", data["destination"] ?? "-"),
+            PdfColors.blue700,
+            "Penjemputan",
+            data["pickup_location"] ?? "-",
+          ),
           pw.SizedBox(height: 8),
-          _labelValue(
-              "Tanggal",
-              "${data["start_date"]} - ${data["end_date"]}"),
-          _labelValue(
-              "Durasi", "${data["duration_days"]} hari"),
-          _labelValue(
-              "Penumpang", "${data["passenger_count"]} orang"),
+          _dotRow(PdfColors.red700, "Tujuan", data["destination"] ?? "-"),
+          pw.SizedBox(height: 8),
+          _labelValue("Tanggal", "${data["start_date"]} - ${data["end_date"]}"),
+          _labelValue("Durasi", "${data["duration_days"]} hari"),
+          _labelValue("Penumpang", "${data["passenger_count"]} orang"),
         ],
       );
     }
@@ -444,13 +479,11 @@ class DetailPesananPdf {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
-        _dotRow(PdfColors.blue700, "Paket",
-            data["package_name"] ?? "-"),
+        _dotRow(PdfColors.blue700, "Paket", data["package_name"] ?? "-"),
         pw.SizedBox(height: 8),
         _labelValue("Tanggal", data["travel_date"] ?? "-"),
         _labelValue("Durasi", "${data["duration_days"]} hari"),
-        _labelValue(
-            "Penumpang", "${data["passenger_count"]} orang"),
+        _labelValue("Penumpang", "${data["passenger_count"]} orang"),
       ],
     );
   }
@@ -463,20 +496,19 @@ class DetailPesananPdf {
           width: 8,
           height: 8,
           margin: const pw.EdgeInsets.only(top: 2, right: 6),
-          decoration: pw.BoxDecoration(
-            color: color,
-            shape: pw.BoxShape.circle,
-          ),
+          decoration: pw.BoxDecoration(color: color, shape: pw.BoxShape.circle),
         ),
         pw.Column(
           crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
-            pw.Text(label,
-                style: pw.TextStyle(
-                    fontSize: 8, color: PdfColors.grey600)),
-            pw.Text(value,
-                style: pw.TextStyle(
-                    fontSize: 10, fontWeight: pw.FontWeight.bold)),
+            pw.Text(
+              label,
+              style: pw.TextStyle(fontSize: 8, color: PdfColors.grey600),
+            ),
+            pw.Text(
+              value,
+              style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
+            ),
           ],
         ),
       ],
@@ -489,12 +521,14 @@ class DetailPesananPdf {
       child: pw.Row(
         children: [
           pw.SizedBox(width: 14),
-          pw.Text("$label: ",
-              style:
-                  pw.TextStyle(fontSize: 8, color: PdfColors.grey600)),
-          pw.Text(value,
-              style: pw.TextStyle(
-                  fontSize: 8, fontWeight: pw.FontWeight.bold)),
+          pw.Text(
+            "$label: ",
+            style: pw.TextStyle(fontSize: 8, color: PdfColors.grey600),
+          ),
+          pw.Text(
+            value,
+            style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold),
+          ),
         ],
       ),
     );
@@ -502,8 +536,19 @@ class DetailPesananPdf {
 
   /// Kartu Rincian Penumpang (kanan) + QR
   pw.Widget _buildPassengerCard(
-      int price, String bookingCode, String printTime, pw.ImageProvider qrImage) {
-    final seatNo = data["seat_number"] ?? data["seat"] ?? "-";
+    int price,
+    String bookingCode,
+    String printTime,
+    pw.ImageProvider qrImage,
+  ) {
+    final passengers = data["passengers"];
+      final firstPassenger = (passengers is List && passengers.isNotEmpty)
+          ? passengers[0] as Map
+          : null;
+      final seatNo = firstPassenger?["seat"]?.toString()
+          ?? data["seat_number"]?.toString()
+          ?? data["seat"]?.toString()
+          ?? "-";
     final busName = type == "ticket" ? (data["bus_name"] ?? "-") : null;
 
     return pw.Container(
@@ -520,11 +565,14 @@ class DetailPesananPdf {
             child: pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
-                pw.Text("Rincian Penumpang",
-                    style: pw.TextStyle(
-                        fontSize: 10,
-                        fontWeight: pw.FontWeight.bold,
-                        color: PdfColors.grey700)),
+                pw.Text(
+                  "Rincian Penumpang",
+                  style: pw.TextStyle(
+                    fontSize: 10,
+                    fontWeight: pw.FontWeight.bold,
+                    color: PdfColors.grey700,
+                  ),
+                ),
                 pw.SizedBox(height: 10),
                 _passengerField("Nama Penumpang", displayName),
                 pw.SizedBox(height: 6),
@@ -539,10 +587,11 @@ class DetailPesananPdf {
                 ],
                 pw.SizedBox(height: 6),
                 _passengerField(
-                    "Waktu Keberangkatan",
-                    type == "ticket"
-                        ? "${data["departure_date"] ?? "-"}\nPukul ${data["departure_time"] ?? "-"} WIB"
-                        : data["start_date"] ?? "-"),
+                  "Waktu Keberangkatan",
+                  type == "ticket"
+                      ? "${data["departure_date"] ?? "-"}\nPukul ${data["departure_time"] ?? "-"} WIB"
+                      : data["start_date"] ?? "-",
+                ),
               ],
             ),
           ),
@@ -556,15 +605,15 @@ class DetailPesananPdf {
               pw.Text(
                 "Rp ${rupiah(price)}",
                 style: pw.TextStyle(
-                    fontSize: 11,
-                    fontWeight: pw.FontWeight.bold,
-                    color: PdfColors.red800),
+                  fontSize: 11,
+                  fontWeight: pw.FontWeight.bold,
+                  color: PdfColors.red800,
+                ),
               ),
               pw.SizedBox(height: 2),
               pw.Text(
                 "Dicetak: $printTime",
-                style:
-                    pw.TextStyle(fontSize: 6, color: PdfColors.grey500),
+                style: pw.TextStyle(fontSize: 6, color: PdfColors.grey500),
               ),
             ],
           ),
@@ -577,12 +626,14 @@ class DetailPesananPdf {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
-        pw.Text(label,
-            style:
-                pw.TextStyle(fontSize: 7, color: PdfColors.grey500)),
-        pw.Text(value,
-            style: pw.TextStyle(
-                fontSize: 9, fontWeight: pw.FontWeight.bold)),
+        pw.Text(
+          label,
+          style: pw.TextStyle(fontSize: 7, color: PdfColors.grey500),
+        ),
+        pw.Text(
+          value,
+          style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold),
+        ),
       ],
     );
   }
@@ -597,33 +648,46 @@ class DetailPesananPdf {
       ),
       child: pw.Row(
         children: [
-          pw.Text("Kontak",
-              style: pw.TextStyle(
-                  fontSize: 10,
-                  fontWeight: pw.FontWeight.bold,
-                  color: PdfColors.grey700)),
+          pw.Text(
+            "Kontak",
+            style: pw.TextStyle(
+              fontSize: 10,
+              fontWeight: pw.FontWeight.bold,
+              color: PdfColors.grey700,
+            ),
+          ),
           pw.SizedBox(width: 30),
           pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              pw.Text("No. Telepon",
-                  style: pw.TextStyle(
-                      fontSize: 7, color: PdfColors.grey500)),
-              pw.Text(displayPhone,
-                  style: pw.TextStyle(
-                      fontSize: 9, fontWeight: pw.FontWeight.bold)),
+              pw.Text(
+                "No. Telepon",
+                style: pw.TextStyle(fontSize: 7, color: PdfColors.grey500),
+              ),
+              pw.Text(
+                displayPhone,
+                style: pw.TextStyle(
+                  fontSize: 9,
+                  fontWeight: pw.FontWeight.bold,
+                ),
+              ),
             ],
           ),
           pw.SizedBox(width: 30),
           pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              pw.Text("Email",
-                  style: pw.TextStyle(
-                      fontSize: 7, color: PdfColors.grey500)),
-              pw.Text(displayEmail,
-                  style: pw.TextStyle(
-                      fontSize: 9, fontWeight: pw.FontWeight.bold)),
+              pw.Text(
+                "Email",
+                style: pw.TextStyle(fontSize: 7, color: PdfColors.grey500),
+              ),
+              pw.Text(
+                displayEmail,
+                style: pw.TextStyle(
+                  fontSize: 9,
+                  fontWeight: pw.FontWeight.bold,
+                ),
+              ),
             ],
           ),
         ],

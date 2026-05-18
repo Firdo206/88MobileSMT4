@@ -316,7 +316,10 @@ class BookingSummaryPage extends StatelessWidget {
                             print(result);
 
                             if (result['success'] == true) {
-                              final bookingData = result['data'];
+                              final bookingData = Map<String, dynamic>.from(result['data']);
+                              bookingData['tour_name'] = data['name'];           
+                              bookingData['participants'] = jumlah.toString();   
+
                               Navigator.pushReplacement(
                                 context,
                                 MaterialPageRoute(

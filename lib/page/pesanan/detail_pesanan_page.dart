@@ -3,6 +3,7 @@ import '../booking/payment_page.dart';
 import '../payment/payment_page.dart' as other;
 import 'widgets/detail_pesanan_service.dart';
 import 'widgets/detail_pesanan_pdf.dart';
+import 'refund_page.dart';
 
 class DetailPesananPage extends StatelessWidget {
   final Map data;
@@ -62,6 +63,10 @@ class DetailPesananPage extends StatelessWidget {
   String get displayEmail => data["email"]?.toString() ?? "-";
 
   // ─── Status ─────────────────────────────────────────────────
+  // Mapping lengkap sesuai backend:
+  //   pending_refund → user ajukan refund, admin belum proses
+  //   refund         → nilai lama (samakan dengan pending_refund)
+  //   refunded       → admin set status "completed" → uang sudah dikembalikan
   static const _statusMap = {
     "pending_payment":     (Color(0xFFFF9800), "Belum Bayar"),
     "waiting_confirmation":(Color(0xFF2196F3), "Wait Confirm"),
@@ -70,10 +75,21 @@ class DetailPesananPage extends StatelessWidget {
     "completed":           (Color(0xFF9E9E9E), "Selesai"),
     "cancelled":           (Color(0xFFF44336), "Dibatalkan"),
     "rejected":            (Color(0xFFF44336), "Ditolak"),
+    "pending_refund":      (Color(0xFF9C27B0), "Menunggu Refund"),
+    "refund":              (Color(0xFF9C27B0), "Menunggu Refund"),
+    "refunded":            (Color(0xFF00BCD4), "Refund Selesai"),  // ← admin set completed
   };
 
-  Color statusColor() => _statusMap[statusFinal]?.$1 ?? const Color(0xFF9E9E9E);
-  String statusText()  => _statusMap[statusFinal]?.$2 ?? "-";
+  String get _paymentStatus => data["payment_status"]?.toString() ?? statusFinal;
+
+  Color statusColor() => _statusMap[_paymentStatus]?.$1 ?? _statusMap[statusFinal]?.$1 ?? const Color(0xFF9E9E9E);
+  String statusText()  => _statusMap[_paymentStatus]?.$2 ?? _statusMap[statusFinal]?.$2 ?? "-";
+
+  // Helper: apakah dalam kondisi refund apapun (blokir semua tombol)
+  bool get _isRefundState =>
+      _paymentStatus == "pending_refund" ||
+      _paymentStatus == "refund" ||
+      _paymentStatus == "refunded";
 
   // ─── Theme ───────────────────────────────────────────────────
   static const Color _primary      = Color(0xFF8B2E2E);
@@ -156,10 +172,8 @@ class DetailPesananPage extends StatelessWidget {
       title: "Informasi Pembayaran",
       children: [
         _infoRow(Icons.account_balance_wallet_outlined, "Metode",
-            data["payment_method"] ?? "Transfer"),
+            data["payment_method"] ?? "Midtrans"),
         const SizedBox(height: 8),
-
-        // Promo banner
         if (hasPromo) ...[
           _promoBanner(promoTitle),
           _promoRows(promoTitle, totalNormal, discountAmount),
@@ -167,8 +181,6 @@ class DetailPesananPage extends StatelessWidget {
               padding: EdgeInsets.symmetric(vertical: 8),
               child: Divider(height: 1)),
         ],
-
-        // Total box
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
@@ -250,13 +262,15 @@ class DetailPesananPage extends StatelessWidget {
         child: SizedBox(
           width: double.infinity,
           child: ElevatedButton.icon(
-            onPressed: () async => await DetailPesananPdf(
-              data: data,
-              type: type,
-              displayName: displayName,
-              displayPhone: displayPhone,
-              displayEmail: displayEmail,
-            ).generate(price),
+            onPressed: () async {
+              await DetailPesananPdf(
+                data: data,
+                type: type,
+                displayName: displayName,
+                displayPhone: displayPhone,
+                displayEmail: displayEmail,
+              ).generate(price);
+            },
             icon: const Icon(Icons.download_rounded, size: 20),
             label: const Text("Download E-Tiket",
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
@@ -384,7 +398,6 @@ class DetailPesananPage extends StatelessWidget {
             ),
             child: Column(
               children: [
-                // Header row: booking code + status
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
                   decoration: BoxDecoration(
@@ -421,7 +434,6 @@ class DetailPesananPage extends StatelessWidget {
               ],
             ),
           ),
-          // Punch-hole circles
           _punchHole(left: 4),
           _punchHole(right: 4),
         ],
@@ -529,25 +541,95 @@ class DetailPesananPage extends StatelessWidget {
 
   // ─── Action Buttons ──────────────────────────────────────────
   Widget buildActionButton(BuildContext context) {
-    if (statusFinal != "pending_payment") return const SizedBox();
+    // ── GUARD: semua kondisi refund → blokir tombol, tampilkan info ──
+    if (_isRefundState) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: _refundInfoBanner(),
+      );
+    }
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
+    // ── pending_payment: tombol bayar, cek status, batalkan ──
+    if (statusFinal == "pending_payment") {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Column(
+          children: [
+            _primaryButton(
+              text: "Lanjut Pembayaran",
+              icon: Icons.payment_rounded,
+              onTap: () => _navigateToPayment(context),
+            ),
+            const SizedBox(height: 10),
+            _outlinedButton(
+              text: "Cek Status Pembayaran",
+              icon: Icons.refresh_rounded,
+              onTap: () => DetailPesananService.checkPaymentStatus(context, data),
+            ),
+            const SizedBox(height: 10),
+            _cancelButton(context),
+          ],
+        ),
+      );
+    }
+
+    // ── paid + bukan sewa bus: tombol ajukan refund ──
+    if (statusFinal == "paid" && type != "bus") {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: _outlinedButton(
+          text: "Ajukan Refund",
+          icon: Icons.assignment_return_outlined,
+          onTap: () async {
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => RefundPage(booking: data),
+              ),
+            );
+            if (result == true && context.mounted) {
+              Navigator.pop(context, true);
+            }
+          },
+        ),
+      );
+    }
+
+    return const SizedBox();
+  }
+
+  // ─── Refund Info Banner ──────────────────────────────────────
+  // Tampilan berbeda sesuai tahap:
+  //   pending_refund / refund → menunggu admin proses (ungu)
+  //   refunded                → admin sudah complete, uang kembali (cyan)
+  Widget _refundInfoBanner() {
+    final isRefunded = _paymentStatus == "refunded";
+    final color      = isRefunded ? const Color(0xFF00BCD4) : const Color(0xFF9C27B0);
+    final icon       = isRefunded
+        ? Icons.check_circle_outline_rounded
+        : Icons.hourglass_top_rounded;
+    final message    = isRefunded
+        ? "Refund telah selesai diproses oleh admin. Dana akan masuk ke rekening kamu dalam 1–3 hari kerja."
+        : "Pengajuan refund sedang menunggu diproses oleh admin. Mohon tunggu konfirmasi dari kami.";
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _primaryButton(
-            text: "Lanjut Pembayaran",
-            icon: Icons.payment_rounded,
-            onTap: () => _navigateToPayment(context),
+          Icon(icon, color: color, size: 18),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              message,
+              style: TextStyle(color: color, fontSize: 13, height: 1.4),
+            ),
           ),
-          const SizedBox(height: 10),
-          _outlinedButton(
-            text: "Cek Status Pembayaran",
-            icon: Icons.refresh_rounded,
-            onTap: () => DetailPesananService.checkPaymentStatus(context, data),
-          ),
-          const SizedBox(height: 10),
-          _cancelButton(context),
         ],
       ),
     );

@@ -6,7 +6,6 @@ import 'package:http/http.dart' as http;
 import 'package:app_links/app_links.dart';
 import '../../services/api_service.dart';
 import '../../services/payment_service.dart';
-import 'transfer_page.dart';
 import 'package:app_88trans/page/navigation/main_page.dart'; 
 
 class PaymentPage extends StatefulWidget {
@@ -46,16 +45,13 @@ class _PaymentPageState extends State<PaymentPage>
       );
 
       final data = jsonDecode(response.body);
-      debugPrint("RESPONSE MIDTRANS: ${response.body}");
 
       if (response.statusCode == 200 && data['status'] == true) {
         return data['snap_token'];
       } else {
-        debugPrint("Gagal token: ${data.toString()}");
         return null;
       }
     } catch (e) {
-      debugPrint("Error Midtrans: $e");
       return null;
     }
   }
@@ -85,7 +81,7 @@ class _PaymentPageState extends State<PaymentPage>
     try {
       await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
     } catch (e) {
-      debugPrint("Launch error: $e");
+      // handle silently
     }
 
     setState(() {
@@ -113,11 +109,11 @@ class _PaymentPageState extends State<PaymentPage>
         ),
       );
       Navigator.of(context).pushAndRemoveUntil(
-    MaterialPageRoute(
-      builder: (_) => const MainPage(initialIndex: 2),
-    ),
-    (route) => false,
-        );
+        MaterialPageRoute(
+          builder: (_) => const MainPage(initialIndex: 2),
+        ),
+        (route) => false,
+      );
     } else if (status == 'pending') {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -136,7 +132,7 @@ class _PaymentPageState extends State<PaymentPage>
     }
   }
 
-  // ================= APP LIFECYCLE ================= ← TAMBAH
+  // ================= APP LIFECYCLE =================
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed && _sudahBayar) {
@@ -144,7 +140,6 @@ class _PaymentPageState extends State<PaymentPage>
         (widget.bookingData['id'] ?? widget.bookingData['booking_id'])
             ?.toString() ?? "0",
       ) ?? 0;
-      // Auto cek status saat balik ke app
       Future.delayed(const Duration(seconds: 1), () {
         if (mounted) _checkStatus(bookingId);
       });
@@ -159,10 +154,8 @@ class _PaymentPageState extends State<PaymentPage>
     ) ?? 0;
 
     _linkSub = _appLinks.uriLinkStream.listen((uri) {
-      debugPrint("DEEP LINK RECEIVED: $uri");
       if (uri.scheme == 'app88trans') {
         final transactionStatus = uri.queryParameters['transaction_status'];
-        debugPrint("TRANSACTION STATUS FROM URL: $transactionStatus");
 
         if (transactionStatus == 'settlement' || transactionStatus == 'capture') {
           if (mounted) _checkStatus(bookingId);
@@ -287,8 +280,6 @@ class _PaymentPageState extends State<PaymentPage>
           (widget.bookingData['id'] ?? widget.bookingData['booking_id'])
               ?.toString() ?? "0",
         ) ?? 0;
-
-    final bookingCode = widget.bookingData['booking_code'] ?? "";
 
     return Scaffold(
       backgroundColor: const Color(0xFFF2F2F2),
@@ -577,38 +568,6 @@ class _PaymentPageState extends State<PaymentPage>
                             "Bayar dengan Midtrans",
                             style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white),
                           ),
-                  ),
-                ),
-
-                const SizedBox(height: 10),
-
-                SizedBox(
-                  width: double.infinity,
-                  height: 52,
-                  child: ElevatedButton(
-                    onPressed: _isExpired
-                        ? null
-                        : () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => TransferPage(
-                                  bookingId: bookingId,
-                                  total: totalPrice,
-                                  bookingCode: bookingCode,
-                                ),
-                              ),
-                            );
-                          },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey.shade400,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      elevation: 0,
-                    ),
-                    child: const Text(
-                      "Transfer Manual",
-                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white),
-                    ),
                   ),
                 ),
 

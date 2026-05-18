@@ -4,6 +4,6 @@ class ApiService {
   static const String midtransPayment = "$baseUrl/payments/midtrans";
   static const String checkPaymentStatus = "$baseUrl/payments/check";
   static const String midtransPaymentTour = "$baseUrl/tour-bookings/midtrans";
-  static const String refundStore = "$baseUrl/refund/store";
+  static const String refundSubmit = "$baseUrl/refund/submit";
   static const String refundCheck = "$baseUrl/refund/check";
 }

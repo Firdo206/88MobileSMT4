@@ -1,23 +1,17 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-
+import 'package:shared_preferences/shared_preferences.dart';
 import 'api_service.dart';
 
 class RefundService {
-
   /// ================= CHECK REFUND =================
   static Future<Map<String, dynamic>> checkRefund({
     required int bookingId,
     required int userId,
   }) async {
-
     final response = await http.get(
-      Uri.parse(
-        "${ApiService.refundCheck}/$bookingId?user_id=$userId",
-      ),
-      headers: {
-        'Accept': 'application/json',
-      },
+      Uri.parse("${ApiService.refundCheck}/$bookingId?user_id=$userId"),
+      headers: {'Accept': 'application/json'},
     );
 
     final data = jsonDecode(response.body);
@@ -38,14 +32,16 @@ class RefundService {
     required String accountNumber,
     required String accountName,
   }) async {
+    // ← TAMBAH SEMENTARA
+    print("=== SUBMIT REFUND ===");
+    print("bookingId: $bookingId");
+    print("userId: $userId");
+    print("reason: $reason");
+    print("====================");
 
     final response = await http.post(
-      Uri.parse(
-        "${ApiService.refundStore}/$bookingId",
-      ),
-      headers: {
-        'Accept': 'application/json',
-      },
+      Uri.parse("${ApiService.refundSubmit}/$bookingId"),
+      headers: {'Accept': 'application/json'},
       body: {
         'user_id': userId.toString(),
         'reason': reason,
@@ -55,12 +51,19 @@ class RefundService {
       },
     );
 
+    // ← TAMBAH SEMENTARA
+    print("=== RESPONSE ===");
+    print("status: ${response.statusCode}");
+    print("body: ${response.body}");
+    print("================");
+
     final data = jsonDecode(response.body);
 
     if (response.statusCode == 200) {
       return data;
     } else {
-      throw data["message"] ?? "Refund gagal";
+      final message = data["message"]?.toString() ?? "Refund gagal";
+      throw message; // ← casting ke String dulu
     }
   }
 }

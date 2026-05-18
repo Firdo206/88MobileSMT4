@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:http/http.dart' as http;
-import 'package:app_links/app_links.dart'; // ← TAMBAH
+import 'package:app_links/app_links.dart';
 import '../../services/api_service.dart';
 import '../../services/payment_service.dart';
 import '../pesanan/pesanan_page.dart';
@@ -28,9 +28,10 @@ class _PaymentPageState extends State<PaymentPage> {
   bool _isLoadingMidtrans = false;
   bool _isLoadingCheck = false;
   bool _sudahBayar = false;
+  bool _tokenRequested = false;
 
-  final _appLinks = AppLinks(); // ← TAMBAH
-  StreamSubscription? _linkSub; // ← TAMBAH
+  final _appLinks = AppLinks();
+  StreamSubscription? _linkSub;
 
   // ─────────────────────────────────────────
   // HELPERS
@@ -69,25 +70,25 @@ class _PaymentPageState extends State<PaymentPage> {
   String get type => widget.type;
 
   // ─────────────────────────────────────────
-  // COUNTDOWN
+  // INIT & DISPOSE
   // ─────────────────────────────────────────
 
   @override
   void initState() {
     super.initState();
     _startCountdown();
-    _listenDeepLink(); // ← TAMBAH
+    _listenDeepLink();
   }
 
   @override
   void dispose() {
-    _linkSub?.cancel(); // ← TAMBAH
+    _linkSub?.cancel();
     _timer?.cancel();
     super.dispose();
   }
 
   // ─────────────────────────────────────────
-  // DEEP LINK ← TAMBAH SEMUA INI
+  // DEEP LINK
   // ─────────────────────────────────────────
 
   void _listenDeepLink() {
@@ -99,10 +100,8 @@ class _PaymentPageState extends State<PaymentPage> {
 
         if (transactionStatus == 'settlement' ||
             transactionStatus == 'capture') {
-          // Langsung cek & update status tanpa delay
           if (mounted) _checkStatus();
         } else {
-          // Kalau bukan settlement, tetap navigate ke pesanan
           if (mounted) {
             Navigator.pushAndRemoveUntil(
               context,
@@ -117,29 +116,50 @@ class _PaymentPageState extends State<PaymentPage> {
     });
   }
 
-  void _startCountdown() {
-    final expiredAt = widget.data['expired_at'];
-    if (expiredAt == null) return;
+  // ─────────────────────────────────────────
+  // COUNTDOWN — dengan fallback created_at + 24 jam
+  // ─────────────────────────────────────────
 
-    final rawString = expiredAt.toString().trim();
-    if (rawString.isEmpty) return;
-
-    DateTime? expiry;
-
-    if (!rawString.contains('+') && !rawString.toUpperCase().contains('Z')) {
-      expiry = DateTime.tryParse('${rawString}Z')?.toLocal();
-    } else {
-      expiry = DateTime.tryParse(rawString)?.toLocal();
+  DateTime? _parseDateTime(dynamic raw) {
+    if (raw == null) return null;
+    final str = raw.toString().trim();
+    if (str.isEmpty) return null;
+    if (!str.contains('+') && !str.toUpperCase().contains('Z')) {
+      return DateTime.tryParse('${str}Z')?.toLocal();
     }
-    if (expiry == null) return;
+    return DateTime.tryParse(str)?.toLocal();
+  }
+
+  void _startCountdown() {
+    // Coba ambil expired_at dari backend
+    DateTime? expiry = _parseDateTime(widget.data['expired_at']);
+
+    // Fallback: created_at + 24 jam (karena backend tidak kirim expired_at)
+    if (expiry == null) {
+      final created = _parseDateTime(widget.data['created_at']);
+      if (created != null) {
+        expiry = created.add(const Duration(hours: 1));
+        debugPrint("TIMER: expired_at tidak ada, pakai created_at + 24 jam => $expiry");
+      }
+    }
+
+    if (expiry == null) {
+      debugPrint("TIMER: tidak bisa hitung expiry, timer tidak jalan");
+      return;
+    }
 
     _remaining = expiry.difference(DateTime.now());
+
     if (_remaining.isNegative) {
-      setState(() => _isExpired = true);
+      if (mounted) setState(() => _isExpired = true);
       return;
     }
 
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) {
+        _timer?.cancel();
+        return;
+      }
       final diff = expiry!.difference(DateTime.now());
       if (diff.isNegative) {
         setState(() {
@@ -196,21 +216,21 @@ class _PaymentPageState extends State<PaymentPage> {
     }
   }
 
-  bool _tokenRequested = false;
-
   Future<void> _openMidtrans() async {
     if (_isLoadingMidtrans || _tokenRequested) return;
-    setState(() => _isLoadingMidtrans = true);
+    if (mounted) setState(() => _isLoadingMidtrans = true);
     _tokenRequested = true;
+
     final token = await _getSnapToken(bookingId);
 
     if (token == null) {
-      setState(() => _isLoadingMidtrans = false);
       if (mounted) {
+        setState(() => _isLoadingMidtrans = false);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Gagal membuka pembayaran")),
         );
       }
+      _tokenRequested = false;
       return;
     }
 
@@ -222,25 +242,27 @@ class _PaymentPageState extends State<PaymentPage> {
       debugPrint("Launch error: $e");
     }
 
-    setState(() {
-      _isLoadingMidtrans = false;
-      _sudahBayar = true;
-    });
+    if (mounted) {
+      setState(() {
+        _isLoadingMidtrans = false;
+        _sudahBayar = true;
+      });
+    }
   }
 
   // ─────────────────────────────────────────
-  // CEK STATUS PEMBAYARAN ← FIX
+  // CEK STATUS PEMBAYARAN
   // ─────────────────────────────────────────
 
   Future<void> _checkStatus() async {
     if (_isLoadingCheck) return;
-    setState(() => _isLoadingCheck = true);
+    if (mounted) setState(() => _isLoadingCheck = true);
 
     final status = await PaymentService.checkStatus(bookingId);
 
-    setState(() => _isLoadingCheck = false);
-
     if (!mounted) return;
+
+    setState(() => _isLoadingCheck = false);
 
     if (status == 'settlement') {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -262,7 +284,6 @@ class _PaymentPageState extends State<PaymentPage> {
       );
     }
 
-    // Selalu navigate ke halaman pesanan setelah cek
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (_) => const MainPage(initialIndex: 2)),
@@ -471,6 +492,7 @@ class _PaymentPageState extends State<PaymentPage> {
                                 safe(
                                   widget.data['tour_name'] ??
                                       widget.data['package_name'],
+                                      
                                 ),
                               ),
                             ),
@@ -582,7 +604,7 @@ class _PaymentPageState extends State<PaymentPage> {
                     width: double.infinity,
                     height: 54,
                     child: ElevatedButton(
-                      onPressed: (_isExpired || _isLoadingMidtrans)
+                      onPressed: (_isExpired || _isLoadingMidtrans || _tokenRequested)
                           ? null
                           : _openMidtrans,
                       style: ElevatedButton.styleFrom(
@@ -659,7 +681,10 @@ class _PaymentPageState extends State<PaymentPage> {
     );
   }
 
+  // ─────────────────────────────────────────
   // WIDGET HELPERS
+  // ─────────────────────────────────────────
+
   Widget _buildTimer() {
     return Container(
       width: double.infinity,
@@ -676,9 +701,7 @@ class _PaymentPageState extends State<PaymentPage> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: (_isExpired ? Colors.red : Colors.orange).withOpacity(
-                0.15,
-              ),
+              color: (_isExpired ? Colors.red : Colors.orange).withOpacity(0.15),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(

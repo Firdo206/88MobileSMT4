@@ -14,8 +14,11 @@ class OrderCard extends StatelessWidget {
 
   final Color primary = const Color(0xFF8B2E2E);
 
-  /// 🔥 STATUS FINAL DARI BACKEND
+  /// STATUS FINAL dari backend
   String get statusFinal => data["status_final"] ?? "-";
+
+  /// PAYMENT STATUS dari backend (lebih spesifik untuk kasus refund)
+  String get paymentStatus => data["payment_status"]?.toString() ?? statusFinal;
 
   /// ================= FORMAT DATE =================
   String formatDate(String? date) {
@@ -67,7 +70,17 @@ class OrderCard extends StatelessWidget {
   }
 
   /// ================= STATUS =================
+  // Cek payment_status dulu (untuk refund), baru fallback ke status_final
   Color statusColor() {
+    switch (paymentStatus) {
+      case "pending_refund":
+      case "refund":
+        return const Color(0xFF9C27B0); // ungu
+      case "refunded":
+        return const Color(0xFF00BCD4); // cyan
+      default:
+        break;
+    }
     switch (statusFinal) {
       case "pending_payment":
         return Colors.orange;
@@ -89,6 +102,15 @@ class OrderCard extends StatelessWidget {
   }
 
   String statusText() {
+    switch (paymentStatus) {
+      case "pending_refund":
+      case "refund":
+        return "Menunggu Refund";
+      case "refunded":
+        return "Refund Selesai";
+      default:
+        break;
+    }
     switch (statusFinal) {
       case "pending_payment":
         return "Belum Bayar";
@@ -212,9 +234,7 @@ class OrderCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      data["booking_code"] ??
-                          data["rental_code"] ??
-                          "-",
+                      data["booking_code"] ?? data["rental_code"] ?? "-",
                       style: const TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 16,
@@ -259,7 +279,6 @@ class OrderCard extends StatelessWidget {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Harga coret jika ada diskon
                         if (hasDiscount)
                           Text(
                             "Rp ${formatRupiah(data["total_price"])}",
@@ -302,7 +321,6 @@ class TicketPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-
     final fill = Paint()
       ..shader = LinearGradient(
         colors: [

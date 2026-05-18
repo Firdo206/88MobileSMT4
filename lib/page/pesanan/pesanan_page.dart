@@ -31,7 +31,6 @@ class _PesananPageState extends State<PesananPage> {
     loadAllOrders();
   }
 
-  /// ================= LOAD DATA =================
   Future loadAllOrders() async {
     try {
       setState(() => isLoading = true);
@@ -39,17 +38,9 @@ class _PesananPageState extends State<PesananPage> {
       final prefs = await SharedPreferences.getInstance();
       int userId = prefs.getInt("user_id") ?? 0;
 
-      print("=== USER ID: $userId ===");
-
       final bookings = await BookingService.getMyBookings(userId);
-      print("=== BOOKINGS DONE: ${bookings?.length} ===");
-
       final tours = await BookingPaketService.getMyTours(userId);
-      print("=== TOURS DONE: ${tours?.length} ===");
-      print("=== TOURS DATA: $tours ===");
-
       final rentals = await RentalService.getMyRentals(userId);
-      print("=== RENTALS DONE: ${rentals?.length} ===");
 
       List temp = [];
 
@@ -63,10 +54,6 @@ class _PesananPageState extends State<PesananPage> {
         temp.add({"type": "bus", "data": r});
       }
 
-      for (var item in temp) {
-        print("STATUS_FINAL: ${item["data"]["status_final"]} | TYPE: ${item["type"]}");
-      }
-
       List activeOrders = temp.where((e) {
         final status = e["data"]["status_final"];
         return [
@@ -77,8 +64,6 @@ class _PesananPageState extends State<PesananPage> {
         ].contains(status);
       }).toList();
 
-      print("=== ACTIVE ORDERS: ${activeOrders.length} ===");
-
       setState(() {
         orders = activeOrders;
         filteredOrders = activeOrders;
@@ -86,13 +71,9 @@ class _PesananPageState extends State<PesananPage> {
       });
 
     } catch (e, stack) {
-      print("ERROR LOAD: $e");
-      print("STACK: $stack");
-      setState(() => isLoading = false);
     }
   }
 
-  /// ================= FILTER =================
   void applyFilter(String type) {
     setState(() {
       selectedFilter = type;
@@ -104,7 +85,6 @@ class _PesananPageState extends State<PesananPage> {
     });
   }
 
-  /// ================= SEARCH =================
   void applySearch(String query) {
     final q = query.toLowerCase();
     setState(() {
@@ -136,11 +116,7 @@ class _PesananPageState extends State<PesananPage> {
                 : Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-
-                      /// ===== HEADER =====
                       _buildHeader(),
-
-                      /// ===== SEARCH =====
                       _buildSearch(),
 
                       const SizedBox(height: 14),

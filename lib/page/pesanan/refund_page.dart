@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../services/refund_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class RefundPage extends StatefulWidget {
   final Map booking;
 
-  const RefundPage({
-    super.key,
-    required this.booking,
-  });
+  const RefundPage({super.key, required this.booking});
 
   @override
   State<RefundPage> createState() => _RefundPageState();
@@ -25,10 +23,12 @@ class _RefundPageState extends State<RefundPage> {
     setState(() => isLoading = true);
 
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getInt('user_id') ?? 0;
 
       final data = await RefundService.submitRefund(
-        bookingId: widget.booking["id"],
-        userId: widget.booking["user_id"],
+        bookingId: int.tryParse(widget.booking["id"].toString()) ?? 0,
+        userId: userId, // ← pakai dari prefs
         reason: reasonController.text,
         bankName: bankController.text,
         accountNumber: accountNumberController.text,
@@ -36,7 +36,6 @@ class _RefundPageState extends State<RefundPage> {
       );
 
       if (data["success"] == true) {
-
         if (!mounted) return;
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -47,20 +46,13 @@ class _RefundPageState extends State<RefundPage> {
         );
 
         Navigator.pop(context, true);
-
       } else {
         throw data["message"];
       }
-
     } catch (e) {
-
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.toString()),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
       );
-
     }
 
     setState(() => isLoading = false);
@@ -74,13 +66,7 @@ class _RefundPageState extends State<RefundPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-
-        Text(
-          label,
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
 
         const SizedBox(height: 8),
 
@@ -88,9 +74,7 @@ class _RefundPageState extends State<RefundPage> {
           controller: controller,
           maxLines: maxLines,
           decoration: InputDecoration(
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           ),
         ),
 
@@ -102,17 +86,13 @@ class _RefundPageState extends State<RefundPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-
-      appBar: AppBar(
-        title: const Text("Ajukan Refund"),
-      ),
+      appBar: AppBar(title: const Text("Ajukan Refund")),
 
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
 
         child: Column(
           children: [
-
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
@@ -123,12 +103,9 @@ class _RefundPageState extends State<RefundPage> {
               child: const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-
                   Text(
                     "Aturan Refund",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontWeight: FontWeight.bold),
                   ),
 
                   SizedBox(height: 8),
@@ -136,7 +113,6 @@ class _RefundPageState extends State<RefundPage> {
                   Text("• > 24 jam sebelum berangkat → Refund 90%"),
                   Text("• 6 - 24 jam sebelum berangkat → Refund 70%"),
                   Text("• < 6 jam sebelum berangkat → Tidak tersedia"),
-
                 ],
               ),
             ),
@@ -149,10 +125,7 @@ class _RefundPageState extends State<RefundPage> {
               maxLines: 3,
             ),
 
-            inputField(
-              label: "Nama Bank",
-              controller: bankController,
-            ),
+            inputField(label: "Nama Bank", controller: bankController),
 
             inputField(
               label: "Nomor Rekening",
@@ -175,9 +148,7 @@ class _RefundPageState extends State<RefundPage> {
                 ),
 
                 child: isLoading
-                    ? const CircularProgressIndicator(
-                        color: Colors.white,
-                      )
+                    ? const CircularProgressIndicator(color: Colors.white)
                     : const Text("Ajukan Refund"),
               ),
             ),
