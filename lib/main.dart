@@ -9,6 +9,8 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'services/notification_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'page/navigation/main_page.dart';
+import 'page/profil/input_phone_page.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
@@ -227,14 +229,38 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
       });
     });
 
-    Timer(const Duration(seconds: 5), () {
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const LoginPage()),
-        );
-      }
-    });
+    Timer(const Duration(seconds: 5), () async {
+  if (!mounted) return;
+
+  final prefs = await SharedPreferences.getInstance();
+  final isLoggedIn = prefs.getBool("is_logged_in") ?? false;
+
+  if (!mounted) return;
+
+  if (isLoggedIn) {
+    final phone = prefs.getString("phone") ?? "";
+    final userId = prefs.getInt("user_id") ?? 0;
+
+    if (phone.isEmpty) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => InputPhonePage(userId: userId),
+        ),
+      );
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const MainPage()),
+      );
+    }
+  } else {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginPage()),
+    );
+  }
+});
   }
 
   @override

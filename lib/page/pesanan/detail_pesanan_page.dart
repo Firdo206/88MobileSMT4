@@ -4,6 +4,7 @@ import '../payment/payment_page.dart' as other;
 import 'widgets/detail_pesanan_service.dart';
 import 'widgets/detail_pesanan_pdf.dart';
 import 'refund_page.dart';
+import '../profil/review_page.dart';
 
 class DetailPesananPage extends StatelessWidget {
   final Map data;
@@ -16,6 +17,12 @@ class DetailPesananPage extends StatelessWidget {
 
   // ─── Helpers ───────────────────────────────────────────────
   String get statusFinal => data["status_final"] ?? "-";
+
+  String get _reviewType {
+  if (type == "ticket") return "booking";
+  if (type == "bus")    return "rental";
+  return "tour";
+}
 
   String rupiah(dynamic value) {
     int v = int.tryParse(value.toString()) ?? 0;
@@ -122,9 +129,9 @@ class DetailPesananPage extends StatelessWidget {
         ),
       ),
       bottomNavigationBar:
-          (statusFinal == "paid" || statusFinal == "completed")
-              ? _buildBottomDownloadBar(context, price)
-              : null,
+    statusFinal == "paid"
+        ? _buildBottomDownloadBar(context, price)
+        : null,
     );
   }
 
@@ -546,6 +553,37 @@ class DetailPesananPage extends StatelessWidget {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: _refundInfoBanner(),
+      );
+    }
+
+if (statusFinal == "completed") {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: _primaryButton(
+          text: "Beri Ulasan",
+          icon: Icons.star_rounded,
+          color: Colors.orange,
+          onTap: () {
+            final userId = data["user_id"] is int
+                ? data["user_id"] as int
+                : int.tryParse(data["user_id"].toString()) ?? 0;
+
+            final reviewableId = data["id"] is int
+                ? data["id"] as int
+                : int.tryParse(data["id"].toString()) ?? 0;
+
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ReviewPage(
+                  userId: userId,
+                  reviewableId: reviewableId,
+                  type: _reviewType,
+                ),
+              ),
+            );
+          },
+        ),
       );
     }
 

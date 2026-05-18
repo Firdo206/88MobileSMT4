@@ -6,4 +6,6 @@ class ApiService {
   static const String midtransPaymentTour = "$baseUrl/tour-bookings/midtrans";
   static const String refundSubmit = "$baseUrl/refund/submit";
   static const String refundCheck = "$baseUrl/refund/check";
+  static const String reviewStore = "$baseUrl/reviews";
+  static const String reviewCheck = "$baseUrl/reviews/check";
 }

@@ -29,7 +29,7 @@ class _DashboardPageState extends State<DashboardPage>
   bool isLoading = true;
 
   // ── Carousel ─────────────────────────────────────────────
- PageController _promoPageController = PageController(viewportFraction: 0.85);
+  PageController _promoPageController = PageController(viewportFraction: 0.85);
   int _currentPromoIndex = 0;
   Timer? _promoTimer;
   // ─────────────────────────────────────────────────────────
@@ -63,21 +63,21 @@ class _DashboardPageState extends State<DashboardPage>
   }
 
   void loadPromo() async {
-  try {
-    final data = await PromoService.getPromo();
-    if (!mounted) return;
-    setState(() {
-      promoList = data;
-      isLoading = false;
-    });
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _startPromoAutoScroll();
-    });
-  } catch (e) {
-    if (!mounted) return;
-    setState(() => isLoading = false);
+    try {
+      final data = await PromoService.getPromo();
+      if (!mounted) return;
+      setState(() {
+        promoList = data;
+        isLoading = false;
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _startPromoAutoScroll();
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => isLoading = false);
+    }
   }
-}
 
   void _startPromoAutoScroll() {
     if (promoList.length <= 1) return;
@@ -153,8 +153,18 @@ class _DashboardPageState extends State<DashboardPage>
 
   String _formatDate(DateTime date) {
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
-      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'Mei',
+      'Jun',
+      'Jul',
+      'Agu',
+      'Sep',
+      'Okt',
+      'Nov',
+      'Des',
     ];
     const days = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
     return '${days[date.weekday - 1]}, ${date.day} ${months[date.month - 1]} ${date.year}';
@@ -218,9 +228,11 @@ class _DashboardPageState extends State<DashboardPage>
       child: Stack(
         children: [
           Positioned(
-            top: -30, right: -20,
+            top: -30,
+            right: -20,
             child: Container(
-              width: 160, height: 160,
+              width: 160,
+              height: 160,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: Colors.white.withOpacity(0.05),
@@ -228,9 +240,11 @@ class _DashboardPageState extends State<DashboardPage>
             ),
           ),
           Positioned(
-            top: 40, right: 30,
+            top: 40,
+            right: 30,
             child: Container(
-              width: 80, height: 80,
+              width: 80,
+              height: 80,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: Colors.white.withOpacity(0.07),
@@ -269,14 +283,16 @@ class _DashboardPageState extends State<DashboardPage>
                       ],
                     ),
                     Container(
-                      width: 44, height: 44,
+                      width: 44,
+                      height: 44,
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: const Icon(
                         Icons.notifications_none_rounded,
-                        color: Colors.white, size: 22,
+                        color: Colors.white,
+                        size: 22,
                       ),
                     ),
                   ],
@@ -343,18 +359,27 @@ class _DashboardPageState extends State<DashboardPage>
             child: Row(
               children: [
                 const SizedBox(width: 4),
-                Expanded(child: Container(height: 1, color: const Color(0xFFEEEEEE))),
+                Expanded(
+                  child: Container(height: 1, color: const Color(0xFFEEEEEE)),
+                ),
                 Container(
                   margin: const EdgeInsets.symmetric(horizontal: 10),
-                  width: 32, height: 32,
+                  width: 32,
+                  height: 32,
                   decoration: BoxDecoration(
                     color: const Color(0xFFF7F3F0),
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(color: const Color(0xFFE0D8D3)),
                   ),
-                  child: const Icon(Icons.swap_vert_rounded, size: 18, color: Color(0xFF8B0000)),
+                  child: const Icon(
+                    Icons.swap_vert_rounded,
+                    size: 18,
+                    color: Color(0xFF8B0000),
+                  ),
                 ),
-                Expanded(child: Container(height: 1, color: const Color(0xFFEEEEEE))),
+                Expanded(
+                  child: Container(height: 1, color: const Color(0xFFEEEEEE)),
+                ),
                 const SizedBox(width: 4),
               ],
             ),
@@ -366,7 +391,11 @@ class _DashboardPageState extends State<DashboardPage>
             iconColor: const Color(0xFFCC3333),
           ),
           const SizedBox(height: 14),
-          _buildDateField(label: "Tanggal Berangkat", date: selectedDate, onTap: pickDate),
+          _buildDateField(
+            label: "Tanggal Berangkat",
+            date: selectedDate,
+            onTap: pickDate,
+          ),
           if (_isRoundTrip) ...[
             const SizedBox(height: 8),
             _buildDateField(
@@ -450,7 +479,9 @@ class _DashboardPageState extends State<DashboardPage>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                active ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
+                active
+                    ? Icons.check_circle_rounded
+                    : Icons.radio_button_unchecked_rounded,
                 size: 13,
                 color: active ? Colors.white : Colors.grey[500],
               ),
@@ -491,21 +522,25 @@ class _DashboardPageState extends State<DashboardPage>
             color: date != null
                 ? const Color(0xFF8B0000).withOpacity(0.4)
                 : isDashed
-                    ? const Color(0xFF8B0000).withOpacity(0.2)
-                    : Colors.transparent,
+                ? const Color(0xFF8B0000).withOpacity(0.2)
+                : Colors.transparent,
           ),
         ),
         child: Row(
           children: [
             Container(
-              width: 36, height: 36,
+              width: 36,
+              height: 36,
               decoration: BoxDecoration(
                 color: const Color(0xFF8B0000).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
-                isDashed ? Icons.event_available_rounded : Icons.calendar_month_rounded,
-                color: const Color(0xFF8B0000), size: 18,
+                isDashed
+                    ? Icons.event_available_rounded
+                    : Icons.calendar_month_rounded,
+                color: const Color(0xFF8B0000),
+                size: 18,
               ),
             ),
             const SizedBox(width: 12),
@@ -513,21 +548,33 @@ class _DashboardPageState extends State<DashboardPage>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(label,
-                      style: TextStyle(fontSize: 10, color: Colors.grey[500], letterSpacing: 0.3)),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: Colors.grey[500],
+                      letterSpacing: 0.3,
+                    ),
+                  ),
                   const SizedBox(height: 2),
                   Text(
                     date == null ? "Pilih tanggal" : _formatDate(date),
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: date == null ? Colors.grey[400] : const Color(0xFF1A1A1A),
+                      color: date == null
+                          ? Colors.grey[400]
+                          : const Color(0xFF1A1A1A),
                     ),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right_rounded, color: Color(0xFFAAAAAA), size: 20),
+            const Icon(
+              Icons.chevron_right_rounded,
+              color: Color(0xFFAAAAAA),
+              size: 20,
+            ),
           ],
         ),
       ),
@@ -543,7 +590,8 @@ class _DashboardPageState extends State<DashboardPage>
     return Row(
       children: [
         Container(
-          width: 36, height: 36,
+          width: 36,
+          height: 36,
           decoration: BoxDecoration(
             color: iconColor.withOpacity(0.08),
             borderRadius: BorderRadius.circular(10),
@@ -554,7 +602,11 @@ class _DashboardPageState extends State<DashboardPage>
         Expanded(
           child: TextField(
             controller: controller,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF1A1A1A)),
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF1A1A1A),
+            ),
             decoration: InputDecoration(
               labelText: label,
               labelStyle: TextStyle(fontSize: 12, color: Colors.grey[500]),
@@ -588,7 +640,11 @@ class _DashboardPageState extends State<DashboardPage>
         ),
         child: Row(
           children: [
-            _menuTab(index: 0, label: "Cari Tiket", icon: Icons.confirmation_num_outlined),
+            _menuTab(
+              index: 0,
+              label: "Cari Tiket",
+              icon: Icons.confirmation_num_outlined,
+            ),
             _menuTab(
               index: 1,
               label: "Sewa Bus",
@@ -627,7 +683,11 @@ class _DashboardPageState extends State<DashboardPage>
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, size: 17, color: active ? Colors.white : const Color(0xFF999999)),
+              Icon(
+                icon,
+                size: 17,
+                color: active ? Colors.white : const Color(0xFF999999),
+              ),
               const SizedBox(width: 7),
               Text(
                 label,
@@ -671,7 +731,8 @@ class _DashboardPageState extends State<DashboardPage>
               ),
               Container(
                 margin: const EdgeInsets.only(top: 4),
-                width: 32, height: 3,
+                width: 32,
+                height: 3,
                 decoration: BoxDecoration(
                   color: const Color(0xFF8B0000),
                   borderRadius: BorderRadius.circular(4),
@@ -689,7 +750,11 @@ class _DashboardPageState extends State<DashboardPage>
               ),
               child: const Text(
                 "Lihat semua →",
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF8B0000)),
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF8B0000),
+                ),
               ),
             ),
           ),
@@ -705,7 +770,10 @@ class _DashboardPageState extends State<DashboardPage>
       return const SizedBox(
         height: 210,
         child: Center(
-          child: CircularProgressIndicator(color: Color(0xFF8B0000), strokeWidth: 2.5),
+          child: CircularProgressIndicator(
+            color: Color(0xFF8B0000),
+            strokeWidth: 2.5,
+          ),
         ),
       );
     }
@@ -724,14 +792,16 @@ class _DashboardPageState extends State<DashboardPage>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                width: 52, height: 52,
+                width: 52,
+                height: 52,
                 decoration: BoxDecoration(
                   color: const Color(0xFF8B0000).withOpacity(0.07),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: const Icon(
                   Icons.local_offer_outlined,
-                  color: Color(0xFF8B0000), size: 26,
+                  color: Color(0xFF8B0000),
+                  size: 26,
                 ),
               ),
               const SizedBox(height: 10),
@@ -815,8 +885,8 @@ class _DashboardPageState extends State<DashboardPage>
     final targetLabel = switch (promo.targetType) {
       'ticket' => 'Tiket Bus',
       'rental' => 'Sewa Bus',
-      'tour'   => 'Wisata',
-      _        => 'Semua',
+      'tour' => 'Wisata',
+      _ => 'Semua',
     };
 
     return GestureDetector(
@@ -841,9 +911,11 @@ class _DashboardPageState extends State<DashboardPage>
         child: Stack(
           children: [
             Positioned(
-              top: -24, right: -24,
+              top: -24,
+              right: -24,
               child: Container(
-                width: 110, height: 110,
+                width: 110,
+                height: 110,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: Colors.white.withOpacity(0.07),
@@ -851,9 +923,11 @@ class _DashboardPageState extends State<DashboardPage>
               ),
             ),
             Positioned(
-              bottom: -20, left: -10,
+              bottom: -20,
+              left: -10,
               child: Container(
-                width: 80, height: 80,
+                width: 80,
+                height: 80,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: Colors.white.withOpacity(0.05),
@@ -869,7 +943,10 @@ class _DashboardPageState extends State<DashboardPage>
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.18),
                           borderRadius: BorderRadius.circular(8),
@@ -892,7 +969,8 @@ class _DashboardPageState extends State<DashboardPage>
                         ),
                         child: const Icon(
                           Icons.local_offer_rounded,
-                          color: Colors.white, size: 14,
+                          color: Colors.white,
+                          size: 14,
                         ),
                       ),
                     ],
@@ -935,7 +1013,10 @@ class _DashboardPageState extends State<DashboardPage>
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 7,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.black.withOpacity(0.18),
                           borderRadius: BorderRadius.circular(6),
@@ -965,7 +1046,10 @@ class _DashboardPageState extends State<DashboardPage>
                         const SizedBox(width: 6),
                         Expanded(
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 7,
+                              vertical: 3,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.white.withOpacity(0.15),
                               borderRadius: BorderRadius.circular(6),
@@ -1013,13 +1097,17 @@ class _DashboardPageState extends State<DashboardPage>
         child: Row(
           children: [
             Container(
-              width: 48, height: 48,
+              width: 48,
+              height: 48,
               decoration: BoxDecoration(
                 color: const Color(0xFF8B0000).withOpacity(0.08),
                 borderRadius: BorderRadius.circular(14),
               ),
-              child: const Icon(Icons.lock_outline_rounded,
-                  color: Color(0xFF8B0000), size: 22),
+              child: const Icon(
+                Icons.lock_outline_rounded,
+                color: Color(0xFF8B0000),
+                size: 22,
+              ),
             ),
             const SizedBox(width: 14),
             const Expanded(

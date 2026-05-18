@@ -121,6 +121,14 @@ class _LoginScreenState extends State<LoginScreen> {
           await NotificationService.saveFcmToken(user["id"]);
         }
 
+        // ✅ SIMPAN DATA USER + FLAG LOGIN
+        final prefs = await SharedPreferences.getInstance();
+        prefs.setInt("user_id", user["id"]);
+        prefs.setString("name", user["name"]);
+        prefs.setString("email", user["email"]);
+        prefs.setString("phone", user["phone"] ?? "");
+        prefs.setBool("is_logged_in", true);
+
         showPopup(
           "Login Berhasil",
           "Selamat datang 👋",
@@ -420,6 +428,7 @@ class _LoginScreenState extends State<LoginScreen> {
           prefs.setString("name", result["data"]["name"]);
           prefs.setString("email", result["data"]["email"]);
           prefs.setString("phone", result["data"]["phone"] ?? "");
+          prefs.setBool("is_logged_in", true); // ✅ TAMBAHAN
 
           showPopup(
             "Login Google Berhasil",

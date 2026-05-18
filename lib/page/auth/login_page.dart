@@ -36,6 +36,7 @@ class LoginPage extends StatelessWidget {
         prefs.setInt("user_id", user["id"]);
         prefs.setString("name", user["name"]);
         prefs.setString("email", user["email"]);
+        prefs.setBool("is_logged_in", true);
 
         // 🔥 SIMPAN TOKEN (VERSI NORMAL)
         await NotificationService.saveFcmToken(user["id"]);
