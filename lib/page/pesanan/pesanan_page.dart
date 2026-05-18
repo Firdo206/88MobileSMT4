@@ -15,7 +15,6 @@ class PesananPage extends StatefulWidget {
 }
 
 class _PesananPageState extends State<PesananPage> {
-
   List orders = [];
   List filteredOrders = [];
 
@@ -60,7 +59,7 @@ class _PesananPageState extends State<PesananPage> {
           "pending_payment",
           "waiting_confirmation",
           "waiting_approval",
-          "paid"
+          "paid",
         ].contains(status);
       }).toList();
 
@@ -69,9 +68,7 @@ class _PesananPageState extends State<PesananPage> {
         filteredOrders = activeOrders;
         isLoading = false;
       });
-
-    } catch (e, stack) {
-    }
+    } catch (e, stack) {}
   }
 
   void applyFilter(String type) {
@@ -90,9 +87,13 @@ class _PesananPageState extends State<PesananPage> {
     setState(() {
       filteredOrders = orders.where((e) {
         final data = e["data"];
-        final code = (data["booking_code"] ?? data["rental_code"] ?? "").toString().toLowerCase();
+        final code = (data["booking_code"] ?? data["rental_code"] ?? "")
+            .toString()
+            .toLowerCase();
         final name = (data["name"] ?? "").toString().toLowerCase();
-        final destination = (data["destination"] ?? data["package_name"] ?? "").toString().toLowerCase();
+        final destination = (data["destination"] ?? data["package_name"] ?? "")
+            .toString()
+            .toLowerCase();
         return code.contains(q) || name.contains(q) || destination.contains(q);
       }).toList();
     });
@@ -104,98 +105,99 @@ class _PesananPageState extends State<PesananPage> {
       backgroundColor: const Color(0xFFF5F5F5),
       body: SafeArea(
         child: isLoading
-            ? const Center(
-                child: CircularProgressIndicator(color: _primary),
-              )
+            ? const Center(child: CircularProgressIndicator(color: _primary))
             : orders.isEmpty
-                ? _emptyState(
-                    title: "Belum Ada Pesanan",
-                    subtitle: "Yuk mulai rencanakan perjalananmu sekarang!",
-                    image: "assets/images/empty_all.png",
-                  )
-                : Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildHeader(),
-                      _buildSearch(),
+            ? _emptyState(
+                title: "Belum Ada Pesanan",
+                subtitle: "Yuk mulai rencanakan perjalananmu sekarang!",
+                image: "assets/images/empty_all.png",
+              )
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildHeader(),
+                  _buildSearch(),
 
-                      const SizedBox(height: 14),
+                  const SizedBox(height: 14),
 
-                      /// ===== FILTER CHIPS =====
-                      _buildFilterRow(),
+                  /// ===== FILTER CHIPS =====
+                  _buildFilterRow(),
 
-                      const SizedBox(height: 14),
+                  const SizedBox(height: 14),
 
-                      /// ===== COUNT BADGE =====
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Row(
-                          children: [
-                            Text(
-                              "${filteredOrders.length} Pesanan",
-                              style: const TextStyle(
+                  /// ===== COUNT BADGE =====
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      children: [
+                        Text(
+                          "${filteredOrders.length} Pesanan",
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black54,
+                          ),
+                        ),
+                        const Spacer(),
+                        if (selectedFilter != "all")
+                          GestureDetector(
+                            onTap: () => applyFilter("all"),
+                            child: const Text(
+                              "Lihat Semua",
+                              style: TextStyle(
                                 fontSize: 13,
+                                color: _primary,
                                 fontWeight: FontWeight.w600,
-                                color: Colors.black54,
                               ),
                             ),
-                            const Spacer(),
-                            if (selectedFilter != "all")
-                              GestureDetector(
-                                onTap: () => applyFilter("all"),
-                                child: const Text(
-                                  "Lihat Semua",
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    color: _primary,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-
-                      const SizedBox(height: 10),
-
-                      /// ===== LIST / EMPTY FILTER =====
-                      Expanded(
-                        child: filteredOrders.isEmpty
-                            ? _buildEmptyByFilter()
-                            : ListView.builder(
-                                padding: const EdgeInsets.only(bottom: 24),
-                                itemCount: filteredOrders.length,
-                                itemBuilder: (context, index) {
-                                  final item = filteredOrders[index];
-                                  final type = item["type"];
-                                  final data = item["data"];
-
-                                  return Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                                    child: OrderCard(
-                                      type: type,
-                                      data: data,
-                                      onTap: () async {
-                                        final result = await Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (_) => DetailPesananPage(
-                                              data: data,
-                                              type: type,
-                                            ),
-                                          ),
-                                        );
-                                        if (result == true) {
-                                          loadAllOrders();
-                                        }
-                                      },
-                                    ),
-                                  );
-                                },
-                              ),
-                      ),
-                    ],
+                          ),
+                      ],
+                    ),
                   ),
+
+                  const SizedBox(height: 10),
+
+                  /// ===== LIST / EMPTY FILTER =====
+                  Expanded(
+                    child: filteredOrders.isEmpty
+                        ? _buildEmptyByFilter()
+                        : ListView.builder(
+                            padding: const EdgeInsets.only(bottom: 24),
+                            itemCount: filteredOrders.length,
+                            itemBuilder: (context, index) {
+                              final item = filteredOrders[index];
+                              final type = item["type"];
+                              final data = item["data"];
+
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 6,
+                                ),
+                                child: OrderCard(
+                                  type: type,
+                                  data: data,
+                                  onTap: () async {
+                                    final result = await Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => DetailPesananPage(
+                                          data: data,
+                                          type: type,
+                                        ),
+                                      ),
+                                    );
+                                    if (result == true) {
+                                      loadAllOrders();
+                                    }
+                                  },
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              ),
       ),
     );
   }
@@ -237,7 +239,11 @@ class _PesananPageState extends State<PesananPage> {
                 color: _primary.withOpacity(0.08),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.refresh_rounded, color: _primary, size: 20),
+              child: const Icon(
+                Icons.refresh_rounded,
+                color: _primary,
+                size: 20,
+              ),
             ),
           ),
         ],
@@ -380,16 +386,14 @@ class _PesananPageState extends State<PesananPage> {
               : null,
           color: isActive ? null : Colors.white,
           borderRadius: BorderRadius.circular(30),
-          border: Border.all(
-            color: isActive ? _primary : Colors.grey.shade300,
-          ),
+          border: Border.all(color: isActive ? _primary : Colors.grey.shade300),
           boxShadow: isActive
               ? [
                   BoxShadow(
                     color: _primary.withOpacity(0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 3),
-                  )
+                  ),
                 ]
               : [],
         ),

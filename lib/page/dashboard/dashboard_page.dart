@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../utils/app_color.dart';
 import '../booking/schedule_page.dart';
@@ -27,6 +28,12 @@ class _DashboardPageState extends State<DashboardPage>
   List<Promo> promoList = [];
   bool isLoading = true;
 
+  // ── Carousel ─────────────────────────────────────────────
+ PageController _promoPageController = PageController(viewportFraction: 0.85);
+  int _currentPromoIndex = 0;
+  Timer? _promoTimer;
+  // ─────────────────────────────────────────────────────────
+
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
 
@@ -47,6 +54,8 @@ class _DashboardPageState extends State<DashboardPage>
 
   @override
   void dispose() {
+    _promoTimer?.cancel();
+    _promoPageController.dispose();
     _fadeController.dispose();
     originController.dispose();
     destinationController.dispose();
@@ -54,17 +63,33 @@ class _DashboardPageState extends State<DashboardPage>
   }
 
   void loadPromo() async {
-    try {
-      final data = await PromoService.getPromo();
+  try {
+    final data = await PromoService.getPromo();
+    if (!mounted) return;
+    setState(() {
+      promoList = data;
+      isLoading = false;
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _startPromoAutoScroll();
+    });
+  } catch (e) {
+    if (!mounted) return;
+    setState(() => isLoading = false);
+  }
+}
+
+  void _startPromoAutoScroll() {
+    if (promoList.length <= 1) return;
+    _promoTimer = Timer.periodic(const Duration(seconds: 3), (_) {
       if (!mounted) return;
-      setState(() {
-        promoList = data;
-        isLoading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => isLoading = false);
-    }
+      final next = (_currentPromoIndex + 1) % promoList.length;
+      _promoPageController.animateToPage(
+        next,
+        duration: const Duration(milliseconds: 600),
+        curve: Curves.easeInOut,
+      );
+    });
   }
 
   Future<void> pickDate() async {
@@ -678,7 +703,7 @@ class _DashboardPageState extends State<DashboardPage>
   Widget _buildPromoSection() {
     if (isLoading) {
       return const SizedBox(
-        height: 190,
+        height: 210,
         child: Center(
           child: CircularProgressIndicator(color: Color(0xFF8B0000), strokeWidth: 2.5),
         ),
@@ -729,23 +754,56 @@ class _DashboardPageState extends State<DashboardPage>
       );
     }
 
-    return SizedBox(
-      height: 190,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.only(left: 24, right: 8),
-        itemCount: promoList.length,
-        itemBuilder: (context, index) {
-          final promo = promoList[index];
-          return _buildPromoCard(promo: promo);
-        },
-      ),
+    return Column(
+      children: [
+        // ── PageView carousel ────────────────────────────────
+        SizedBox(
+          height: 190,
+          child: PageView.builder(
+            controller: _promoPageController,
+            itemCount: promoList.length,
+            onPageChanged: (index) {
+              setState(() => _currentPromoIndex = index);
+            },
+            itemBuilder: (context, index) {
+              final promo = promoList[index];
+              return AnimatedScale(
+                scale: _currentPromoIndex == index ? 1.0 : 0.93,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOut,
+                child: _buildPromoCard(promo: promo),
+              );
+            },
+          ),
+        ),
+
+        // ── Dot indicator ────────────────────────────────────
+        if (promoList.length > 1) ...[
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(promoList.length, (index) {
+              final isActive = index == _currentPromoIndex;
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                margin: const EdgeInsets.symmetric(horizontal: 3),
+                width: isActive ? 20 : 6,
+                height: 6,
+                decoration: BoxDecoration(
+                  color: isActive
+                      ? const Color(0xFF8B0000)
+                      : const Color(0xFF8B0000).withOpacity(0.25),
+                  borderRadius: BorderRadius.circular(3),
+                ),
+              );
+            }),
+          ),
+        ],
+      ],
     );
   }
 
   Widget _buildPromoCard({required Promo promo}) {
-    // Warna berbeda tiap card
     final List<List<Color>> gradients = [
       [const Color(0xFF8B0000), const Color(0xFFCC2222)],
       [const Color(0xFF6B0000), const Color(0xFFAA1111)],
@@ -754,19 +812,17 @@ class _DashboardPageState extends State<DashboardPage>
     final idx = promoList.indexOf(promo) % gradients.length;
     final grad = gradients[idx];
 
-    // Target label ringkas
     final targetLabel = switch (promo.targetType) {
-      'ticket'  => 'Tiket Bus',
-      'rental'  => 'Sewa Bus',
-      'tour'    => 'Wisata',
-      _         => 'Semua',
+      'ticket' => 'Tiket Bus',
+      'rental' => 'Sewa Bus',
+      'tour'   => 'Wisata',
+      _        => 'Semua',
     };
 
     return GestureDetector(
       onTap: () => _onTapPromoCard(promo),
       child: Container(
-        width: 220,
-        margin: const EdgeInsets.only(right: 14, bottom: 4),
+        margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: grad,
@@ -784,7 +840,6 @@ class _DashboardPageState extends State<DashboardPage>
         ),
         child: Stack(
           children: [
-            // ── Lingkaran dekoratif ───────────────────────────────
             Positioned(
               top: -24, right: -24,
               child: Container(
@@ -805,18 +860,14 @@ class _DashboardPageState extends State<DashboardPage>
                 ),
               ),
             ),
-
             Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-
-                  // ── Baris atas: chip target + ikon ───────────────
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Chip target type
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
@@ -833,7 +884,6 @@ class _DashboardPageState extends State<DashboardPage>
                           ),
                         ),
                       ),
-                      // Ikon diskon
                       Container(
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
@@ -847,10 +897,7 @@ class _DashboardPageState extends State<DashboardPage>
                       ),
                     ],
                   ),
-
                   const Spacer(),
-
-                  // ── Angka diskon besar ────────────────────────────
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
@@ -873,10 +920,7 @@ class _DashboardPageState extends State<DashboardPage>
                       ),
                     ],
                   ),
-
                   const SizedBox(height: 8),
-
-                  // ── Judul promo ───────────────────────────────────
                   Text(
                     promo.title,
                     maxLines: 1,
@@ -887,13 +931,9 @@ class _DashboardPageState extends State<DashboardPage>
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-
                   const SizedBox(height: 8),
-
-                  // ── Baris bawah: kuota + kode ─────────────────────
                   Row(
                     children: [
-                      // Kuota
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                         decoration: BoxDecoration(
@@ -921,8 +961,6 @@ class _DashboardPageState extends State<DashboardPage>
                           ],
                         ),
                       ),
-
-                      // Kode promo (kalau ada)
                       if (promo.promoCode != null) ...[
                         const SizedBox(width: 6),
                         Expanded(

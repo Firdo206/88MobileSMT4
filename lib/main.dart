@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'page/auth/login_page.dart';
+import 'page/promo/promo_list.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -9,11 +10,11 @@ import 'services/notification_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
+
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  print("Background Message: ${message.notification?.title}");
+  // background handler
 }
 
 void main() async {
@@ -32,9 +33,11 @@ void main() async {
     importance: Importance.high,
   );
 
-  await flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()?.createNotificationChannel(channel);
-  
-  // HANDLE BACKGROUND NOTIF
+  final AndroidFlutterLocalNotificationsPlugin? androidPlugin =
+    flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    await androidPlugin?.createNotificationChannel(channel);
+
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   runApp(const MyApp());
@@ -55,7 +58,7 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-// SPLASH PAGE — Elegant White Version (88Trans)
+
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
 
@@ -64,13 +67,10 @@ class SplashPage extends StatefulWidget {
 }
 
 class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
-  // Controllers
   late AnimationController _logoController;
   late AnimationController _textController;
   late AnimationController _taglineController;
   late AnimationController _dotController;
-
-  // Animations
   late Animation<double> _logoScale;
   late Animation<double> _logoFade;
   late Animation<double> _textFade;
@@ -79,44 +79,71 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
   late Animation<double> _dotFade;
 
   Future<void> setupFCM() async {
-    try {
-      FirebaseMessaging messaging = FirebaseMessaging.instance;
-      NotificationSettings settings = await messaging.requestPermission();
-      print("PERMISSION: ${settings.authorizationStatus}");
-      String? token = await messaging.getToken();
-      print("FCM TOKEN RESULT: $token");
-    } catch (e) {
-      print("ERROR FCM: $e");
+  try {
+    FirebaseMessaging messaging = FirebaseMessaging.instance;
+    await messaging.requestPermission();
+    final token = await messaging.getToken();
+    
+    // ← TAMBAH INI untuk debug
+    print("FCM TOKEN: $token");
+    
+    // Pastikan token disimpan ke server
+    final prefs = await SharedPreferences.getInstance();
+    int? userId = prefs.getInt("user_id");
+    print("USER ID: $userId");
+    
+    if (userId != null && token != null) {
+      await NotificationService.saveFcmToken(userId, token: token);
+      print("TOKEN BERHASIL DISIMPAN");
     }
+  } catch (e) {
+    print("ERROR FCM: $e");
   }
+}
 
+  // ── TAMBAH HANDLER NOTIF ──────────────────────────────────
   void _handleNotifClick(Map<String, dynamic> data) {
     if (!mounted) return;
-    if (data['type'] == 'flash_sale') {
-      print("Buka halaman flash sale ID: ${data['id']}");
-    } else if (data['type'] == 'booking') {
-      print("Buka halaman booking");
-    } else if (data['type'] == 'tour') {
-      print("Buka halaman tour");
+
+    final type = data['type'] ?? '';
+
+    switch (type) {
+      case 'new_promo':
+        // Klik notif promo → buka halaman promo
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const PromoListPage(), // ← sesuaikan nama page kamu
+          ),
+        );
+        break;
+
+      // Tambahkan case lain di sini sesuai kebutuhan
+      // case 'payment_status':
+      // case 'rental_cancelled':
+      //   break;
     }
   }
+  // ─────────────────────────────────────────────────────────
 
   @override
   void initState() {
     super.initState();
     setupFCM();
+
     FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
       alert: true,
       badge: true,
       sound: true,
     );
+
+    // Foreground — app sedang dibuka
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      print("Notif masuk: ${message.notification?.title}");
       RemoteNotification? notification = message.notification;
       AndroidNotification? android = message.notification?.android;
       if (notification != null && android != null) {
         flutterLocalNotificationsPlugin.show(
-          message.hashCode, 
+          message.hashCode,
           notification.title,
           notification.body,
           const NotificationDetails(
@@ -130,16 +157,10 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
           ),
         );
       }
-
-      // 🆕 Handle tipe flash_sale saat app terbuka
-      if (message.data['type'] == 'flash_sale') {
-        print("Ada flash sale baru! ID: ${message.data['id']}");
-      }
     });
 
-    // 🔥 FIX TOKEN SELALU UPDATE
+    // Token refresh
     FirebaseMessaging.instance.onTokenRefresh.listen((newToken) async {
-      print("TOKEN BARU: $newToken");
       final prefs = await SharedPreferences.getInstance();
       int? userId = prefs.getInt("user_id");
       if (userId != null) {
@@ -147,23 +168,22 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
       }
     });
 
-    // 🆕 SAAT NOTIF DIKLIK & APP DI BACKGROUND
+    // Background — user klik notif saat app di background
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      print("Notif diklik dari background: ${message.data}");
       _handleNotifClick(message.data);
     });
 
-    // 🆕 SAAT NOTIF DIKLIK & APP MATI (TERMINATED)
-    FirebaseMessaging.instance.getInitialMessage().then((RemoteMessage? message) {
+    // Terminated — user klik notif saat app mati
+    FirebaseMessaging.instance
+        .getInitialMessage()
+        .then((RemoteMessage? message) {
       if (message != null) {
-        print("Notif diklik dari terminated: ${message.data}");
         _handleNotifClick(message.data);
       }
     });
 
     // ── ANIMATION SETUP ──────────────────────────────────────
 
-    // Logo: scale + fade in
     _logoController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 900),
@@ -171,26 +191,22 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
     _logoScale = Tween<double>(begin: 0.7, end: 1.0).animate(
       CurvedAnimation(parent: _logoController, curve: Curves.easeOutBack),
     );
-    _logoFade = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _logoController, curve: Curves.easeIn));
+    _logoFade = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _logoController, curve: Curves.easeIn),
+    );
 
-    // Brand name: fade + slide up
     _textController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 700),
     );
-    _textFade = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _textController, curve: Curves.easeIn));
+    _textFade = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _textController, curve: Curves.easeIn),
+    );
     _textSlide = Tween<Offset>(
       begin: const Offset(0, 0.3),
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _textController, curve: Curves.easeOut));
 
-    // Tagline: fade in after text
     _taglineController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 600),
@@ -199,21 +215,18 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
       CurvedAnimation(parent: _taglineController, curve: Curves.easeIn),
     );
 
-    // Loading dots blink
     _dotController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 800),
     )..repeat(reverse: true);
     _dotFade = Tween<double>(begin: 0.3, end: 1.0).animate(_dotController);
 
-    // Staggered sequence
     _logoController.forward().then((_) {
       _textController.forward().then((_) {
         _taglineController.forward();
       });
     });
 
-    // Navigate after 5 seconds
     Timer(const Duration(seconds: 5), () {
       if (mounted) {
         Navigator.pushReplacement(
@@ -290,7 +303,6 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Logo langsung tanpa lingkaran
                 ScaleTransition(
                   scale: _logoScale,
                   child: FadeTransition(
@@ -301,7 +313,6 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
 
                 const SizedBox(height: 32),
 
-                // Brand name: "88" bold + "Trans" light — mirip tacoscafe style
                 FadeTransition(
                   opacity: _textFade,
                   child: SlideTransition(
@@ -335,7 +346,6 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
 
                 const SizedBox(height: 8),
 
-                // Tagline
                 FadeTransition(
                   opacity: _taglineFade,
                   child: Text(
@@ -384,23 +394,20 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
                         return AnimatedBuilder(
                           animation: _dotController,
                           builder: (_, __) {
-                            // stagger dots
                             double opacity =
                                 (_dotController.value + (i * 0.33)) % 1.0;
                             if (opacity > 0.5) opacity = 1.0 - opacity;
-                            opacity = 0.3 + (opacity * 1.4).clamp(0.0, 0.7);
+                            opacity =
+                                0.3 + (opacity * 1.4).clamp(0.0, 0.7);
                             return Container(
-                              margin: const EdgeInsets.symmetric(horizontal: 4),
+                              margin:
+                                  const EdgeInsets.symmetric(horizontal: 4),
                               width: 6,
                               height: 6,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: const Color.fromARGB(
-                                  255,
-                                  211,
-                                  18,
-                                  8,
-                                ).withOpacity(opacity),
+                                color: const Color.fromARGB(255, 211, 18, 8)
+                                    .withOpacity(opacity),
                               ),
                             );
                           },
