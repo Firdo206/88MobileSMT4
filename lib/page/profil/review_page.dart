@@ -36,11 +36,98 @@ class _ReviewPageState extends State<ReviewPage> {
     super.dispose();
   }
 
-  Future pickImage() async {
-    final picked = await ImagePicker().pickImage(
-      source: ImageSource.gallery,
+  void _showImageSourceSheet() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      backgroundColor: Colors.white,
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                "Pilih Sumber Foto",
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF1A1A1A),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: _imageSourceOption(
+                      icon: Icons.camera_alt_rounded,
+                      label: "Kamera",
+                      onTap: () {
+                        Navigator.pop(context);
+                        _pickImage(ImageSource.camera);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _imageSourceOption(
+                      icon: Icons.photo_library_rounded,
+                      label: "Galeri",
+                      onTap: () {
+                        Navigator.pop(context);
+                        _pickImage(ImageSource.gallery);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      ),
     );
+  }
 
+  Widget _imageSourceOption({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 20),
+        decoration: BoxDecoration(
+          color: const Color(0xFF8B0000).withOpacity(0.07),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: const Color(0xFF8B0000).withOpacity(0.3),
+          ),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: const Color(0xFF8B0000), size: 32),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Color(0xFF8B0000),
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    final picked = await ImagePicker().pickImage(source: source);
     if (picked != null) {
       setState(() {
         selectedImage = File(picked.path);
@@ -140,7 +227,7 @@ class _ReviewPageState extends State<ReviewPage> {
                   Shadow(
                     color: const Color(0xFFFBBF24).withOpacity(0.5),
                     blurRadius: 10,
-                  )
+                  ),
                 ]
               : null,
         ),
@@ -371,7 +458,7 @@ class _ReviewPageState extends State<ReviewPage> {
 
             // Pick Image Button
             GestureDetector(
-              onTap: pickImage,
+              onTap: _showImageSourceSheet,
               child: Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 16),
@@ -429,7 +516,9 @@ class _ReviewPageState extends State<ReviewPage> {
                 onPressed: isLoading ? null : submitReview,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF8B0000),
-                  disabledBackgroundColor: const Color(0xFF8B0000).withOpacity(0.5),
+                  disabledBackgroundColor: const Color(
+                    0xFF8B0000,
+                  ).withOpacity(0.5),
                   foregroundColor: Colors.white,
                   elevation: 6,
                   shadowColor: const Color(0xFF8B0000).withOpacity(0.4),
