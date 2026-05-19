@@ -576,16 +576,19 @@ if (statusFinal == "completed") {
                           ? data["id"] as int
                           : int.tryParse(data["id"].toString()) ?? 0);
 
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => ReviewPage(
-                  userId: userId,
-                  reviewableId: reviewableId,
-                  type: _reviewType,
+                  Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ReviewPage(
+                    userId: userId,
+                    reviewableId: reviewableId,
+                    bookingId: data["id"] is int  // ← selalu id booking/tour_booking
+                        ? data["id"] as int
+                        : int.tryParse(data["id"].toString()) ?? 0,
+                    type: _reviewType,
+                  ),
                 ),
-              ),
-            );
+              );
           },
         ),
       );

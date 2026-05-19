@@ -23,8 +23,7 @@ class PaymentService {
       return null;
     }
   }
-
-  // 🔥 TAMBAHAN: Cek status pembayaran langsung ke Midtrans via backend
+  //pembayaran dengan midtrans
   static Future<String?> checkStatus(int bookingId) async {
     try {
       final response = await http.get(

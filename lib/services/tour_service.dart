@@ -7,17 +7,29 @@ class TourService {
   static Future<List<dynamic>> getTours() async {
     final response = await http.get(
       Uri.parse("${ApiService.baseUrl}/tour-packages"),
-      headers: {
-        "Accept": "application/json"
-      },
+      headers: {"Accept": "application/json"},
     );
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
-      print(data['data'][0]);
       return data['data'];
     } else {
       throw Exception("Gagal ambil data");
+    }
+  }
+
+  
+  static Future<Map<String, dynamic>> getTourDetail(int id) async {
+    final response = await http.get(
+      Uri.parse("${ApiService.baseUrl}/tour-packages/$id"),
+      headers: {"Accept": "application/json"},
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      return Map<String, dynamic>.from(data['data']);
+    } else {
+      throw Exception("Gagal ambil detail paket");
     }
   }
 }

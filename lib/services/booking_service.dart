@@ -32,8 +32,6 @@ class BookingService {
     );
 
     final data = jsonDecode(res.body);
-
-    // 🔥 FIX: flatten booking + passengers jadi satu map
     final booking = Map<String, dynamic>.from(data["data"]["booking"] ?? {});
     booking["passengers"] = data["data"]["passengers"] ?? [];
     booking["seats"] = data["data"]["seats"] ?? [];

@@ -8,6 +8,7 @@ class ReviewService {
 
   static Future<String?> submitReview({
     required int userId,
+    required int bookingId,   // ← tambah
     required String type,
     required int reviewableId,
     required int rating,
@@ -25,6 +26,7 @@ class ReviewService {
       request.headers['Accept'] = 'application/json';
 
       request.fields["user_id"] = userId.toString();
+      request.fields["booking_reference_id"] = bookingId.toString(); // ← tambah
       request.fields["reviewable_type"] = type;
       request.fields["reviewable_id"] = reviewableId.toString();
       request.fields["rating"] = rating.toString();
@@ -41,9 +43,9 @@ class ReviewService {
       final json = jsonDecode(resBody);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        return null; // null = sukses
+        return null;
       } else {
-        return json['message'] ?? 'Gagal mengirim review'; // return pesan error
+        return json['message'] ?? 'Gagal mengirim review';
       }
 
     } catch (e) {
