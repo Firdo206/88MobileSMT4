@@ -567,10 +567,14 @@ if (statusFinal == "completed") {
             final userId = data["user_id"] is int
                 ? data["user_id"] as int
                 : int.tryParse(data["user_id"].toString()) ?? 0;
-
-            final reviewableId = data["id"] is int
-                ? data["id"] as int
-                : int.tryParse(data["id"].toString()) ?? 0;
+                
+                  final reviewableId = type == "tour"
+                      ? (data["tour_package_id"] is int
+                          ? data["tour_package_id"] as int
+                          : int.tryParse(data["tour_package_id"].toString()) ?? 0)
+                      : (data["id"] is int
+                          ? data["id"] as int
+                          : int.tryParse(data["id"].toString()) ?? 0);
 
             Navigator.push(
               context,

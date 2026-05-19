@@ -24,7 +24,6 @@ class PaketDetailPage extends StatelessWidget {
     return (price - discount).clamp(0, double.infinity).toInt();
   }
 
-  // ✅ gunakan ApiService.storageUrl, ganti IP cukup di ApiService
   String _getImageUrl(dynamic data) {
     if (data['image'] != null && data['image'].toString().isNotEmpty) {
       return '${ApiService.storageUrl}/storage/${data['image']}';
@@ -34,7 +33,6 @@ class PaketDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    /// 🔥 DESTINATIONS
     List<String> destinations = [];
     if (data['destinations'] != null) {
       if (data['destinations'] is List) {
@@ -44,7 +42,6 @@ class PaketDetailPage extends StatelessWidget {
       }
     }
 
-    /// 🔥 INCLUSIONS
     List<String> inclusions = [];
     if (data['inclusions'] != null) {
       if (data['inclusions'] is List) {
@@ -54,7 +51,6 @@ class PaketDetailPage extends StatelessWidget {
       }
     }
 
-    /// 🔥 EXCLUSIONS
     List<String> exclusions = [];
     if (data['exclusions'] != null) {
       if (data['exclusions'] is List) {
@@ -63,6 +59,12 @@ class PaketDetailPage extends StatelessWidget {
         exclusions = data['exclusions'].split(',');
       }
     }
+
+    // ── Rating & Review Count ──
+    final double avgRating = double.tryParse(
+          data['reviews_avg_rating']?.toString() ?? '0',
+        ) ?? 0;
+    final int reviewCount = data['reviews_count'] ?? 0;
 
     String imageUrl = _getImageUrl(data);
 
@@ -80,7 +82,6 @@ class PaketDetailPage extends StatelessWidget {
         ),
       ),
 
-      /// 🔥 BOTTOM BAR
       bottomNavigationBar: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         decoration: const BoxDecoration(
@@ -95,7 +96,6 @@ class PaketDetailPage extends StatelessWidget {
         ),
         child: Row(
           children: [
-            /// WA BUTTON
             GestureDetector(
               onTap: () async {
                 final url = Uri.parse("https://wa.me/6285234203707");
@@ -122,7 +122,6 @@ class PaketDetailPage extends StatelessWidget {
 
             const SizedBox(width: 14),
 
-            /// PESAN BUTTON
             Expanded(
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
@@ -163,7 +162,6 @@ class PaketDetailPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            /// 🔥 IMAGE HERO
             Stack(
               children: [
                 imageUrl.isNotEmpty
@@ -209,10 +207,7 @@ class PaketDetailPage extends StatelessWidget {
                   left: 16,
                   bottom: 16,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 5,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(20),
@@ -220,11 +215,7 @@ class PaketDetailPage extends StatelessWidget {
                     ),
                     child: Row(
                       children: [
-                        const Icon(
-                          Icons.schedule_rounded,
-                          color: Colors.white,
-                          size: 14,
-                        ),
+                        const Icon(Icons.schedule_rounded, color: Colors.white, size: 14),
                         const SizedBox(width: 4),
                         Text(
                           "${data['duration_days'] ?? 0} Hari",
@@ -255,26 +246,20 @@ class PaketDetailPage extends StatelessWidget {
                         ),
                       ],
                     ),
-                    child: const Icon(
-                      Icons.favorite_rounded,
-                      color: Colors.white,
-                      size: 20,
-                    ),
+                    child: const Icon(Icons.favorite_rounded, color: Colors.white, size: 20),
                   ),
                 ),
               ],
             ),
 
-            /// 🔥 CONTENT CARD
             Container(
-              margin: const EdgeInsets.only(top: 0),
               decoration: const BoxDecoration(color: Color(0xFFF5F6FA)),
               child: Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    /// TITLE + RATING ROW
+                    // ── TITLE + RATING ──
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -291,25 +276,18 @@ class PaketDetailPage extends StatelessWidget {
                         ),
                         const SizedBox(width: 12),
                         Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 5,
-                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                           decoration: BoxDecoration(
                             color: const Color(0xFFFFF8E1),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Row(
-                            children: const [
-                              Icon(
-                                Icons.star_rounded,
-                                color: Colors.amber,
-                                size: 16,
-                              ),
-                              SizedBox(width: 3),
+                            children: [
+                              const Icon(Icons.star_rounded, color: Colors.amber, size: 16),
+                              const SizedBox(width: 3),
                               Text(
-                                "4.8",
-                                style: TextStyle(
+                                reviewCount > 0 ? avgRating.toStringAsFixed(1) : '0.0',
+                                style: const TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.bold,
                                   color: Color(0xFF7B6000),
@@ -323,8 +301,9 @@ class PaketDetailPage extends StatelessWidget {
 
                     const SizedBox(height: 6),
 
+                    // ── REVIEW COUNT ──
                     Text(
-                      "120 Reviews",
+                      reviewCount > 0 ? "$reviewCount Reviews" : "Belum ada ulasan",
                       style: TextStyle(fontSize: 12, color: Colors.grey[500]),
                     ),
 
@@ -332,10 +311,7 @@ class PaketDetailPage extends StatelessWidget {
 
                     /// HARGA CARD
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
@@ -344,9 +320,7 @@ class PaketDetailPage extends StatelessWidget {
                           ],
                         ),
                         borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                          color: AppColor.primary.withOpacity(0.2),
-                        ),
+                        border: Border.all(color: AppColor.primary.withOpacity(0.2)),
                       ),
                       child: promo != null
                           ? Column(
@@ -354,17 +328,9 @@ class PaketDetailPage extends StatelessWidget {
                               children: [
                                 Row(
                                   children: [
-                                    Icon(
-                                      Icons.local_offer_rounded,
-                                      color: AppColor.primary,
-                                      size: 20,
-                                    ),
+                                    Icon(Icons.local_offer_rounded, color: AppColor.primary, size: 20),
                                     const SizedBox(width: 10),
-                                    const Text(
-                                      "Mulai dari",
-                                      style: TextStyle(
-                                          fontSize: 13, color: Colors.grey),
-                                    ),
+                                    const Text("Mulai dari", style: TextStyle(fontSize: 13, color: Colors.grey)),
                                   ],
                                 ),
                                 const SizedBox(height: 6),
@@ -382,90 +348,42 @@ class PaketDetailPage extends StatelessWidget {
                                     Expanded(
                                       child: Text(
                                         "Rp ${_getFinalPrice(data['price_per_person'])}",
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 20,
-                                          color: AppColor.primary,
-                                        ),
+                                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: AppColor.primary),
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
-                                    const Text(
-                                      "/orang",
-                                      style: TextStyle(
-                                          fontSize: 12, color: Colors.grey),
-                                    ),
+                                    const Text("/orang", style: TextStyle(fontSize: 12, color: Colors.grey)),
                                   ],
                                 ),
                               ],
                             )
                           : Row(
                               children: [
-                                Icon(
-                                  Icons.local_offer_rounded,
-                                  color: AppColor.primary,
-                                  size: 20,
-                                ),
+                                Icon(Icons.local_offer_rounded, color: AppColor.primary, size: 20),
                                 const SizedBox(width: 10),
-                                const Text(
-                                  "Mulai dari",
-                                  style: TextStyle(
-                                      fontSize: 13, color: Colors.grey),
-                                ),
+                                const Text("Mulai dari", style: TextStyle(fontSize: 13, color: Colors.grey)),
                                 const Spacer(),
                                 Flexible(
                                   child: Text(
                                     "Rp ${data['price_per_person'] ?? '-'}",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 18,
-                                      color: AppColor.primary,
-                                    ),
+                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppColor.primary),
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
-                                const Text(
-                                  " /orang",
-                                  style: TextStyle(
-                                      fontSize: 12, color: Colors.grey),
-                                ),
+                                const Text(" /orang", style: TextStyle(fontSize: 12, color: Colors.grey)),
                               ],
                             ),
                     ),
 
                     const SizedBox(height: 20),
 
-                    /// DESCRIPTION
-                    const Text(
-                      "Deskripsi",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: Color(0xFF1A1A2E),
-                      ),
-                    ),
+                    const Text("Deskripsi", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF1A1A2E))),
                     const SizedBox(height: 8),
-                    Text(
-                      data['description'] ?? '-',
-                      style: const TextStyle(
-                        color: Color(0xFF6B7280),
-                        height: 1.6,
-                        fontSize: 14,
-                      ),
-                    ),
+                    Text(data['description'] ?? '-', style: const TextStyle(color: Color(0xFF6B7280), height: 1.6, fontSize: 14)),
 
                     const SizedBox(height: 24),
 
-                    /// DESTINASI
-                    const Text(
-                      "Destinasi",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: Color(0xFF1A1A2E),
-                      ),
-                    ),
-
+                    const Text("Destinasi", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF1A1A2E))),
                     const SizedBox(height: 10),
 
                     Wrap(
@@ -473,33 +391,20 @@ class PaketDetailPage extends StatelessWidget {
                       runSpacing: 8,
                       children: destinations.map((e) {
                         return Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 7,
-                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                           decoration: BoxDecoration(
                             color: AppColor.primary.withOpacity(0.08),
                             borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: AppColor.primary.withOpacity(0.25),
-                            ),
+                            border: Border.all(color: AppColor.primary.withOpacity(0.25)),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(
-                                Icons.location_on_rounded,
-                                color: AppColor.primary,
-                                size: 13,
-                              ),
+                              Icon(Icons.location_on_rounded, color: AppColor.primary, size: 13),
                               const SizedBox(width: 4),
                               Text(
                                 e.trim(),
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: AppColor.primary,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                                style: TextStyle(fontSize: 12, color: AppColor.primary, fontWeight: FontWeight.w600),
                               ),
                             ],
                           ),
@@ -509,24 +414,16 @@ class PaketDetailPage extends StatelessWidget {
 
                     const SizedBox(height: 24),
 
-                    /// 🔥 2 KOLOM - FASILITAS & EKSTENSI
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        /// FASILITAS
                         Expanded(
                           child: Container(
                             padding: const EdgeInsets.all(14),
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(16),
-                              boxShadow: const [
-                                BoxShadow(
-                                  color: Color(0x08000000),
-                                  blurRadius: 10,
-                                  offset: Offset(0, 2),
-                                ),
-                              ],
+                              boxShadow: const [BoxShadow(color: Color(0x08000000), blurRadius: 10, offset: Offset(0, 2))],
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -535,67 +432,26 @@ class PaketDetailPage extends StatelessWidget {
                                   children: [
                                     Container(
                                       padding: const EdgeInsets.all(6),
-                                      decoration: BoxDecoration(
-                                        color: Colors.green.withOpacity(0.1),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: const Icon(
-                                        Icons.check_circle_rounded,
-                                        color: Colors.green,
-                                        size: 16,
-                                      ),
+                                      decoration: BoxDecoration(color: Colors.green.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                                      child: const Icon(Icons.check_circle_rounded, color: Colors.green, size: 16),
                                     ),
                                     const SizedBox(width: 8),
-                                    const Flexible(
-                                      child: Text(
-                                        "Fasilitas Inti",
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 13,
-                                          color: Color(0xFF1A1A2E),
-                                        ),
-                                      ),
-                                    ),
+                                    const Flexible(child: Text("Fasilitas Inti", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF1A1A2E)))),
                                   ],
                                 ),
                                 const SizedBox(height: 10),
                                 ...inclusions.isNotEmpty
-                                    ? inclusions.map(
-                                        (e) => Padding(
-                                          padding: const EdgeInsets.only(
-                                            bottom: 5,
-                                          ),
+                                    ? inclusions.map((e) => Padding(
+                                          padding: const EdgeInsets.only(bottom: 5),
                                           child: Row(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
+                                            crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
-                                              const Text(
-                                                "✓ ",
-                                                style: TextStyle(
-                                                  color: Colors.green,
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 13,
-                                                ),
-                                              ),
-                                              Expanded(
-                                                child: Text(
-                                                  e.trim(),
-                                                  style: const TextStyle(
-                                                    fontSize: 12,
-                                                    color: Color(0xFF6B7280),
-                                                  ),
-                                                ),
-                                              ),
+                                              const Text("✓ ", style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 13)),
+                                              Expanded(child: Text(e.trim(), style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)))),
                                             ],
                                           ),
-                                        ),
-                                      )
-                                    : [
-                                        const Text(
-                                          "-",
-                                          style: TextStyle(color: Colors.grey),
-                                        ),
-                                      ],
+                                        ))
+                                    : [const Text("-", style: TextStyle(color: Colors.grey))],
                               ],
                             ),
                           ),
@@ -603,20 +459,13 @@ class PaketDetailPage extends StatelessWidget {
 
                         const SizedBox(width: 12),
 
-                        /// EKSTENSI
                         Expanded(
                           child: Container(
                             padding: const EdgeInsets.all(14),
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(16),
-                              boxShadow: const [
-                                BoxShadow(
-                                  color: Color(0x08000000),
-                                  blurRadius: 10,
-                                  offset: Offset(0, 2),
-                                ),
-                              ],
+                              boxShadow: const [BoxShadow(color: Color(0x08000000), blurRadius: 10, offset: Offset(0, 2))],
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -625,67 +474,26 @@ class PaketDetailPage extends StatelessWidget {
                                   children: [
                                     Container(
                                       padding: const EdgeInsets.all(6),
-                                      decoration: BoxDecoration(
-                                        color: Colors.orange.withOpacity(0.1),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: const Icon(
-                                        Icons.add_circle_outline_rounded,
-                                        color: Colors.orange,
-                                        size: 16,
-                                      ),
+                                      decoration: BoxDecoration(color: Colors.orange.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                                      child: const Icon(Icons.add_circle_outline_rounded, color: Colors.orange, size: 16),
                                     ),
                                     const SizedBox(width: 8),
-                                    const Flexible(
-                                      child: Text(
-                                        "Opsional",
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 13,
-                                          color: Color(0xFF1A1A2E),
-                                        ),
-                                      ),
-                                    ),
+                                    const Flexible(child: Text("Opsional", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF1A1A2E)))),
                                   ],
                                 ),
                                 const SizedBox(height: 10),
                                 ...exclusions.isNotEmpty
-                                    ? exclusions.map(
-                                        (e) => Padding(
-                                          padding: const EdgeInsets.only(
-                                            bottom: 5,
-                                          ),
+                                    ? exclusions.map((e) => Padding(
+                                          padding: const EdgeInsets.only(bottom: 5),
                                           child: Row(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
+                                            crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
-                                              const Text(
-                                                "+ ",
-                                                style: TextStyle(
-                                                  color: Colors.orange,
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 13,
-                                                ),
-                                              ),
-                                              Expanded(
-                                                child: Text(
-                                                  e.trim(),
-                                                  style: const TextStyle(
-                                                    fontSize: 12,
-                                                    color: Color(0xFF6B7280),
-                                                  ),
-                                                ),
-                                              ),
+                                              const Text("+ ", style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold, fontSize: 13)),
+                                              Expanded(child: Text(e.trim(), style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)))),
                                             ],
                                           ),
-                                        ),
-                                      )
-                                    : [
-                                        const Text(
-                                          "-",
-                                          style: TextStyle(color: Colors.grey),
-                                        ),
-                                      ],
+                                        ))
+                                    : [const Text("-", style: TextStyle(color: Colors.grey))],
                               ],
                             ),
                           ),
@@ -695,16 +503,7 @@ class PaketDetailPage extends StatelessWidget {
 
                     const SizedBox(height: 24),
 
-                    /// 🔥 INVESTASI
-                    const Text(
-                      "Investasi Perjalanan",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: Color(0xFF1A1A2E),
-                      ),
-                    ),
-
+                    const Text("Investasi Perjalanan", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF1A1A2E))),
                     const SizedBox(height: 12),
 
                     Container(
@@ -713,68 +512,29 @@ class PaketDetailPage extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(16),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Color(0x08000000),
-                            blurRadius: 10,
-                            offset: Offset(0, 2),
-                          ),
-                        ],
+                        boxShadow: const [BoxShadow(color: Color(0x08000000), blurRadius: 10, offset: Offset(0, 2))],
                       ),
                       child: Row(
                         children: [
                           Container(
                             padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: Colors.red.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(
-                              Icons.groups_rounded,
-                              color: Colors.red,
-                              size: 22,
-                            ),
+                            decoration: BoxDecoration(color: Colors.red.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+                            child: const Icon(Icons.groups_rounded, color: Colors.red, size: 22),
                           ),
                           const SizedBox(width: 14),
                           const Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                "Pasti Berangkat",
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                  color: Color(0xFF1A1A2E),
-                                ),
-                              ),
+                              Text("Pasti Berangkat", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF1A1A2E))),
                               SizedBox(height: 2),
-                              Text(
-                                "Garansi Keberangkatan",
-                                style: TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: 12,
-                                ),
-                              ),
+                              Text("Garansi Keberangkatan", style: TextStyle(color: Colors.grey, fontSize: 12)),
                             ],
                           ),
                           const Spacer(),
                           Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 5,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.green.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: const Text(
-                              "Garansi",
-                              style: TextStyle(
-                                color: Colors.green,
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            decoration: BoxDecoration(color: Colors.green.withOpacity(0.1), borderRadius: BorderRadius.circular(20)),
+                            child: const Text("Garansi", style: TextStyle(color: Colors.green, fontSize: 11, fontWeight: FontWeight.bold)),
                           ),
                         ],
                       ),
@@ -785,68 +545,29 @@ class PaketDetailPage extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(16),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Color(0x08000000),
-                            blurRadius: 10,
-                            offset: Offset(0, 2),
-                          ),
-                        ],
+                        boxShadow: const [BoxShadow(color: Color(0x08000000), blurRadius: 10, offset: Offset(0, 2))],
                       ),
                       child: Row(
                         children: [
                           Container(
                             padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: Colors.blue.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(
-                              Icons.shield_rounded,
-                              color: Colors.blue,
-                              size: 22,
-                            ),
+                            decoration: BoxDecoration(color: Colors.blue.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+                            child: const Icon(Icons.shield_rounded, color: Colors.blue, size: 22),
                           ),
                           const SizedBox(width: 14),
                           const Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                "Asuransi Trip",
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                  color: Color(0xFF1A1A2E),
-                                ),
-                              ),
+                              Text("Asuransi Trip", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF1A1A2E))),
                               SizedBox(height: 2),
-                              Text(
-                                "Perjalanan Tanpa Khawatir",
-                                style: TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: 12,
-                                ),
-                              ),
+                              Text("Perjalanan Tanpa Khawatir", style: TextStyle(color: Colors.grey, fontSize: 12)),
                             ],
                           ),
                           const Spacer(),
                           Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 5,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.blue.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: const Text(
-                              "Included",
-                              style: TextStyle(
-                                color: Colors.blue,
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            decoration: BoxDecoration(color: Colors.blue.withOpacity(0.1), borderRadius: BorderRadius.circular(20)),
+                            child: const Text("Included", style: TextStyle(color: Colors.blue, fontSize: 11, fontWeight: FontWeight.bold)),
                           ),
                         ],
                       ),

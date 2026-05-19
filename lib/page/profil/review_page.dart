@@ -136,41 +136,52 @@ class _ReviewPageState extends State<ReviewPage> {
   }
 
   Future submitReview() async {
-    setState(() {
-      isLoading = true;
-    });
+  setState(() => isLoading = true);
 
-    final success = await ReviewService.submitReview(
-      userId: widget.userId,
-      type: widget.type,
-      reviewableId: widget.reviewableId,
-      rating: rating,
-      comment: commentController.text,
-      image: selectedImage,
+  final errorMessage = await ReviewService.submitReview(
+    userId: widget.userId,
+    type: widget.type,
+    reviewableId: widget.reviewableId,
+    rating: rating,
+    comment: commentController.text,
+    image: selectedImage,
+  );
+
+  setState(() => isLoading = false);
+
+  if (!mounted) return;
+
+  if (errorMessage == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Review berhasil dikirim"),
+        backgroundColor: Colors.green,
+      ),
     );
-
-    setState(() {
-      isLoading = false;
-    });
-
-    if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Review berhasil dikirim"),
-          backgroundColor: Colors.green,
+    Navigator.pop(context, true);
+  } else {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.info_outline_rounded, color: Colors.orange),
+            SizedBox(width: 8),
+            Text("Perhatian", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          ],
         ),
-      );
-
-      Navigator.pop(context, true);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Gagal mengirim review"),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
+        content: Text(errorMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("OK", style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF8B0000))),
+          ),
+        ],
+      ),
+    );
   }
+}
 
   String get _ratingLabel {
     switch (rating) {
@@ -200,7 +211,7 @@ class _ReviewPageState extends State<ReviewPage> {
       case 4:
         return const Color(0xFF22C55E);
       case 5:
-        return const Color(0xFF8B0000);
+        return const Color(0xFF8B0000); 
       default:
         return Colors.grey;
     }

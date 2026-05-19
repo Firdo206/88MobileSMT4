@@ -358,6 +358,8 @@ class _PaketWisataPageState extends State<PaketWisataPage> {
                             : '',
                         title: item['name'] ?? '',
                         price: "Rp ${item['price_per_person']}",
+                        rating: double.tryParse(item['reviews_avg_rating']?.toString() ?? '0') ?? 0, 
+                        reviewCount: item['reviews_count'] ?? 0,
                         onTap: () {
                           Navigator.push(
                             context,

@@ -1,11 +1,12 @@
 import 'dart:io';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart'; 
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 import 'api_service.dart';
 
 class ReviewService {
 
-  static Future<bool> submitReview({
+  static Future<String?> submitReview({
     required int userId,
     required String type,
     required int reviewableId,
@@ -14,15 +15,12 @@ class ReviewService {
     File? image,
   }) async {
     try {
-      // ambil token dari shared preferences
       final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token') ?? ''; // sesuaikan key-nya
+      final token = prefs.getString('token') ?? '';
 
       var uri = Uri.parse(ApiService.reviewStore);
-
       var request = http.MultipartRequest("POST", uri);
 
-      // tambahkan header ini
       request.headers['Authorization'] = 'Bearer $token';
       request.headers['Accept'] = 'application/json';
 
@@ -40,13 +38,16 @@ class ReviewService {
 
       var response = await request.send();
       final resBody = await response.stream.bytesToString();
-      print(resBody);
+      final json = jsonDecode(resBody);
 
-      return response.statusCode == 200 || response.statusCode == 201;
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return null; // null = sukses
+      } else {
+        return json['message'] ?? 'Gagal mengirim review'; // return pesan error
+      }
 
     } catch (e) {
-      print(e);
-      return false;
+      return 'Terjadi kesalahan, coba lagi';
     }
   }
 }

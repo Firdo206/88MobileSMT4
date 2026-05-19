@@ -6,6 +6,8 @@ class PaketCard extends StatelessWidget {
   final String title;
   final String price;
   final VoidCallback onTap;
+  final double rating;    // ← tambah
+  final int reviewCount;  // ← tambah
 
   const PaketCard({
     super.key,
@@ -13,6 +15,8 @@ class PaketCard extends StatelessWidget {
     required this.title,
     required this.price,
     required this.onTap,
+    this.rating = 0,       // ← default 0
+    this.reviewCount = 0,  // ← default 0
   });
 
   @override
@@ -28,7 +32,7 @@ class PaketCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          /// 🔥 IMAGE
+          // IMAGE (tidak berubah)
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
             child: image.isNotEmpty
@@ -54,18 +58,27 @@ class PaketCard extends StatelessWidget {
 
           const SizedBox(height: 10),
 
-          /// RATING (dummy sesuai figma)
-          const Row(
+          // ← GANTI bagian rating dummy dengan ini:
+          Row(
             children: [
-              Icon(Icons.star, color: Colors.amber, size: 16),
-              SizedBox(width: 4),
-              Text("4.8 (120 Reviews)", style: TextStyle(fontSize: 12)),
+              Icon(
+                Icons.star,
+                color: reviewCount > 0 ? Colors.amber : Colors.grey[400],
+                size: 16,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                reviewCount > 0
+                    ? "${rating.toStringAsFixed(1)} ($reviewCount Reviews)"
+                    : "Belum ada ulasan",
+                style: const TextStyle(fontSize: 12),
+              ),
             ],
           ),
 
           const SizedBox(height: 6),
 
-          /// TITLE
+          // TITLE (tidak berubah)
           Text(
             title,
             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
@@ -73,12 +86,12 @@ class PaketCard extends StatelessWidget {
 
           const SizedBox(height: 4),
 
-          /// PRICE
+          // PRICE (tidak berubah)
           Text(price, style: const TextStyle(color: Colors.grey)),
 
           const SizedBox(height: 10),
 
-          /// BUTTON + FAVORITE
+          // BUTTON + FAVORITE (tidak berubah)
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [

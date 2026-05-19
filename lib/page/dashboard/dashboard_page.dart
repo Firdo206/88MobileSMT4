@@ -179,6 +179,7 @@ class _DashboardPageState extends State<DashboardPage>
 
   @override
   Widget build(BuildContext context) {
+    print("isRoundTrip: $_isRoundTrip");
     return Scaffold(
       backgroundColor: const Color(0xFFF7F3F0),
       body: FadeTransition(
@@ -332,18 +333,18 @@ class _DashboardPageState extends State<DashboardPage>
             child: Row(
               children: [
                 _tripTypeTab(
-                  label: "Sekali Jalan",
-                  active: !_isRoundTrip,
-                  onTap: () => setState(() {
-                    _isRoundTrip = false;
-                    returnDate = null;
-                  }),
-                ),
+                      label: "Sekali Jalan",
+                      active: !_isRoundTrip,
+                      onTap: () => setState(() {
+                        _isRoundTrip = false;
+                        returnDate = null;
+                      }),
+                    ),
                 _tripTypeTab(
-                  label: "Pulang Pergi",
-                  active: _isRoundTrip,
-                  onTap: () => setState(() => _isRoundTrip = true),
-                ),
+              label: "Pulang Pergi",
+              active: _isRoundTrip,
+              onTap: () => setState(() => _isRoundTrip = true),
+            ),
               ],
             ),
           ),
@@ -414,6 +415,7 @@ class _DashboardPageState extends State<DashboardPage>
                   origin: originController.text,
                   destination: destinationController.text,
                   date: selectedDate,
+                   returnDate: _isRoundTrip ? returnDate : null,
                 ),
               ),
             ),
