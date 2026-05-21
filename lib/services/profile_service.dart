@@ -36,25 +36,32 @@ class ProfileService {
   }
 
   // UPLOAD AVATAR
-  static Future<bool> uploadAvatar(int userId, File imageFile) async {
-    var uri = Uri.parse("${ApiService.baseUrl}/upload-avatar");
+static Future<bool> uploadAvatar(int userId, File imageFile) async {
+  var uri = Uri.parse("${ApiService.baseUrl}/upload-avatar");
 
-    var request = http.MultipartRequest('POST', uri);
+  var request = http.MultipartRequest('POST', uri);
 
-    request.fields['user_id'] = userId.toString();
+  // Tambahkan header ini
+  request.headers['Accept'] = 'application/json';
 
-    request.files.add(
-      await http.MultipartFile.fromPath('avatar', imageFile.path),
-    );
+  request.fields['user_id'] = userId.toString();
 
-    var response = await request.send();
+  request.files.add(
+    await http.MultipartFile.fromPath('avatar', imageFile.path),
+  );
 
-    if (response.statusCode == 200) {
-      return true;
-    } else {
-      return false;
-    }
+  var response = await request.send();
+
+  final responseBody = await response.stream.bytesToString();
+  print("=== UPLOAD AVATAR STATUS: ${response.statusCode}");
+  print("=== UPLOAD AVATAR BODY: $responseBody");
+
+  if (response.statusCode == 200) {
+    return true;
+  } else {
+    return false;
   }
+}
 
   // UPDATE NAMA
   static Future<bool> updateName(int userId, String name) async {

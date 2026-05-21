@@ -168,13 +168,14 @@ class _PromoListPageState extends State<PromoListPage> {
               discountValue:  promo.discountValue,
               minTransaction: promo.minTransaction,
               maxDiscount:    promo.maxDiscount,
-              startDate:      promo.startDate,   // ← String? langsung
-              endDate:        promo.endDate,     // ← String? langsung
+              startDate:      promo.startDate,   
+              endDate:        promo.endDate,     
               quota:          promo.quota,
               usedQuota:      promo.usedQuota,
               isActive:       promo.bisaDipakai,
               promoCode:      promo.promoCode,
               targetType:     promo.targetType,
+              image:          promo.image,
               onTap: () => _onTapPromo(promo),
             ),
           );

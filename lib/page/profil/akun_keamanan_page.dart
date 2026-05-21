@@ -138,15 +138,103 @@ class _AkunKeamananPageState extends State<AkunKeamananPage> {
     );
   }
 
-  Future<void> pickImage() async {
-    final XFile? pickedFile = await _picker.pickImage(
-      source: ImageSource.gallery,
+  void _showImageSourceSheet() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      backgroundColor: Colors.white,
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                "Ganti Foto Profil",
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF1A1A1A),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: _imageSourceOption(
+                      icon: Icons.camera_alt_rounded,
+                      label: "Kamera",
+                      onTap: () {
+                        Navigator.pop(context);
+                        _pickImage(ImageSource.camera);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _imageSourceOption(
+                      icon: Icons.photo_library_rounded,
+                      label: "Galeri",
+                      onTap: () {
+                        Navigator.pop(context);
+                        _pickImage(ImageSource.gallery);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      ),
     );
+  }
+
+  Widget _imageSourceOption({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 20),
+        decoration: BoxDecoration(
+          color: _primary.withOpacity(0.07),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: _primary.withOpacity(0.3)),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: _primary, size: 32),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: const TextStyle(
+                color: _primary,
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    final XFile? pickedFile = await _picker.pickImage(source: source);
 
     if (pickedFile != null) {
       File imageFile = File(pickedFile.path);
+      print("=== FILE PATH: ${pickedFile.path}");
 
       bool success = await ProfileService.uploadAvatar(userId, imageFile);
+      print("=== UPLOAD SUCCESS: $success");
 
       if (success) {
         setState(() {
@@ -158,8 +246,33 @@ class _AkunKeamananPageState extends State<AkunKeamananPage> {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text("Foto berhasil diupdate")));
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Gagal upload foto"),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
+  }
+
+  // ── Inisial nama kalau belum ada foto ────────────────────────
+  Widget _buildInitialAvatar() {
+    final initial = name.isNotEmpty ? name[0].toUpperCase() : '?';
+    return Container(
+      color: const Color(0xFF6B1E1E),
+      child: Center(
+        child: Text(
+          initial,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 36,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
   }
 
   static const Color _primary = Color(0xFF8B2E2E);
@@ -170,7 +283,6 @@ class _AkunKeamananPageState extends State<AkunKeamananPage> {
       backgroundColor: const Color(0xFFF5F5F5),
       body: CustomScrollView(
         slivers: [
-          // ── App Bar dengan hero profile ──────────────────────
           SliverAppBar(
             expandedHeight: 220,
             pinned: true,
@@ -194,7 +306,7 @@ class _AkunKeamananPageState extends State<AkunKeamananPage> {
 
                       // Avatar
                       GestureDetector(
-                        onTap: pickImage,
+                        onTap: _showImageSourceSheet,
                         child: Stack(
                           children: [
                             Container(
@@ -221,11 +333,10 @@ class _AkunKeamananPageState extends State<AkunKeamananPage> {
                                     ? Image.network(
                                         "${ApiService.storageUrl}/avatar/$avatar?${DateTime.now().millisecondsSinceEpoch}",
                                         fit: BoxFit.cover,
+                                        errorBuilder: (_, __, ___) =>
+                                            _buildInitialAvatar(),
                                       )
-                                    : Image.network(
-                                        "https://randomuser.me/api/portraits/women/44.jpg",
-                                        fit: BoxFit.cover,
-                                      ),
+                                    : _buildInitialAvatar(),
                               ),
                             ),
                             Positioned(
@@ -256,7 +367,6 @@ class _AkunKeamananPageState extends State<AkunKeamananPage> {
 
                       const SizedBox(height: 10),
 
-                      // Nama + tombol edit
                       GestureDetector(
                         onTap: showEditNameDialog,
                         child: Row(
@@ -308,14 +418,12 @@ class _AkunKeamananPageState extends State<AkunKeamananPage> {
             ),
           ),
 
-          // ── Body ─────────────────────────────────────────────
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Section: Informasi Akun
                   _sectionLabel("Informasi Akun"),
                   const SizedBox(height: 10),
 
@@ -353,7 +461,6 @@ class _AkunKeamananPageState extends State<AkunKeamananPage> {
 
                   const SizedBox(height: 20),
 
-                  // Section: Keamanan
                   _sectionLabel("Keamanan"),
                   const SizedBox(height: 10),
 
@@ -455,12 +562,10 @@ class _AkunKeamananPageState extends State<AkunKeamananPage> {
                   const SizedBox(height: 2),
                   Text(
                     value,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: isReadOnly && trailingText == null
-                          ? Colors.black87
-                          : Colors.black87,
+                      color: Colors.black87,
                     ),
                   ),
                 ],

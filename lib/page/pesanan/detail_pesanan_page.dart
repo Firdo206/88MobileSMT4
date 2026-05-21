@@ -19,10 +19,10 @@ class DetailPesananPage extends StatelessWidget {
   String get statusFinal => data["status_final"] ?? "-";
 
   String get _reviewType {
-  if (type == "ticket") return "booking";
-  if (type == "bus")    return "rental";
-  return "tour";
-}
+    if (type == "ticket") return "booking";
+    if (type == "bus")    return "rental";
+    return "tour";
+  }
 
   String rupiah(dynamic value) {
     int v = int.tryParse(value.toString()) ?? 0;
@@ -70,21 +70,18 @@ class DetailPesananPage extends StatelessWidget {
   String get displayEmail => data["email"]?.toString() ?? "-";
 
   // ─── Status ─────────────────────────────────────────────────
-  // Mapping lengkap sesuai backend:
-  //   pending_refund → user ajukan refund, admin belum proses
-  //   refund         → nilai lama (samakan dengan pending_refund)
-  //   refunded       → admin set status "completed" → uang sudah dikembalikan
   static const _statusMap = {
-    "pending_payment":     (Color(0xFFFF9800), "Belum Bayar"),
-    "waiting_confirmation":(Color(0xFF2196F3), "Wait Confirm"),
-    "waiting_approval":    (Color(0xFF2196F3), "Wait Approval"),
-    "paid":                (Color(0xFF4CAF50), "Lunas"),
-    "completed":           (Color(0xFF9E9E9E), "Selesai"),
-    "cancelled":           (Color(0xFFF44336), "Dibatalkan"),
-    "rejected":            (Color(0xFFF44336), "Ditolak"),
-    "pending_refund":      (Color(0xFF9C27B0), "Menunggu Refund"),
-    "refund":              (Color(0xFF9C27B0), "Menunggu Refund"),
-    "refunded":            (Color(0xFF00BCD4), "Refund Selesai"),  // ← admin set completed
+    "pending_payment":      (Color(0xFFFF9800), "Belum Bayar"),
+    "waiting_confirmation": (Color(0xFF2196F3), "Wait Confirm"),
+    "waiting_approval":     (Color(0xFF2196F3), "Wait Approval"),
+    "paid":                 (Color(0xFF4CAF50), "Lunas"),
+    "completed":            (Color(0xFF9E9E9E), "Selesai"),
+    "cancelled":            (Color(0xFFF44336), "Dibatalkan"),
+    "rejected":             (Color(0xFFF44336), "Ditolak"),
+    "pending_refund":       (Color(0xFF9C27B0), "Menunggu Refund"),
+    "refund":               (Color(0xFF9C27B0), "Menunggu Refund"),
+    "refunded":             (Color(0xFF00BCD4), "Refund Selesai"),
+    "refund_rejected":      (Color(0xFFF44336), "Refund Ditolak"), // ✅
   };
 
   String get _paymentStatus => data["payment_status"]?.toString() ?? statusFinal;
@@ -92,7 +89,7 @@ class DetailPesananPage extends StatelessWidget {
   Color statusColor() => _statusMap[_paymentStatus]?.$1 ?? _statusMap[statusFinal]?.$1 ?? const Color(0xFF9E9E9E);
   String statusText()  => _statusMap[_paymentStatus]?.$2 ?? _statusMap[statusFinal]?.$2 ?? "-";
 
-  // Helper: apakah dalam kondisi refund apapun (blokir semua tombol)
+  // ✅ refund_rejected TIDAK masuk sini, supaya tombol normal muncul lagi
   bool get _isRefundState =>
       _paymentStatus == "pending_refund" ||
       _paymentStatus == "refund" ||
@@ -106,7 +103,7 @@ class DetailPesananPage extends StatelessWidget {
   // ─── Build ───────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
-    final price = getPrice();
+    final price             = getPrice();
     final promoTitle        = data["promo_title"];
     final discountAmountRaw = data["discount_amount"];
     final hasPromo          = promoTitle != null && discountAmountRaw != null;
@@ -128,10 +125,11 @@ class DetailPesananPage extends StatelessWidget {
           ],
         ),
       ),
+      // ✅ Download tiket juga muncul saat refund_rejected (tiket masih aktif)
       bottomNavigationBar:
-    statusFinal == "paid"
-        ? _buildBottomDownloadBar(context, price)
-        : null,
+          (statusFinal == "paid" || _paymentStatus == "refund_rejected")
+              ? _buildBottomDownloadBar(context, price)
+              : null,
     );
   }
 
@@ -149,7 +147,7 @@ class DetailPesananPage extends StatelessWidget {
         ),
       );
 
-  // ─── Hero Stack (gradient bg + card) ────────────────────────
+  // ─── Hero Stack ─────────────────────────────────────────────
   Widget _buildHeroStack() => Stack(
         clipBehavior: Clip.none,
         children: [
@@ -292,7 +290,7 @@ class DetailPesananPage extends StatelessWidget {
         ),
       );
 
-  // ─── Header Content (gradient area) ─────────────────────────
+  // ─── Header Content ──────────────────────────────────────────
   Widget _topContent() {
     if (type == "ticket") return _headerTicket();
     if (type == "bus")    return _headerBus();
@@ -548,7 +546,7 @@ class DetailPesananPage extends StatelessWidget {
 
   // ─── Action Buttons ──────────────────────────────────────────
   Widget buildActionButton(BuildContext context) {
-    // ── GUARD: semua kondisi refund → blokir tombol, tampilkan info ──
+    // ── Menunggu refund diproses admin ──
     if (_isRefundState) {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -556,7 +554,58 @@ class DetailPesananPage extends StatelessWidget {
       );
     }
 
-if (statusFinal == "completed") {
+    // ── ✅ Refund ditolak → tiket masih aktif, tampilkan info + tombol ajukan lagi ──
+    if (_paymentStatus == "refund_rejected") {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Column(
+          children: [
+            // Banner info ditolak
+            Container(
+              padding: const EdgeInsets.all(14),
+              margin: const EdgeInsets.only(bottom: 12),
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.07),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.red.withOpacity(0.3)),
+              ),
+              child: const Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.cancel_outlined, color: Colors.redAccent, size: 18),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      "Pengajuan refund kamu ditolak oleh admin. Tiket kamu masih aktif dan dapat digunakan.",
+                      style: TextStyle(
+                          color: Colors.redAccent, fontSize: 13, height: 1.4),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Tombol ajukan refund lagi
+            if (type != "bus")
+              _outlinedButton(
+                text: "Ajukan Refund Lagi",
+                icon: Icons.assignment_return_outlined,
+                onTap: () async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => RefundPage(booking: data)),
+                  );
+                  if (result == true && context.mounted) {
+                    Navigator.pop(context, true);
+                  }
+                },
+              ),
+          ],
+        ),
+      );
+    }
+
+    // ── Selesai → tombol beri ulasan ──
+    if (statusFinal == "completed") {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: _primaryButton(
@@ -567,34 +616,34 @@ if (statusFinal == "completed") {
             final userId = data["user_id"] is int
                 ? data["user_id"] as int
                 : int.tryParse(data["user_id"].toString()) ?? 0;
-                
-                  final reviewableId = type == "tour"
-                      ? (data["tour_package_id"] is int
-                          ? data["tour_package_id"] as int
-                          : int.tryParse(data["tour_package_id"].toString()) ?? 0)
-                      : (data["id"] is int
-                          ? data["id"] as int
-                          : int.tryParse(data["id"].toString()) ?? 0);
 
-                  Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => ReviewPage(
-                    userId: userId,
-                    reviewableId: reviewableId,
-                    bookingId: data["id"] is int  // ← selalu id booking/tour_booking
-                        ? data["id"] as int
-                        : int.tryParse(data["id"].toString()) ?? 0,
-                    type: _reviewType,
-                  ),
+            final reviewableId = type == "tour"
+                ? (data["tour_package_id"] is int
+                    ? data["tour_package_id"] as int
+                    : int.tryParse(data["tour_package_id"].toString()) ?? 0)
+                : (data["id"] is int
+                    ? data["id"] as int
+                    : int.tryParse(data["id"].toString()) ?? 0);
+
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ReviewPage(
+                  userId: userId,
+                  reviewableId: reviewableId,
+                  bookingId: data["id"] is int
+                      ? data["id"] as int
+                      : int.tryParse(data["id"].toString()) ?? 0,
+                  type: _reviewType,
                 ),
-              );
+              ),
+            );
           },
         ),
       );
     }
 
-    // ── pending_payment: tombol bayar, cek status, batalkan ──
+    // ── Belum bayar → tombol bayar, cek status, batalkan ──
     if (statusFinal == "pending_payment") {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -618,7 +667,7 @@ if (statusFinal == "completed") {
       );
     }
 
-    // ── paid + bukan sewa bus: tombol ajukan refund ──
+    // ── Lunas + bukan sewa bus → tombol ajukan refund ──
     if (statusFinal == "paid" && type != "bus") {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -628,9 +677,7 @@ if (statusFinal == "completed") {
           onTap: () async {
             final result = await Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (_) => RefundPage(booking: data),
-              ),
+              MaterialPageRoute(builder: (_) => RefundPage(booking: data)),
             );
             if (result == true && context.mounted) {
               Navigator.pop(context, true);
@@ -644,9 +691,6 @@ if (statusFinal == "completed") {
   }
 
   // ─── Refund Info Banner ──────────────────────────────────────
-  // Tampilan berbeda sesuai tahap:
-  //   pending_refund / refund → menunggu admin proses (ungu)
-  //   refunded                → admin sudah complete, uang kembali (cyan)
   Widget _refundInfoBanner() {
     final isRefunded = _paymentStatus == "refunded";
     final color      = isRefunded ? const Color(0xFF00BCD4) : const Color(0xFF9C27B0);

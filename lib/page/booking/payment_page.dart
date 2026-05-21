@@ -57,40 +57,39 @@ class _PaymentPageState extends State<PaymentPage>
   }
 
   Future<void> openMidtrans(int bookingId) async {
-    if (_isLoadingMidtrans || _tokenRequested) return; 
-    setState(() {
-      _isLoadingMidtrans = true;
-      _tokenRequested = true; 
-    });
+  if (_isLoadingMidtrans || _tokenRequested) return;
+  setState(() {
+    _isLoadingMidtrans = true;
+    _tokenRequested = true;
+  });
 
-    final token = await getSnapToken(bookingId);
+  final token = await PaymentService.getSnapToken(bookingId);
 
-    if (token == null) {
-      setState(() {
-        _isLoadingMidtrans = false;
-        _tokenRequested = false; 
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Gagal membuka pembayaran")),
-      );
-      return;
-    }
-
-    final url = "https://app.sandbox.midtrans.com/snap/v2/vtweb/$token";
-
-    try {
-      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-    } catch (e) {
-      // handle silently
-    }
-
+  if (token == null) {
     setState(() {
       _isLoadingMidtrans = false;
-      _sudahBayar = true;
+      _tokenRequested = false;
     });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Gagal membuka pembayaran")),
+    );
+    return;
   }
 
-  // ================= CEK STATUS =================
+  final url = "https://app.sandbox.midtrans.com/snap/v2/vtweb/$token";
+
+  try {
+    await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+  } catch (e) {
+    // handle silently
+  }
+
+  setState(() {
+    _isLoadingMidtrans = false;
+    _sudahBayar = true;
+  });
+}
+
   Future<void> _checkStatus(int bookingId) async {
     if (_isLoadingCheck) return;
     setState(() => _isLoadingCheck = true);
@@ -184,6 +183,8 @@ class _PaymentPageState extends State<PaymentPage>
 
   void _startCountdown() {
     final expiredAt = widget.bookingData['expired_at'];
+    debugPrint("=== EXPIRED AT: $expiredAt ===");
+  
     if (expiredAt == null) return;
 
     final rawString = expiredAt.toString().trim();
@@ -191,7 +192,7 @@ class _PaymentPageState extends State<PaymentPage>
 
     DateTime? expiry;
     if (!rawString.contains('+') && !rawString.toUpperCase().contains('Z')) {
-      expiry = DateTime.tryParse(rawString + 'Z')?.toLocal();
+      expiry = DateTime.tryParse(rawString)?.copyWith(isUtc: false);
     } else {
       expiry = DateTime.tryParse(rawString)?.toLocal();
     }

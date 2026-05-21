@@ -673,8 +673,7 @@ class _BookingFormPageState extends State<BookingFormPage> {
 
                         double discount = 0;
                         if (activePromo != null) {
-                          discount = activePromo!.discountType.trim().toLowerCase() ==
-                                  'percentage'
+                          discount = activePromo!.discountType.trim().toLowerCase() == 'percent'
                               ? harga * (activePromo!.discountValue / 100)
                               : activePromo!.discountValue;
                         }

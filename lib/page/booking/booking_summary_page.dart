@@ -46,7 +46,7 @@ class BookingSummaryPage extends StatelessWidget {
     // 🔥 FIX - tambah .trim().toLowerCase() agar konsisten
     double discount = 0;
     if (promo != null) {
-      discount = promo!.discountType.trim().toLowerCase() == 'percentage'
+      discount = promo!.discountType.trim().toLowerCase() == 'percent'
           ? harga * (promo!.discountValue / 100)
           : promo!.discountValue;
     }

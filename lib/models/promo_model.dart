@@ -80,7 +80,7 @@ class Promo {
   }
 
   String get discountLabel {
-    if (discountType == 'percentage') return '${discountValue.toInt()}%';
+    if (discountType == 'percent') return '${discountValue.toInt()}%';
     return 'Rp ${discountValue.toInt()}';
   }
 

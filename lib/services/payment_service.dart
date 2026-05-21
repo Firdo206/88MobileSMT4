@@ -7,13 +7,14 @@ class PaymentService {
     final response = await http.post(
       Uri.parse(ApiService.midtransPayment),
       headers: {
-        "Accept": "application/json"
-      },
-      body: {
-        "booking_id": bookingId.toString(),
-      },
-    );
-
+        "Accept": "application/json",
+      "Content-Type": "application/json", 
+        },
+        body: jsonEncode({                     
+          "booking_id": bookingId,
+        }),
+      );
+      
     final data = jsonDecode(response.body);
 
     if (data['status'] == true) {

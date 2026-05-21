@@ -111,7 +111,8 @@ class _ReviewPageState extends State<ReviewPage> {
   }
 
   Future<void> _pickImage(ImageSource source) async {
-    final picked = await ImagePicker().pickImage(source: source);
+    final picked = await ImagePicker().pickImage
+    (source: source, imageQuality: 70, maxWidth: 800);
     if (picked != null) {
       setState(() => selectedImage = File(picked.path));
     }
