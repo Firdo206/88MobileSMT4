@@ -4,6 +4,7 @@ import '../../utils/app_color.dart';
 import '../../models/promo_model.dart'; 
 import '../../services/booking_paket_service.dart';
 import '../payment/payment_page.dart';
+import '../../services/api_service.dart';
 
 class BookingSummaryPage extends StatelessWidget {
   final dynamic data;
@@ -40,7 +41,11 @@ class BookingSummaryPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String imageUrl = data['image_url'] ?? '';
+    debugPrint("IMAGE URL: ${data['image_url']}");
+    debugPrint("DATA TOUR: $data");
+    String imageUrl = data['image'] != null 
+    ? '${ApiService.storageUrl}/storage/${data['image']}'
+    : '';
     double harga = double.parse(data['price_per_person'].toString());
 
     // 🔥 FIX - tambah .trim().toLowerCase() agar konsisten
