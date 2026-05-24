@@ -3,7 +3,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../utils/app_color.dart';
 import '../../models/promo_model.dart';
 import '../../services/api_service.dart';
-import '../../services/tour_service.dart'; // ← tambah
+import '../../services/tour_service.dart';
 import '../booking/booking_form_page.dart';
 
 class PaketDetailPage extends StatefulWidget {
@@ -89,7 +89,7 @@ class _PaketDetailPageState extends State<PaketDetailPage> {
     final String imageUrl = _getImageUrl(data);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F6FA),
+      backgroundColor: const Color(0xFFF4F1EE),
       extendBodyBehindAppBar: true,
 
       appBar: AppBar(
@@ -103,10 +103,12 @@ class _PaketDetailPageState extends State<PaketDetailPage> {
       ),
 
       bottomNavigationBar: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-        decoration: const BoxDecoration(
+        padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
+        decoration: BoxDecoration(
           color: Colors.white,
-          boxShadow: [BoxShadow(color: Color(0x14000000), blurRadius: 20, offset: Offset(0, -4))],
+          border: Border(
+            top: BorderSide(color: Colors.black.withOpacity(0.07), width: 0.5),
+          ),
         ),
         child: Row(
           children: [
@@ -116,35 +118,52 @@ class _PaketDetailPageState extends State<PaketDetailPage> {
                 if (await canLaunchUrl(url)) await launchUrl(url);
               },
               child: Container(
-                padding: const EdgeInsets.all(14),
+                width: 52,
+                height: 52,
                 decoration: BoxDecoration(
                   color: const Color(0xFFEAFAF1),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(0xFF25D366).withOpacity(0.3)),
+                  border: Border.all(
+                    color: const Color(0xFF25D366).withOpacity(0.35),
+                    width: 0.5,
+                  ),
                 ),
-                child: const Icon(Icons.chat_bubble_outline_rounded, color: Color(0xFF25D366), size: 22),
+                child: const Icon(
+                  Icons.chat_bubble_outline_rounded,
+                  color: Color(0xFF25D366),
+                  size: 22,
+                ),
               ),
             ),
             const SizedBox(width: 14),
             Expanded(
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColor.primary,
+                  backgroundColor: const Color(0xFF8B0000),
+                  foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   elevation: 0,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                 ),
                 onPressed: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => BookingFormPage(data: data, promo: widget.promo),
+                      builder: (_) =>
+                          BookingFormPage(data: data, promo: widget.promo),
                     ),
                   );
                 },
                 child: const Text(
                   "Pesan Sekarang",
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, letterSpacing: 0.3, color: Colors.black),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                    letterSpacing: 0.3,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ),
@@ -164,19 +183,30 @@ class _PaketDetailPageState extends State<PaketDetailPage> {
                         height: 300,
                         width: double.infinity,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Container(height: 300, color: Colors.grey[300], child: const Icon(Icons.broken_image, size: 50)),
+                        errorBuilder: (_, __, ___) => Container(
+                          height: 300,
+                          color: Colors.grey[300],
+                          child: const Icon(Icons.broken_image, size: 50),
+                        ),
                       )
-                    : Container(height: 300, color: Colors.grey[300], child: const Icon(Icons.image_not_supported, size: 50)),
+                    : Container(
+                        height: 300,
+                        color: Colors.grey[300],
+                        child: const Icon(Icons.image_not_supported, size: 50),
+                      ),
 
                 Positioned(
                   bottom: 0, left: 0, right: 0,
                   child: Container(
-                    height: 120,
+                    height: 140,
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        colors: [Colors.transparent, Colors.black.withOpacity(0.55)],
+                        colors: [
+                          Colors.transparent,
+                          Colors.black.withOpacity(0.65),
+                        ],
                       ),
                     ),
                   ),
@@ -185,19 +215,25 @@ class _PaketDetailPageState extends State<PaketDetailPage> {
                 Positioned(
                   left: 16, bottom: 16,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withOpacity(0.18),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.white.withOpacity(0.5)),
+                      border: Border.all(
+                          color: Colors.white.withOpacity(0.45), width: 0.5),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.schedule_rounded, color: Colors.white, size: 14),
-                        const SizedBox(width: 4),
+                        const Icon(Icons.schedule_rounded,
+                            color: Colors.white, size: 14),
+                        const SizedBox(width: 5),
                         Text(
                           "${data['duration_days'] ?? 0} Hari",
-                          style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600),
                         ),
                       ],
                     ),
@@ -208,279 +244,530 @@ class _PaketDetailPageState extends State<PaketDetailPage> {
                   right: 16, bottom: 16,
                   child: Container(
                     padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: AppColor.primary,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF8B0000),
                       shape: BoxShape.circle,
-                      boxShadow: [BoxShadow(color: AppColor.primary.withOpacity(0.4), blurRadius: 10, offset: const Offset(0, 4))],
                     ),
-                    child: const Icon(Icons.favorite_rounded, color: Colors.white, size: 20),
+                    child: const Icon(Icons.favorite_rounded,
+                        color: Colors.white, size: 20),
                   ),
                 ),
               ],
             ),
 
-            Container(
-              decoration: const BoxDecoration(color: Color(0xFFF5F6FA)),
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            data['name'] ?? '',
-                            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF1A1A2E), height: 1.2),
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          data['name'] ?? '',
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1A1A1A),
+                            height: 1.25,
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                          decoration: BoxDecoration(color: const Color(0xFFFFF8E1), borderRadius: BorderRadius.circular(20)),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.star_rounded, color: Colors.amber, size: 16),
-                              const SizedBox(width: 3),
-                              Text(
-                                reviewCount > 0 ? avgRating.toStringAsFixed(1) : '0.0',
-                                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF7B6000)),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 6),
-                    Text(
-                      reviewCount > 0 ? "$reviewCount Reviews" : "Belum ada ulasan",
-                      style: TextStyle(fontSize: 12, color: Colors.grey[500]),
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(colors: [AppColor.primary.withOpacity(0.08), AppColor.primary.withOpacity(0.03)]),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: AppColor.primary.withOpacity(0.2)),
                       ),
-                      child: widget.promo != null
-                          ? Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(children: [
-                                  Icon(Icons.local_offer_rounded, color: AppColor.primary, size: 20),
-                                  const SizedBox(width: 10),
-                                  const Text("Mulai dari", style: TextStyle(fontSize: 13, color: Colors.grey)),
-                                ]),
-                                const SizedBox(height: 6),
-                                Row(children: [
-                                  Text("Rp ${data['price_per_person'] ?? '-'}",
-                                      style: const TextStyle(fontSize: 13, color: Colors.grey, decoration: TextDecoration.lineThrough)),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text("Rp ${_getFinalPrice(data['price_per_person'])}",
-                                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: AppColor.primary),
-                                        overflow: TextOverflow.ellipsis),
-                                  ),
-                                  const Text("/orang", style: TextStyle(fontSize: 12, color: Colors.grey)),
-                                ]),
-                              ],
-                            )
-                          : Row(children: [
-                              Icon(Icons.local_offer_rounded, color: AppColor.primary, size: 20),
-                              const SizedBox(width: 10),
-                              const Text("Mulai dari", style: TextStyle(fontSize: 13, color: Colors.grey)),
-                              const Spacer(),
-                              Flexible(
-                                child: Text("Rp ${data['price_per_person'] ?? '-'}",
-                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppColor.primary),
-                                    overflow: TextOverflow.ellipsis),
-                              ),
-                              const Text(" /orang", style: TextStyle(fontSize: 12, color: Colors.grey)),
-                            ]),
-                    ),
-
-                    const SizedBox(height: 20),
-                    const Text("Deskripsi", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF1A1A2E))),
-                    const SizedBox(height: 8),
-                    Text(data['description'] ?? '-', style: const TextStyle(color: Color(0xFF6B7280), height: 1.6, fontSize: 14)),
-
-                    const SizedBox(height: 24),
-                    const Text("Destinasi", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF1A1A2E))),
-                    const SizedBox(height: 10),
-
-                    Wrap(
-                      spacing: 8, runSpacing: 8,
-                      children: destinations.map((e) => Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                      const SizedBox(width: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 6),
                         decoration: BoxDecoration(
-                          color: AppColor.primary.withOpacity(0.08),
+                          color: const Color(0xFFFFF8E1),
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: AppColor.primary.withOpacity(0.25)),
                         ),
                         child: Row(
-                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.location_on_rounded, color: AppColor.primary, size: 13),
-                            const SizedBox(width: 4),
-                            Text(e.trim(), style: TextStyle(fontSize: 12, color: AppColor.primary, fontWeight: FontWeight.w600)),
+                            const Icon(Icons.star_rounded,
+                                color: Colors.amber, size: 16),
+                            const SizedBox(width: 3),
+                            Text(
+                              reviewCount > 0
+                                  ? avgRating.toStringAsFixed(1)
+                                  : '0.0',
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF7B6000),
+                              ),
+                            ),
                           ],
                         ),
-                      )).toList(),
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Container(
-                            padding: const EdgeInsets.all(14),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(16),
-                              boxShadow: const [BoxShadow(color: Color(0x08000000), blurRadius: 10, offset: Offset(0, 2))],
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(6),
-                                    decoration: BoxDecoration(color: Colors.green.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
-                                    child: const Icon(Icons.check_circle_rounded, color: Colors.green, size: 16),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  const Flexible(child: Text("Fasilitas Inti", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF1A1A2E)))),
-                                ]),
-                                const SizedBox(height: 10),
-                                ...inclusions.isNotEmpty
-                                    ? inclusions.map((e) => Padding(
-                                          padding: const EdgeInsets.only(bottom: 5),
-                                          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                            const Text("✓ ", style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 13)),
-                                            Expanded(child: Text(e.trim(), style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)))),
-                                          ]),
-                                        ))
-                                    : [const Text("-", style: TextStyle(color: Colors.grey))],
-                              ],
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(width: 12),
-
-                        Expanded(
-                          child: Container(
-                            padding: const EdgeInsets.all(14),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(16),
-                              boxShadow: const [BoxShadow(color: Color(0x08000000), blurRadius: 10, offset: Offset(0, 2))],
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(6),
-                                    decoration: BoxDecoration(color: Colors.orange.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
-                                    child: const Icon(Icons.add_circle_outline_rounded, color: Colors.orange, size: 16),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  const Flexible(child: Text("Opsional", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF1A1A2E)))),
-                                ]),
-                                const SizedBox(height: 10),
-                                ...exclusions.isNotEmpty
-                                    ? exclusions.map((e) => Padding(
-                                          padding: const EdgeInsets.only(bottom: 5),
-                                          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                            const Text("+ ", style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold, fontSize: 13)),
-                                            Expanded(child: Text(e.trim(), style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)))),
-                                          ]),
-                                        ))
-                                    : [const Text("-", style: TextStyle(color: Colors.grey))],
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 24),
-                    const Text("Investasi Perjalanan", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF1A1A2E))),
-                    const SizedBox(height: 12),
-
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      margin: const EdgeInsets.only(bottom: 10),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: const [BoxShadow(color: Color(0x08000000), blurRadius: 10, offset: Offset(0, 2))],
                       ),
-                      child: Row(children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(color: Colors.red.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-                          child: const Icon(Icons.groups_rounded, color: Colors.red, size: 22),
-                        ),
-                        const SizedBox(width: 14),
-                        const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                          Text("Pasti Berangkat", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF1A1A2E))),
-                          SizedBox(height: 2),
-                          Text("Garansi Keberangkatan", style: TextStyle(color: Colors.grey, fontSize: 12)),
-                        ]),
-                        const Spacer(),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                          decoration: BoxDecoration(color: Colors.green.withOpacity(0.1), borderRadius: BorderRadius.circular(20)),
-                          child: const Text("Garansi", style: TextStyle(color: Colors.green, fontSize: 11, fontWeight: FontWeight.bold)),
-                        ),
-                      ]),
-                    ),
+                    ],
+                  ),
 
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: const [BoxShadow(color: Color(0x08000000), blurRadius: 10, offset: Offset(0, 2))],
-                      ),
-                      child: Row(children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(color: Colors.blue.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-                          child: const Icon(Icons.shield_rounded, color: Colors.blue, size: 22),
-                        ),
-                        const SizedBox(width: 14),
-                        const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                          Text("Asuransi Trip", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF1A1A2E))),
-                          SizedBox(height: 2),
-                          Text("Perjalanan Tanpa Khawatir", style: TextStyle(color: Colors.grey, fontSize: 12)),
-                        ]),
-                        const Spacer(),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                          decoration: BoxDecoration(color: Colors.blue.withOpacity(0.1), borderRadius: BorderRadius.circular(20)),
-                          child: const Text("Included", style: TextStyle(color: Colors.blue, fontSize: 11, fontWeight: FontWeight.bold)),
-                        ),
-                      ]),
-                    ),
+                  const SizedBox(height: 5),
+                  Text(
+                    reviewCount > 0
+                        ? "$reviewCount Ulasan"
+                        : "Belum ada ulasan",
+                    style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                  ),
 
-                    const SizedBox(height: 100),
-                  ],
-                ),
+                  const SizedBox(height: 20),
+
+                  widget.promo != null
+                      ? _buildPriceWithPromo()
+                      : _buildPriceNormal(),
+
+                  const SizedBox(height: 24),
+
+                  _sectionTitle("Deskripsi"),
+                  const SizedBox(height: 8),
+                  Text(
+                    data['description'] ?? '-',
+                    style: const TextStyle(
+                      color: Color(0xFF6B7280),
+                      height: 1.65,
+                      fontSize: 14,
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  _sectionTitle("Destinasi"),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: destinations
+                        .map((e) => Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 7),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF8B0000).withOpacity(0.07),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: const Color(0xFF8B0000).withOpacity(0.25),
+                                  width: 0.5,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.location_on_rounded,
+                                      color: Color(0xFF8B0000), size: 13),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    e.trim(),
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Color(0xFF6B0000),
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ))
+                        .toList(),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                          child: _buildFasilitasCard(
+                        title: "Termasuk",
+                        icon: Icons.check_circle_outline_rounded,
+                        iconColor: const Color(0xFF2E7D32),
+                        iconBg: const Color(0xFFE8F5E9),
+                        prefix: "✓",
+                        prefixColor: const Color(0xFF2E7D32),
+                        items: inclusions,
+                      )),
+                      const SizedBox(width: 12),
+                      Expanded(
+                          child: _buildFasilitasCard(
+                        title: "Opsional",
+                        icon: Icons.add_circle_outline_rounded,
+                        iconColor: const Color(0xFFE65100),
+                        iconBg: const Color(0xFFFFF3E0),
+                        prefix: "+",
+                        prefixColor: const Color(0xFFE65100),
+                        items: exclusions,
+                      )),
+                    ],
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  _sectionTitle("Jaminan Perjalanan"),
+                  const SizedBox(height: 12),
+                  _buildJaminanCard(
+                    icon: Icons.groups_rounded,
+                    iconColor: const Color(0xFF8B0000),
+                    iconBg: const Color(0xFFFBEAEA),
+                    title: "Pasti Berangkat",
+                    subtitle: "Garansi Keberangkatan",
+                    badgeText: "Garansi",
+                    badgeColor: const Color(0xFF2E7D32),
+                    badgeBg: const Color(0xFFE8F5E9),
+                  ),
+                  const SizedBox(height: 10),
+                  _buildJaminanCard(
+                    icon: Icons.shield_outlined,
+                    iconColor: const Color(0xFF1565C0),
+                    iconBg: const Color(0xFFE3F2FD),
+                    title: "Asuransi Trip",
+                    subtitle: "Perjalanan Tanpa Khawatir",
+                    badgeText: "Included",
+                    badgeColor: const Color(0xFF1565C0),
+                    badgeBg: const Color(0xFFE3F2FD),
+                  ),
+
+                  const SizedBox(height: 100),
+                ],
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  // ── Section title ──────────────────────────────────────────────
+  Widget _sectionTitle(String text) {
+    return Row(
+      children: [
+        Container(
+          width: 4,
+          height: 18,
+          margin: const EdgeInsets.only(right: 8),
+          decoration: BoxDecoration(
+            color: const Color(0xFF8B0000),
+            borderRadius: BorderRadius.circular(4),
+          ),
+        ),
+        Text(
+          text,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+            color: Color(0xFF1A1A1A),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── Fasilitas card ─────────────────────────────────────────────
+  Widget _buildFasilitasCard({
+    required String title,
+    required IconData icon,
+    required Color iconColor,
+    required Color iconBg,
+    required String prefix,
+    required Color prefixColor,
+    required List<String> items,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.black.withOpacity(0.06), width: 0.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                  color: iconBg, borderRadius: BorderRadius.circular(8)),
+              child: Icon(icon, color: iconColor, size: 16),
+            ),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(title,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                      color: Color(0xFF1A1A1A))),
+            ),
+          ]),
+          const SizedBox(height: 10),
+          ...items.isNotEmpty
+              ? items
+                  .map((e) => Padding(
+                        padding: const EdgeInsets.only(bottom: 5),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text("$prefix ",
+                                style: TextStyle(
+                                    color: prefixColor,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13)),
+                            Expanded(
+                              child: Text(e.trim(),
+                                  style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Color(0xFF6B7280))),
+                            ),
+                          ],
+                        ),
+                      ))
+                  .toList()
+              : [
+                  const Text("-",
+                      style: TextStyle(color: Colors.grey, fontSize: 12))
+                ],
+        ],
+      ),
+    );
+  }
+
+  // ── Jaminan card ───────────────────────────────────────────────
+  Widget _buildJaminanCard({
+    required IconData icon,
+    required Color iconColor,
+    required Color iconBg,
+    required String title,
+    required String subtitle,
+    required String badgeText,
+    required Color badgeColor,
+    required Color badgeBg,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.black.withOpacity(0.06), width: 0.5),
+      ),
+      child: Row(children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+              color: iconBg, borderRadius: BorderRadius.circular(12)),
+          child: Icon(icon, color: iconColor, size: 22),
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: Color(0xFF1A1A1A))),
+                const SizedBox(height: 2),
+                Text(subtitle,
+                    style:
+                        const TextStyle(color: Colors.grey, fontSize: 12)),
+              ]),
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          decoration:
+              BoxDecoration(color: badgeBg, borderRadius: BorderRadius.circular(20)),
+          child: Text(badgeText,
+              style: TextStyle(
+                  color: badgeColor,
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold)),
+        ),
+      ]),
+    );
+  }
+
+  // ── Harga normal ───────────────────────────────────────────────
+  Widget _buildPriceNormal() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFF8B0000).withOpacity(0.2),
+          width: 0.5,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF8B0000).withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.local_offer_outlined,
+                    color: Color(0xFF8B0000), size: 22),
+              ),
+              const SizedBox(width: 10),
+              const Text(
+                "Harga per orang",
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            "Rp ${data['price_per_person'] ?? '-'}",
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 22,
+              color: Color(0xFF8B0000),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Harga dengan promo ─────────────────────────────────────────
+  Widget _buildPriceWithPromo() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFF8B0000).withOpacity(0.3),
+          width: 0.5,
+        ),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: double.infinity,
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: const BoxDecoration(
+              color: Color(0xFF8B0000),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.local_fire_department_rounded,
+                    color: Colors.white70, size: 15),
+                const SizedBox(width: 6),
+                const Text(
+                  "Promo Aktif",
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 9, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    widget.promo!.discountLabel,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(children: [
+                      const Icon(Icons.remove_circle_outline,
+                          size: 14, color: Colors.grey),
+                      const SizedBox(width: 5),
+                      const Text("Harga normal",
+                          style:
+                              TextStyle(fontSize: 13, color: Colors.grey)),
+                    ]),
+                    Text(
+                      "Rp ${data['price_per_person'] ?? '-'}",
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey,
+                        decoration: TextDecoration.lineThrough,
+                        decorationColor: Colors.grey,
+                        decorationThickness: 2,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(children: [
+                  const Expanded(
+                      child: Divider(color: Color(0xFFEEEEEE), height: 1)),
+                  Container(
+                    margin:
+                        const EdgeInsets.symmetric(horizontal: 10),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFBEAEA),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Text(
+                      "Kamu hemat!",
+                      style: TextStyle(
+                          fontSize: 11,
+                          color: Color(0xFF8B0000),
+                          fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                  const Expanded(
+                      child: Divider(color: Color(0xFFEEEEEE), height: 1)),
+                ]),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF8B0000).withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.sell_outlined,
+                          color: Color(0xFF8B0000), size: 18),
+                    ),
+                    const SizedBox(width: 10),
+                    const Text("Harga kamu /orang",
+                        style:
+                            TextStyle(fontSize: 11, color: Colors.grey)),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  "Rp ${_getFinalPrice(data['price_per_person'])}",
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 26,
+                    color: Color(0xFF8B0000),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
