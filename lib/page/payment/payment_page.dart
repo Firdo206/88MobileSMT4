@@ -69,13 +69,10 @@ class _PaymentPageState extends State<PaymentPage> {
 
   String get type => widget.type;
 
-  // ─────────────────────────────────────────
-  // INIT & DISPOSE
-  // ─────────────────────────────────────────
-
   @override
   void initState() {
     super.initState();
+    debugPrint("DATA RENTAL: ${widget.data}");
     _startCountdown();
     _listenDeepLink();
   }
@@ -86,11 +83,6 @@ class _PaymentPageState extends State<PaymentPage> {
     _timer?.cancel();
     super.dispose();
   }
-
-  // ─────────────────────────────────────────
-  // DEEP LINK
-  // ─────────────────────────────────────────
-
   void _listenDeepLink() {
     _linkSub = _appLinks.uriLinkStream.listen((uri) {
       debugPrint("DEEP LINK RECEIVED: $uri");
@@ -121,20 +113,14 @@ class _PaymentPageState extends State<PaymentPage> {
   // ─────────────────────────────────────────
 
   DateTime? _parseDateTime(dynamic raw) {
-    if (raw == null) return null;
-    final str = raw.toString().trim();
-    if (str.isEmpty) return null;
-    if (!str.contains('+') && !str.toUpperCase().contains('Z')) {
-      return DateTime.tryParse('${str}Z')?.toLocal();
-    }
-    return DateTime.tryParse(str)?.toLocal();
-  }
+  if (raw == null) return null;
+  final str = raw.toString().trim();
+  if (str.isEmpty) return null;
+  return DateTime.tryParse(str);
+}
 
   void _startCountdown() {
-    // Coba ambil expired_at dari backend
     DateTime? expiry = _parseDateTime(widget.data['expired_at']);
-
-    // Fallback: created_at + 24 jam (karena backend tidak kirim expired_at)
     if (expiry == null) {
       final created = _parseDateTime(widget.data['created_at']);
       if (created != null) {

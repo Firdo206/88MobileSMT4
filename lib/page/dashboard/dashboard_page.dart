@@ -29,7 +29,11 @@ class _DashboardPageState extends State<DashboardPage>
   bool isLoading = true;
 
   // ── Carousel ─────────────────────────────────────────────
-  PageController _promoPageController = PageController(viewportFraction: 0.85);
+  static const int _initialPage = 10000;
+  PageController _promoPageController = PageController(
+    viewportFraction: 0.85,
+    initialPage: _initialPage,
+  );
   int _currentPromoIndex = 0;
   Timer? _promoTimer;
   // ─────────────────────────────────────────────────────────
@@ -83,9 +87,8 @@ class _DashboardPageState extends State<DashboardPage>
     if (promoList.length <= 1) return;
     _promoTimer = Timer.periodic(const Duration(seconds: 3), (_) {
       if (!mounted) return;
-      final next = (_currentPromoIndex + 1) % promoList.length;
       _promoPageController.animateToPage(
-        next,
+        _promoPageController.page!.round() + 1,
         duration: const Duration(milliseconds: 600),
         curve: Curves.easeInOut,
       );
@@ -333,18 +336,18 @@ class _DashboardPageState extends State<DashboardPage>
             child: Row(
               children: [
                 _tripTypeTab(
-                      label: "Sekali Jalan",
-                      active: !_isRoundTrip,
-                      onTap: () => setState(() {
-                        _isRoundTrip = false;
-                        returnDate = null;
-                      }),
-                    ),
+                  label: "Sekali Jalan",
+                  active: !_isRoundTrip,
+                  onTap: () => setState(() {
+                    _isRoundTrip = false;
+                    returnDate = null;
+                  }),
+                ),
                 _tripTypeTab(
-              label: "Pulang Pergi",
-              active: _isRoundTrip,
-              onTap: () => setState(() => _isRoundTrip = true),
-            ),
+                  label: "Pulang Pergi",
+                  active: _isRoundTrip,
+                  onTap: () => setState(() => _isRoundTrip = true),
+                ),
               ],
             ),
           ),
@@ -415,7 +418,7 @@ class _DashboardPageState extends State<DashboardPage>
                   origin: originController.text,
                   destination: destinationController.text,
                   date: selectedDate,
-                   returnDate: _isRoundTrip ? returnDate : null,
+                  returnDate: _isRoundTrip ? returnDate : null,
                 ),
               ),
             ),
@@ -524,8 +527,8 @@ class _DashboardPageState extends State<DashboardPage>
             color: date != null
                 ? const Color(0xFF8B0000).withOpacity(0.4)
                 : isDashed
-                ? const Color(0xFF8B0000).withOpacity(0.2)
-                : Colors.transparent,
+                    ? const Color(0xFF8B0000).withOpacity(0.2)
+                    : Colors.transparent,
           ),
         ),
         child: Row(
@@ -828,19 +831,20 @@ class _DashboardPageState extends State<DashboardPage>
 
     return Column(
       children: [
-        // ── PageView carousel ────────────────────────────────
+        // ── PageView carousel (infinite loop) ───────────────
         SizedBox(
           height: 190,
           child: PageView.builder(
             controller: _promoPageController,
-            itemCount: promoList.length,
+            itemCount: 99999,
             onPageChanged: (index) {
-              setState(() => _currentPromoIndex = index);
+              setState(() => _currentPromoIndex = index % promoList.length);
             },
             itemBuilder: (context, index) {
-              final promo = promoList[index];
+              final promo = promoList[index % promoList.length];
+              final actualIndex = index % promoList.length;
               return AnimatedScale(
-                scale: _currentPromoIndex == index ? 1.0 : 0.93,
+                scale: _currentPromoIndex == actualIndex ? 1.0 : 0.93,
                 duration: const Duration(milliseconds: 300),
                 curve: Curves.easeOut,
                 child: _buildPromoCard(promo: promo),
@@ -1089,51 +1093,107 @@ class _DashboardPageState extends State<DashboardPage>
   Widget _buildInfoBanner() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Container(
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: const Color(0xFFEDE8E4)),
-        ),
-        child: Row(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Stack(
           children: [
+            // Background gradient
             Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: const Color(0xFF8B0000).withOpacity(0.08),
-                borderRadius: BorderRadius.circular(14),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFF6B0000), Color(0xFF8B0000)],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                ),
               ),
-              child: const Icon(
-                Icons.lock_outline_rounded,
-                color: Color(0xFF8B0000),
-                size: 22,
-              ),
-            ),
-            const SizedBox(width: 14),
-            const Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+              child: Row(
                 children: [
-                  Text(
-                    "Diskon Eksklusif",
-                    style: TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 13,
-                      color: Color(0xFF1A1A1A),
+                  // Icon area
+                  Column(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(13),
+                        ),
+                        child: const Icon(
+                          Icons.workspace_premium_rounded,
+                          color: Colors.white,
+                          size: 22,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(width: 14),
+                  // Text area
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Diskon Eksklusif",
+                          style: TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 14,
+                            color: Colors.white,
+                            letterSpacing: -0.2,
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          "Hanya tersedia di hari-hari tertentu dan untuk pengguna terpilih.",
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            color: Colors.white70,
+                            height: 1.5,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  SizedBox(height: 3),
-                  Text(
-                    "Hanya tersedia di hari-hari tertentu dan untuk pengguna terpilih.",
-                    style: TextStyle(
-                      fontSize: 11.5,
-                      color: Color(0xFF888888),
-                      height: 1.5,
+                  const SizedBox(width: 8),
+                  // Arrow chip
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.arrow_forward_rounded,
+                      color: Colors.white,
+                      size: 16,
                     ),
                   ),
                 ],
+              ),
+            ),
+            // Decorative circles
+            Positioned(
+              top: -18,
+              right: 60,
+              child: Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withOpacity(0.05),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: -20,
+              right: -10,
+              child: Container(
+                width: 90,
+                height: 90,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withOpacity(0.07),
+                ),
               ),
             ),
           ],

@@ -924,14 +924,23 @@ class DetailPesananPage extends StatelessWidget {
       );
 
   Widget _infoRow(IconData icon, String label, String value) => Row(
-        children: [
-          Icon(icon, size: 16, color: Colors.grey[500]),
-          const SizedBox(width: 8),
-          Text(label, style: TextStyle(color: Colors.grey[600], fontSize: 13)),
-          const Spacer(),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13)),
-        ],
-      );
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 16, color: Colors.grey[500]),
+        const SizedBox(width: 8),
+        Text(label, style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            value,
+            textAlign: TextAlign.right,
+            style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
+            overflow: TextOverflow.visible,
+            softWrap: true,
+          ),
+        ),
+      ],
+    );
 
   Widget _sectionCard({
     required IconData icon,
