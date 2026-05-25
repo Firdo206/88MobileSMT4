@@ -253,42 +253,58 @@ class DetailPesananPage extends StatelessWidget {
       );
 
   // ─── Bottom Download Bar ─────────────────────────────────────
-  Widget _buildBottomDownloadBar(BuildContext context, int price) => Container(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-                color: Colors.black.withOpacity(0.08),
-                blurRadius: 16,
-                offset: const Offset(0, -4))
-          ],
-        ),
-        child: SizedBox(
-          width: double.infinity,
-          child: ElevatedButton.icon(
-            onPressed: () async {
-              await DetailPesananPdf(
+  // ─── Bottom Download Bar ─────────────────────────────────────
+Widget _buildBottomDownloadBar(BuildContext context, int price) => Container(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 16,
+              offset: const Offset(0, -4))
+        ],
+      ),
+      child: SizedBox(
+        width: double.infinity,
+        child: ElevatedButton.icon(
+          onPressed: () async {
+            if (type == "ticket") {
+              await TicketPesananPdf(
                 data: data,
-                type: type,
                 displayName: displayName,
                 displayPhone: displayPhone,
                 displayEmail: displayEmail,
               ).generate(price);
-            },
-            icon: const Icon(Icons.download_rounded, size: 20),
-            label: const Text("Download E-Tiket",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF1976D2),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 15),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              elevation: 2,
-            ),
+            } else if (type == "bus") {
+              await RentalPesananPdf(
+                data: data,
+                displayName: displayName,
+                displayPhone: displayPhone,
+                displayEmail: displayEmail,
+              ).generate(price);
+            } else {
+              await TourPesananPdf(
+                data: data,
+                displayName: displayName,
+                displayPhone: displayPhone,
+                displayEmail: displayEmail,
+              ).generate(price);
+            }
+          },
+          icon: const Icon(Icons.download_rounded, size: 20),
+          label: const Text("Download E-Tiket",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF1976D2),
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 15),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            elevation: 2,
           ),
         ),
-      );
+      ),
+    );  
 
   // ─── Header Content ──────────────────────────────────────────
   Widget _topContent() {

@@ -10,11 +10,7 @@ class PaketDetailPage extends StatefulWidget {
   final dynamic data;
   final Promo? promo;
 
-  const PaketDetailPage({
-    super.key,
-    required this.data,
-    this.promo,
-  });
+  const PaketDetailPage({super.key, required this.data, this.promo});
 
   @override
   State<PaketDetailPage> createState() => _PaketDetailPageState();
@@ -82,9 +78,8 @@ class _PaketDetailPageState extends State<PaketDetailPage> {
       }
     }
 
-    final double avgRating = double.tryParse(
-          data['reviews_avg_rating']?.toString() ?? '0',
-        ) ?? 0;
+    final double avgRating =
+        double.tryParse(data['reviews_avg_rating']?.toString() ?? '0') ?? 0;
     final int reviewCount = data['reviews_count'] ?? 0;
     final String imageUrl = _getImageUrl(data);
 
@@ -196,7 +191,9 @@ class _PaketDetailPageState extends State<PaketDetailPage> {
                       ),
 
                 Positioned(
-                  bottom: 0, left: 0, right: 0,
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
                   child: Container(
                     height: 140,
                     decoration: BoxDecoration(
@@ -213,27 +210,36 @@ class _PaketDetailPageState extends State<PaketDetailPage> {
                 ),
 
                 Positioned(
-                  left: 16, bottom: 16,
+                  left: 16,
+                  bottom: 16,
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 6),
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.18),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                          color: Colors.white.withOpacity(0.45), width: 0.5),
+                        color: Colors.white.withOpacity(0.45),
+                        width: 0.5,
+                      ),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.schedule_rounded,
-                            color: Colors.white, size: 14),
+                        const Icon(
+                          Icons.schedule_rounded,
+                          color: Colors.white,
+                          size: 14,
+                        ),
                         const SizedBox(width: 5),
                         Text(
                           "${data['duration_days'] ?? 0} Hari",
                           style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600),
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ],
                     ),
@@ -241,15 +247,19 @@ class _PaketDetailPageState extends State<PaketDetailPage> {
                 ),
 
                 Positioned(
-                  right: 16, bottom: 16,
+                  right: 16,
+                  bottom: 16,
                   child: Container(
                     padding: const EdgeInsets.all(10),
                     decoration: const BoxDecoration(
                       color: Color(0xFF8B0000),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.favorite_rounded,
-                        color: Colors.white, size: 20),
+                    child: const Icon(
+                      Icons.favorite_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                   ),
                 ),
               ],
@@ -260,7 +270,6 @@ class _PaketDetailPageState extends State<PaketDetailPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -278,15 +287,20 @@ class _PaketDetailPageState extends State<PaketDetailPage> {
                       const SizedBox(width: 12),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 6),
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFFFF8E1),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.star_rounded,
-                                color: Colors.amber, size: 16),
+                            const Icon(
+                              Icons.star_rounded,
+                              color: Colors.amber,
+                              size: 16,
+                            ),
                             const SizedBox(width: 3),
                             Text(
                               reviewCount > 0
@@ -339,34 +353,43 @@ class _PaketDetailPageState extends State<PaketDetailPage> {
                     spacing: 8,
                     runSpacing: 8,
                     children: destinations
-                        .map((e) => Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 7),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF8B0000).withOpacity(0.07),
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: const Color(0xFF8B0000).withOpacity(0.25),
-                                  width: 0.5,
+                        .map(
+                          (e) => Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 7,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF8B0000).withOpacity(0.07),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: const Color(
+                                  0xFF8B0000,
+                                ).withOpacity(0.25),
+                                width: 0.5,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.location_on_rounded,
+                                  color: Color(0xFF8B0000),
+                                  size: 13,
                                 ),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(Icons.location_on_rounded,
-                                      color: Color(0xFF8B0000), size: 13),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    e.trim(),
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: Color(0xFF6B0000),
-                                      fontWeight: FontWeight.w600,
-                                    ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  e.trim(),
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Color(0xFF6B0000),
+                                    fontWeight: FontWeight.w600,
                                   ),
-                                ],
-                              ),
-                            ))
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
                         .toList(),
                   ),
 
@@ -376,26 +399,28 @@ class _PaketDetailPageState extends State<PaketDetailPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
-                          child: _buildFasilitasCard(
-                        title: "Termasuk",
-                        icon: Icons.check_circle_outline_rounded,
-                        iconColor: const Color(0xFF2E7D32),
-                        iconBg: const Color(0xFFE8F5E9),
-                        prefix: "✓",
-                        prefixColor: const Color(0xFF2E7D32),
-                        items: inclusions,
-                      )),
+                        child: _buildFasilitasCard(
+                          title: "Termasuk",
+                          icon: Icons.check_circle_outline_rounded,
+                          iconColor: const Color(0xFF2E7D32),
+                          iconBg: const Color(0xFFE8F5E9),
+                          prefix: "✓",
+                          prefixColor: const Color(0xFF2E7D32),
+                          items: inclusions,
+                        ),
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
-                          child: _buildFasilitasCard(
-                        title: "Opsional",
-                        icon: Icons.add_circle_outline_rounded,
-                        iconColor: const Color(0xFFE65100),
-                        iconBg: const Color(0xFFFFF3E0),
-                        prefix: "+",
-                        prefixColor: const Color(0xFFE65100),
-                        items: exclusions,
-                      )),
+                        child: _buildFasilitasCard(
+                          title: "Opsional",
+                          icon: Icons.add_circle_outline_rounded,
+                          iconColor: const Color(0xFFE65100),
+                          iconBg: const Color(0xFFFFF3E0),
+                          prefix: "+",
+                          prefixColor: const Color(0xFFE65100),
+                          items: exclusions,
+                        ),
+                      ),
                     ],
                   ),
 
@@ -480,48 +505,65 @@ class _PaketDetailPageState extends State<PaketDetailPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(children: [
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                  color: iconBg, borderRadius: BorderRadius.circular(8)),
-              child: Icon(icon, color: iconColor, size: 16),
-            ),
-            const SizedBox(width: 8),
-            Flexible(
-              child: Text(title,
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: iconBg,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, color: iconColor, size: 16),
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  title,
                   style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13,
-                      color: Color(0xFF1A1A1A))),
-            ),
-          ]),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                    color: Color(0xFF1A1A1A),
+                  ),
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 10),
           ...items.isNotEmpty
               ? items
-                  .map((e) => Padding(
+                    .map(
+                      (e) => Padding(
                         padding: const EdgeInsets.only(bottom: 5),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text("$prefix ",
-                                style: TextStyle(
-                                    color: prefixColor,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 13)),
+                            Text(
+                              "$prefix ",
+                              style: TextStyle(
+                                color: prefixColor,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                            ),
                             Expanded(
-                              child: Text(e.trim(),
-                                  style: const TextStyle(
-                                      fontSize: 12,
-                                      color: Color(0xFF6B7280))),
+                              child: Text(
+                                e.trim(),
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Color(0xFF6B7280),
+                                ),
+                              ),
                             ),
                           ],
                         ),
-                      ))
-                  .toList()
+                      ),
+                    )
+                    .toList()
               : [
-                  const Text("-",
-                      style: TextStyle(color: Colors.grey, fontSize: 12))
+                  const Text(
+                    "-",
+                    style: TextStyle(color: Colors.grey, fontSize: 12),
+                  ),
                 ],
         ],
       ),
@@ -546,40 +588,54 @@ class _PaketDetailPageState extends State<PaketDetailPage> {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.black.withOpacity(0.06), width: 0.5),
       ),
-      child: Row(children: [
-        Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-              color: iconBg, borderRadius: BorderRadius.circular(12)),
-          child: Icon(icon, color: iconColor, size: 22),
-        ),
-        const SizedBox(width: 14),
-        Expanded(
-          child: Column(
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: iconBg,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: iconColor, size: 22),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                        color: Color(0xFF1A1A1A))),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: Color(0xFF1A1A1A),
+                  ),
+                ),
                 const SizedBox(height: 2),
-                Text(subtitle,
-                    style:
-                        const TextStyle(color: Colors.grey, fontSize: 12)),
-              ]),
-        ),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-          decoration:
-              BoxDecoration(color: badgeBg, borderRadius: BorderRadius.circular(20)),
-          child: Text(badgeText,
+                Text(
+                  subtitle,
+                  style: const TextStyle(color: Colors.grey, fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(
+              color: badgeBg,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              badgeText,
               style: TextStyle(
-                  color: badgeColor,
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold)),
-        ),
-      ]),
+                color: badgeColor,
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -606,8 +662,11 @@ class _PaketDetailPageState extends State<PaketDetailPage> {
                   color: const Color(0xFF8B0000).withOpacity(0.08),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.local_offer_outlined,
-                    color: Color(0xFF8B0000), size: 22),
+                child: const Icon(
+                  Icons.local_offer_outlined,
+                  color: Color(0xFF8B0000),
+                  size: 22,
+                ),
               ),
               const SizedBox(width: 10),
               const Text(
@@ -645,16 +704,18 @@ class _PaketDetailPageState extends State<PaketDetailPage> {
         children: [
           Container(
             width: double.infinity,
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: const BoxDecoration(
               color: Color(0xFF8B0000),
               borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
             ),
             child: Row(
               children: [
-                const Icon(Icons.local_fire_department_rounded,
-                    color: Colors.white70, size: 15),
+                const Icon(
+                  Icons.local_fire_department_rounded,
+                  color: Colors.white70,
+                  size: 15,
+                ),
                 const SizedBox(width: 6),
                 const Text(
                   "Promo Aktif",
@@ -667,7 +728,9 @@ class _PaketDetailPageState extends State<PaketDetailPage> {
                 const Spacer(),
                 Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 9, vertical: 3),
+                    horizontal: 9,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(20),
@@ -693,14 +756,20 @@ class _PaketDetailPageState extends State<PaketDetailPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(children: [
-                      const Icon(Icons.remove_circle_outline,
-                          size: 14, color: Colors.grey),
-                      const SizedBox(width: 5),
-                      const Text("Harga normal",
-                          style:
-                              TextStyle(fontSize: 13, color: Colors.grey)),
-                    ]),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.remove_circle_outline,
+                          size: 14,
+                          color: Colors.grey,
+                        ),
+                        const SizedBox(width: 5),
+                        const Text(
+                          "Harga normal",
+                          style: TextStyle(fontSize: 13, color: Colors.grey),
+                        ),
+                      ],
+                    ),
                     Text(
                       "Rp ${data['price_per_person'] ?? '-'}",
                       style: const TextStyle(
@@ -714,29 +783,35 @@ class _PaketDetailPageState extends State<PaketDetailPage> {
                   ],
                 ),
                 const SizedBox(height: 12),
-                Row(children: [
-                  const Expanded(
-                      child: Divider(color: Color(0xFFEEEEEE), height: 1)),
-                  Container(
-                    margin:
-                        const EdgeInsets.symmetric(horizontal: 10),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFBEAEA),
-                      borderRadius: BorderRadius.circular(20),
+                Row(
+                  children: [
+                    const Expanded(
+                      child: Divider(color: Color(0xFFEEEEEE), height: 1),
                     ),
-                    child: const Text(
-                      "Kamu hemat!",
-                      style: TextStyle(
+                    Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 10),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFBEAEA),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Text(
+                        "Kamu hemat!",
+                        style: TextStyle(
                           fontSize: 11,
                           color: Color(0xFF8B0000),
-                          fontWeight: FontWeight.w600),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
-                  ),
-                  const Expanded(
-                      child: Divider(color: Color(0xFFEEEEEE), height: 1)),
-                ]),
+                    const Expanded(
+                      child: Divider(color: Color(0xFFEEEEEE), height: 1),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 12),
                 Row(
                   children: [
@@ -746,13 +821,17 @@ class _PaketDetailPageState extends State<PaketDetailPage> {
                         color: const Color(0xFF8B0000).withOpacity(0.08),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Icon(Icons.sell_outlined,
-                          color: Color(0xFF8B0000), size: 18),
+                      child: const Icon(
+                        Icons.sell_outlined,
+                        color: Color(0xFF8B0000),
+                        size: 18,
+                      ),
                     ),
                     const SizedBox(width: 10),
-                    const Text("Harga kamu /orang",
-                        style:
-                            TextStyle(fontSize: 11, color: Colors.grey)),
+                    const Text(
+                      "Harga kamu /orang",
+                      style: TextStyle(fontSize: 11, color: Colors.grey),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 8),
