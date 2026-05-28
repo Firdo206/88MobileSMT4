@@ -39,6 +39,11 @@ class _BookingFormPageState extends State<BookingFormPage> {
   String? _promoError;
   bool isCheckingPromo = false;
 
+  // 🚌 Bus state
+  List<dynamic> _busList = [];
+  dynamic _selectedBus;
+  bool _isLoadingBus = false;
+
   static const Color _primary = Color(0xFF8B2E2E);
 
   Promo? get activePromo => _appliedPromo ?? widget.promo;
@@ -90,7 +95,42 @@ class _BookingFormPageState extends State<BookingFormPage> {
         );
       },
     );
-    if (picked != null) setState(() => selectedDate = picked);
+    if (picked != null) {
+      setState(() {
+        selectedDate = picked;
+        _selectedBus = null; // reset bus saat tanggal berubah
+      });
+      _fetchAvailableBuses();
+    }
+  }
+
+  // 🚌 Fetch bus tersedia berdasarkan tanggal + durasi paket
+  Future<void> _fetchAvailableBuses() async {
+    if (selectedDate == null) return;
+    setState(() {
+      _isLoadingBus = true;
+      _busList = [];
+      _selectedBus = null;
+    });
+
+    final dateStr =
+        "${selectedDate!.year}-${selectedDate!.month.toString().padLeft(2, '0')}-${selectedDate!.day.toString().padLeft(2, '0')}";
+    final duration = widget.data['duration_days'] ?? 1;
+
+    try {
+      final res = await http.get(
+        Uri.parse("${ApiService.baseUrl}/buses/available?date=$dateStr&duration=$duration"),
+        headers: {"Accept": "application/json"},
+      );
+      final body = jsonDecode(res.body);
+      if (res.statusCode == 200 && body['status'] == true) {
+        setState(() => _busList = body['data']);
+      }
+    } catch (e) {
+      debugPrint("Gagal fetch bus: $e");
+    } finally {
+      setState(() => _isLoadingBus = false);
+    }
   }
 
   void _increment() {
@@ -203,6 +243,64 @@ class _BookingFormPageState extends State<BookingFormPage> {
       _promoController.clear();
       _promoError = null;
     });
+  }
+
+  // 🚌 Dialog bus tidak tersedia
+  void _showBusUnavailableDialog(dynamic bus) {
+    final duration = widget.data['duration_days'] ?? 1;
+    showDialog(
+      context: context,
+      builder: (_) => Dialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  color: Colors.red.shade50,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.directions_bus_rounded,
+                    color: Colors.red.shade400, size: 28),
+              ),
+              const SizedBox(height: 14),
+              const Text(
+                "Bus Tidak Tersedia",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                "${bus['name']} sudah dipesan pada tanggal yang dipilih hingga $duration hari ke depan.",
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.grey, fontSize: 13, height: 1.5),
+              ),
+              const SizedBox(height: 18),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _primary,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  child: const Text("Mengerti",
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -386,6 +484,201 @@ class _BookingFormPageState extends State<BookingFormPage> {
 
                   const SizedBox(height: 14),
 
+                  // 🚌 PILIH BUS
+                  _sectionCard(
+                    icon: Icons.directions_bus_rounded,
+                    title: "Pilih Bus",
+                    required: true,
+                    child: _isLoadingBus
+                        ? const Center(
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(vertical: 12),
+                              child: CircularProgressIndicator(
+                                  color: _primary, strokeWidth: 2),
+                            ),
+                          )
+                        : selectedDate == null
+                            ? Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF8F8F8),
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(color: Colors.grey.shade200),
+                                ),
+                                child: const Row(
+                                  children: [
+                                    Icon(Icons.info_outline_rounded,
+                                        color: Colors.grey, size: 16),
+                                    SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        "Pilih tanggal keberangkatan terlebih dahulu",
+                                        style: TextStyle(
+                                            color: Colors.grey, fontSize: 13),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : _busList.isEmpty
+                                ? Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 12, vertical: 12),
+                                    decoration: BoxDecoration(
+                                      color: Colors.orange.shade50,
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(
+                                          color: Colors.orange.shade200),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.warning_amber_rounded,
+                                            color: Colors.orange.shade600,
+                                            size: 16),
+                                        const SizedBox(width: 8),
+                                        const Expanded(
+                                          child: Text(
+                                            "Tidak ada bus tersedia pada tanggal ini",
+                                            style: TextStyle(
+                                                color: Colors.orange, fontSize: 13),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                : Column(
+                                    children: _busList.map((bus) {
+                                      final bool available =
+                                          bus['available'] == true;
+                                      final bool isSelected =
+                                          _selectedBus?['id'] == bus['id'];
+                                      return GestureDetector(
+                                        onTap: () {
+                                          if (!available) {
+                                            _showBusUnavailableDialog(bus);
+                                            return;
+                                          }
+                                          setState(() => _selectedBus = bus);
+                                        },
+                                        child: AnimatedContainer(
+                                          duration:
+                                              const Duration(milliseconds: 200),
+                                          margin:
+                                              const EdgeInsets.only(bottom: 8),
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 14, vertical: 12),
+                                          decoration: BoxDecoration(
+                                            color: !available
+                                                ? Colors.grey.shade100
+                                                : isSelected
+                                                    ? _primary.withOpacity(0.07)
+                                                    : const Color(0xFFF8F8F8),
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                            border: Border.all(
+                                              color: !available
+                                                  ? Colors.grey.shade300
+                                                  : isSelected
+                                                      ? _primary
+                                                      : Colors.grey.shade200,
+                                              width: isSelected ? 1.5 : 1,
+                                            ),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Container(
+                                                width: 38,
+                                                height: 38,
+                                                decoration: BoxDecoration(
+                                                  color: !available
+                                                      ? Colors.grey.shade200
+                                                      : isSelected
+                                                          ? _primary
+                                                              .withOpacity(0.12)
+                                                          : _primary
+                                                              .withOpacity(0.07),
+                                                  borderRadius:
+                                                      BorderRadius.circular(10),
+                                                ),
+                                                child: Icon(
+                                                  Icons.directions_bus_rounded,
+                                                  color: !available
+                                                      ? Colors.grey.shade400
+                                                      : _primary,
+                                                  size: 20,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 12),
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      bus['name'] ?? '-',
+                                                      style: TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                        fontSize: 13,
+                                                        color: !available
+                                                            ? Colors.grey
+                                                            : Colors.black87,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 2),
+                                                    Text(
+                                                      "Kapasitas: ${bus['capacity']} kursi",
+                                                      style: TextStyle(
+                                                        fontSize: 11,
+                                                        color: !available
+                                                            ? Colors.grey.shade400
+                                                            : Colors.grey,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              if (!available)
+                                                Container(
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                      horizontal: 8,
+                                                      vertical: 4),
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.red.shade50,
+                                                    borderRadius:
+                                                        BorderRadius.circular(8),
+                                                    border: Border.all(
+                                                        color: Colors
+                                                            .red.shade200),
+                                                  ),
+                                                  child: Text(
+                                                    "Penuh",
+                                                    style: TextStyle(
+                                                        color:
+                                                            Colors.red.shade400,
+                                                        fontSize: 11,
+                                                        fontWeight:
+                                                            FontWeight.w600),
+                                                  ),
+                                                )
+                                              else if (isSelected)
+                                                const Icon(
+                                                  Icons.check_circle_rounded,
+                                                  color: _primary,
+                                                  size: 20,
+                                                ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    }).toList(),
+                                  ),
+                  ),
+
+                  const SizedBox(height: 14),
+
                   /// LOKASI PENJEMPUTAN
                   _sectionCard(
                     icon: Icons.location_on_rounded,
@@ -538,7 +831,6 @@ class _BookingFormPageState extends State<BookingFormPage> {
                         ),
                         const SizedBox(height: 14),
 
-                        // Jika promo sudah diterapkan
                         if (activePromo != null) ...[
                           Container(
                             padding: const EdgeInsets.symmetric(
@@ -667,6 +959,13 @@ class _BookingFormPageState extends State<BookingFormPage> {
                           return;
                         }
 
+                        if (_selectedBus == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("Pilih bus terlebih dahulu")),
+                          );
+                          return;
+                        }
+
                         int jumlah = int.parse(jumlahController.text);
                         double harga = double.parse(
                             widget.data['price_per_person'].toString());
@@ -679,7 +978,7 @@ class _BookingFormPageState extends State<BookingFormPage> {
                         }
                         double hargaFinal =
                             (harga - discount).clamp(0, double.infinity);
-                        double total = jumlah * hargaFinal;
+                        double total = hargaFinal;
 
                         Navigator.push(
                           context,
@@ -690,7 +989,9 @@ class _BookingFormPageState extends State<BookingFormPage> {
                               jumlah: jumlah,
                               total: total,
                               notes: catatanController.text,
-                              promo: activePromo, // 🔥 kirim activePromo
+                              promo: activePromo,
+                              busId: _selectedBus!['id'],
+                              busName: _selectedBus!['name'],
                             ),
                           ),
                         );

@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import '../booking/payment_page.dart';
 import '../payment/payment_page.dart' as other;
 import 'widgets/detail_pesanan_service.dart';
-import 'widgets/detail_pesanan_pdf.dart';
+import 'widgets/ticket_pesanan_pdf.dart';
+import 'widgets/tour_pesanan_pdf.dart';
+import 'widgets/rental_pesanan_pdf.dart';
 import 'refund_page.dart';
 import '../profil/review_page.dart';
 
@@ -14,8 +16,6 @@ class DetailPesananPage extends StatelessWidget {
     required this.data,
     required this.type,
   });
-
-  // ─── Helpers ───────────────────────────────────────────────
   String get statusFinal => data["status_final"] ?? "-";
 
   String get _reviewType {

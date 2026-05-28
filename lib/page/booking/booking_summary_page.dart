@@ -13,6 +13,8 @@ class BookingSummaryPage extends StatelessWidget {
   final double total;
   final String notes;
   final Promo? promo;
+  final int busId;
+  final String busName;
 
   const BookingSummaryPage({
     super.key,
@@ -22,6 +24,8 @@ class BookingSummaryPage extends StatelessWidget {
     required this.total,
     required this.notes,
     this.promo,
+    required this.busId,
+     required this.busName,
   });
 
   String formatDate(DateTime d) {
@@ -198,19 +202,18 @@ class BookingSummaryPage extends StatelessWidget {
                         icon: Icons.receipt_long_rounded,
                         child: Column(
                           children: [
-                            // 👈 BERUBAH - tampilkan harga normal
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  "$jumlah orang × ${formatRupiah(harga)}",
+                                    "Harga Paket (Flat)",
                                   style: const TextStyle(
                                     color: Colors.grey,
                                     fontSize: 13,
                                   ),
                                 ),
                                 Text(
-                                  formatRupiah(harga * jumlah),
+                                   formatRupiah(harga), 
                                   style: TextStyle(
                                     fontSize: 13,
                                     decoration: promo != null
@@ -223,8 +226,6 @@ class BookingSummaryPage extends StatelessWidget {
                                 ),
                               ],
                             ),
-
-                            // 👈 TAMBAH - tampilkan baris diskon jika ada promo
                             if (promo != null) ...[
                               const SizedBox(height: 8),
                               Row(
@@ -238,16 +239,17 @@ class BookingSummaryPage extends StatelessWidget {
                                       fontSize: 13,
                                     ),
                                   ),
-                                  Text(
-                                    '- ${formatRupiah(discount * jumlah)}',
-                                    style: const TextStyle(
-                                      color: Colors.green,
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                                 Text(
+                                  '- ${formatRupiah(discount)}',   
+                                  style: const TextStyle(
+                                    color: Colors.green,
+                                    fontSize: 13,
+                                     ),
+                                    )
+                                  ],
+                               ),
                             ],
+
 
                             const Padding(
                               padding: EdgeInsets.symmetric(vertical: 12),
@@ -349,6 +351,7 @@ class BookingSummaryPage extends StatelessWidget {
                                   ? discount * jumlah
                                   : null,
                               promoTitle: promo?.title,
+                              busId: busId,
                             );
 
                             print(result);

@@ -13,8 +13,9 @@ class BookingPaketService {
     required double total,
     String? notes,
     int? promoId,
-    double? discountAmount,  // ← TAMBAH
-    String? promoTitle,      // ← TAMBAH
+    double? discountAmount,
+    String? promoTitle,
+    int? busId, // 🚌 tambah busId
   }) async {
 
     final Map<String, dynamic> body = {
@@ -26,15 +27,15 @@ class BookingPaketService {
       "notes": notes,
     };
 
-    // 🔥 FIX: kirim data promo jika ada
     if (promoId != null) body["promo_id"] = promoId;
     if (discountAmount != null) body["discount_amount"] = discountAmount;
     if (promoTitle != null) body["promo_title"] = promoTitle;
+    if (busId != null) body["bus_id"] = busId; // 🚌 kirim bus_id
 
     final response = await http.post(
       Uri.parse("${ApiService.baseUrl}/tour-bookings"),
       headers: {"Content-Type": "application/json"},
-      body: jsonEncode(body), // 🔥 FIX: pakai body variable, bukan hardcode
+      body: jsonEncode(body),
     );
 
     return jsonDecode(response.body);
