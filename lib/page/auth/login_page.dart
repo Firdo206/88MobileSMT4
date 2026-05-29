@@ -9,13 +9,11 @@ import '../navigation/main_page.dart';
 import '../profil/input_phone_page.dart'; 
 import '../../services/notification_service.dart';
 
-// 🔥 TAMBAHAN
+
 import 'package:firebase_messaging/firebase_messaging.dart';
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
-
-  // 🔥 GOOGLE LOGIN + VALIDASI NOMOR
   Future loginGoogle(BuildContext context) async {
     var account = await GoogleAuthService.signIn();
 
@@ -31,17 +29,11 @@ class LoginPage extends StatelessWidget {
         final prefs = await SharedPreferences.getInstance();
 
         var user = result["data"];
-
-        // 🔥 SIMPAN USER DULU
         prefs.setInt("user_id", user["id"]);
         prefs.setString("name", user["name"]);
         prefs.setString("email", user["email"]);
         prefs.setBool("is_logged_in", true);
-
-        // 🔥 SIMPAN TOKEN (VERSI NORMAL)
         await NotificationService.saveFcmToken(user["id"]);
-
-        // 🔥 FORCE REFRESH TOKEN (ANTI TOKEN LAMA)
         await FirebaseMessaging.instance.deleteToken();
         String? newToken = await FirebaseMessaging.instance.getToken();
 
@@ -50,11 +42,6 @@ class LoginPage extends StatelessWidget {
         if (newToken != null) {
           await NotificationService.saveFcmToken(user["id"]);
         }
-
-        print("Login Google berhasil");
-        print("DATA USER: $user");
-
-        // 🔥 CEK NOMOR
         if (user["phone"] == null || user["phone"] == "") {
 
           Navigator.pushReplacement(

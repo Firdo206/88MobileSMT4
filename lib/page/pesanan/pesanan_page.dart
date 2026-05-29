@@ -53,15 +53,25 @@ class _PesananPageState extends State<PesananPage> {
         temp.add({"type": "bus", "data": r});
       }
 
-      List activeOrders = temp.where((e) {
-        final status = e["data"]["status_final"];
-        return [
-          "pending_payment",
-          "waiting_confirmation",
-          "waiting_approval",
-          "paid",
-        ].contains(status);
-      }).toList();
+          List activeOrders = temp.where((e) {
+            final status = e["data"]["status_final"];
+            final paymentStatus = e["data"]["payment_status"]?.toString() ?? "";
+
+            // refunded → masuk riwayat, bukan pesanan aktif
+            if (paymentStatus == "refunded") return false;
+
+            return [
+              "pending_payment",
+              "waiting_confirmation",
+              "waiting_approval",
+              "paid",
+              "pending_refund",
+              "refund",
+            ].contains(status) || [
+              "pending_refund",
+              "refund",
+            ].contains(paymentStatus);
+          }).toList();
 
       setState(() {
         orders = activeOrders;
