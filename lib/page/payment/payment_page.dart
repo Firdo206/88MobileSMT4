@@ -1,13 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:http/http.dart' as http;
 import 'package:app_links/app_links.dart';
 import '../../services/api_service.dart';
 import '../../services/payment_service.dart';
 import '../pesanan/pesanan_page.dart';
 import '../navigation/main_page.dart';
+import 'midtrans_webview_page.dart';
 
 class PaymentPage extends StatefulWidget {
   final Map data;
@@ -83,6 +83,7 @@ class _PaymentPageState extends State<PaymentPage> {
     _timer?.cancel();
     super.dispose();
   }
+
   void _listenDeepLink() {
     _linkSub = _appLinks.uriLinkStream.listen((uri) {
       debugPrint("DEEP LINK RECEIVED: $uri");
@@ -109,15 +110,15 @@ class _PaymentPageState extends State<PaymentPage> {
   }
 
   // ─────────────────────────────────────────
-  // COUNTDOWN — dengan fallback created_at + 24 jam
+  // COUNTDOWN
   // ─────────────────────────────────────────
 
   DateTime? _parseDateTime(dynamic raw) {
-  if (raw == null) return null;
-  final str = raw.toString().trim();
-  if (str.isEmpty) return null;
-  return DateTime.tryParse(str);
-}
+    if (raw == null) return null;
+    final str = raw.toString().trim();
+    if (str.isEmpty) return null;
+    return DateTime.tryParse(str);
+  }
 
   void _startCountdown() {
     DateTime? expiry = _parseDateTime(widget.data['expired_at']);
@@ -125,7 +126,7 @@ class _PaymentPageState extends State<PaymentPage> {
       final created = _parseDateTime(widget.data['created_at']);
       if (created != null) {
         expiry = created.add(const Duration(hours: 1));
-        debugPrint("TIMER: expired_at tidak ada, pakai created_at + 24 jam => $expiry");
+        debugPrint("TIMER: expired_at tidak ada, pakai created_at + 1 jam => $expiry");
       }
     }
 
@@ -167,7 +168,7 @@ class _PaymentPageState extends State<PaymentPage> {
   }
 
   // ─────────────────────────────────────────
-  // MIDTRANS
+  // MIDTRANS — pakai WebView
   // ─────────────────────────────────────────
 
   Future<String?> _getSnapToken(int id) async {
@@ -220,20 +221,34 @@ class _PaymentPageState extends State<PaymentPage> {
       return;
     }
 
-    final url = "https://app.sandbox.midtrans.com/snap/v2/vtweb/$token";
+    if (mounted) setState(() => _isLoadingMidtrans = false);
 
-    try {
-      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-    } catch (e) {
-      debugPrint("Launch error: $e");
-    }
+    if (!mounted) return;
 
-    if (mounted) {
-      setState(() {
-        _isLoadingMidtrans = false;
-        _sudahBayar = true;
-      });
-    }
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => MidtransWebViewPage(
+          snapToken: token,
+          onResult: (status) {
+            if (status == 'settlement') {
+              _checkStatus();
+            } else if (status == 'pending') {
+              if (mounted) setState(() => _sudahBayar = true);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text("⏳ Pembayaran pending, cek status nanti"),
+                  backgroundColor: Colors.orange,
+                ),
+              );
+            }
+            // cancel → tidak perlu action
+          },
+        ),
+      ),
+    );
+
+    if (mounted) setState(() => _sudahBayar = true);
   }
 
   // ─────────────────────────────────────────
@@ -478,7 +493,6 @@ class _PaymentPageState extends State<PaymentPage> {
                                 safe(
                                   widget.data['tour_name'] ??
                                       widget.data['package_name'],
-                                      
                                 ),
                               ),
                             ),
@@ -590,9 +604,10 @@ class _PaymentPageState extends State<PaymentPage> {
                     width: double.infinity,
                     height: 54,
                     child: ElevatedButton(
-                      onPressed: (_isExpired || _isLoadingMidtrans || _tokenRequested)
-                          ? null
-                          : _openMidtrans,
+                      onPressed:
+                          (_isExpired || _isLoadingMidtrans || _tokenRequested)
+                              ? null
+                              : _openMidtrans,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primary,
                         elevation: 0,
@@ -602,7 +617,8 @@ class _PaymentPageState extends State<PaymentPage> {
                         disabledBackgroundColor: Colors.grey.shade300,
                       ),
                       child: _isLoadingMidtrans
-                          ? const CircularProgressIndicator(color: Colors.white)
+                          ? const CircularProgressIndicator(
+                              color: Colors.white)
                           : const Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
@@ -679,7 +695,8 @@ class _PaymentPageState extends State<PaymentPage> {
         color: _isExpired ? const Color(0xFFFFEBEE) : Colors.orange.shade50,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: _isExpired ? const Color(0xFFEF9A9A) : Colors.orange.shade200,
+          color:
+              _isExpired ? const Color(0xFFEF9A9A) : Colors.orange.shade200,
         ),
       ),
       child: Row(
@@ -718,7 +735,8 @@ class _PaymentPageState extends State<PaymentPage> {
           if (!_isExpired) ...[
             const SizedBox(width: 8),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
                 color: Colors.orange.shade700,
                 borderRadius: BorderRadius.circular(8),

@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:http/http.dart' as http;
 import 'package:app_links/app_links.dart';
 import '../../services/api_service.dart';
 import '../../services/payment_service.dart';
-import 'package:app_88trans/page/navigation/main_page.dart'; 
+import 'package:app_88trans/page/navigation/main_page.dart';
+import '../payment/midtrans_webview_page.dart';
 
 class PaymentPage extends StatefulWidget {
   final Map bookingData;
@@ -21,7 +21,7 @@ class PaymentPage extends StatefulWidget {
 }
 
 class _PaymentPageState extends State<PaymentPage>
-    with WidgetsBindingObserver {  
+    with WidgetsBindingObserver {
   static const Color _primary = Color(0xFF7B2D2D);
 
   Timer? _timer;
@@ -30,65 +30,60 @@ class _PaymentPageState extends State<PaymentPage>
   bool _isLoadingMidtrans = false;
   bool _isLoadingCheck = false;
   bool _sudahBayar = false;
-  bool _tokenRequested = false; 
+  bool _tokenRequested = false;
 
   final _appLinks = AppLinks();
   StreamSubscription? _linkSub;
 
   // ================= MIDTRANS =================
-  Future<String?> getSnapToken(int bookingId) async {
-    try {
-      final response = await http.post(
-        Uri.parse(ApiService.midtransPayment),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"booking_id": bookingId}),
-      );
-
-      final data = jsonDecode(response.body);
-
-      if (response.statusCode == 200 && data['status'] == true) {
-        return data['snap_token'];
-      } else {
-        return null;
-      }
-    } catch (e) {
-      return null;
-    }
-  }
-
   Future<void> openMidtrans(int bookingId) async {
-  if (_isLoadingMidtrans || _tokenRequested) return;
-  setState(() {
-    _isLoadingMidtrans = true;
-    _tokenRequested = true;
-  });
-
-  final token = await PaymentService.getSnapToken(bookingId);
-
-  if (token == null) {
+    if (_isLoadingMidtrans || _tokenRequested) return;
     setState(() {
-      _isLoadingMidtrans = false;
-      _tokenRequested = false;
+      _isLoadingMidtrans = true;
+      _tokenRequested = true;
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Gagal membuka pembayaran")),
+
+    final token = await PaymentService.getSnapToken(bookingId);
+
+    setState(() => _isLoadingMidtrans = false);
+
+    if (token == null) {
+      setState(() => _tokenRequested = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Gagal membuka pembayaran")),
+        );
+      }
+      return;
+    }
+
+    if (!mounted) return;
+
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => MidtransWebViewPage(
+          snapToken: token,
+          onResult: (status) {
+            if (status == 'settlement') {
+              _checkStatus(bookingId);
+            } else if (status == 'pending') {
+              if (mounted) setState(() => _sudahBayar = true);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text("⏳ Pembayaran pending, cek status nanti"),
+                  backgroundColor: Colors.orange,
+                ),
+              );
+            }
+            // cancel → tidak perlu action
+          },
+        ),
+      ),
     );
-    return;
+
+    if (mounted) setState(() => _sudahBayar = true);
   }
-
-  final url = "https://app.sandbox.midtrans.com/snap/v2/vtweb/$token";
-
-  try {
-    await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-  } catch (e) {
-    // handle silently
-  }
-
-  setState(() {
-    _isLoadingMidtrans = false;
-    _sudahBayar = true;
-  });
-}
 
   Future<void> _checkStatus(int bookingId) async {
     if (_isLoadingCheck) return;
@@ -136,9 +131,11 @@ class _PaymentPageState extends State<PaymentPage>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed && _sudahBayar) {
       final bookingId = int.tryParse(
-        (widget.bookingData['id'] ?? widget.bookingData['booking_id'])
-            ?.toString() ?? "0",
-      ) ?? 0;
+            (widget.bookingData['id'] ?? widget.bookingData['booking_id'])
+                ?.toString() ??
+                "0",
+          ) ??
+          0;
       Future.delayed(const Duration(seconds: 1), () {
         if (mounted) _checkStatus(bookingId);
       });
@@ -148,15 +145,18 @@ class _PaymentPageState extends State<PaymentPage>
   // ================= DEEP LINK =================
   void _listenDeepLink() {
     final bookingId = int.tryParse(
-      (widget.bookingData['id'] ?? widget.bookingData['booking_id'])
-          ?.toString() ?? "0",
-    ) ?? 0;
+          (widget.bookingData['id'] ?? widget.bookingData['booking_id'])
+              ?.toString() ??
+              "0",
+        ) ??
+        0;
 
     _linkSub = _appLinks.uriLinkStream.listen((uri) {
       if (uri.scheme == 'app88trans') {
         final transactionStatus = uri.queryParameters['transaction_status'];
 
-        if (transactionStatus == 'settlement' || transactionStatus == 'capture') {
+        if (transactionStatus == 'settlement' ||
+            transactionStatus == 'capture') {
           if (mounted) _checkStatus(bookingId);
         } else {
           if (mounted) Navigator.pop(context);
@@ -170,7 +170,7 @@ class _PaymentPageState extends State<PaymentPage>
     super.initState();
     _startCountdown();
     _listenDeepLink();
-    WidgetsBinding.instance.addObserver(this); 
+    WidgetsBinding.instance.addObserver(this);
   }
 
   @override
@@ -184,7 +184,7 @@ class _PaymentPageState extends State<PaymentPage>
   void _startCountdown() {
     final expiredAt = widget.bookingData['expired_at'];
     debugPrint("=== EXPIRED AT: $expiredAt ===");
-  
+
     if (expiredAt == null) return;
 
     final rawString = expiredAt.toString().trim();
@@ -279,15 +279,20 @@ class _PaymentPageState extends State<PaymentPage>
 
     final bookingId = int.tryParse(
           (widget.bookingData['id'] ?? widget.bookingData['booking_id'])
-              ?.toString() ?? "0",
-        ) ?? 0;
+              ?.toString() ??
+              "0",
+        ) ??
+        0;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF2F2F2),
       appBar: AppBar(
         title: const Text(
           "Pesan Tiket",
-          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w600, fontSize: 16),
+          style: TextStyle(
+              color: Colors.black87,
+              fontWeight: FontWeight.w600,
+              fontSize: 16),
         ),
         backgroundColor: Colors.white,
         elevation: 0,
@@ -298,43 +303,66 @@ class _PaymentPageState extends State<PaymentPage>
         children: [
           Container(
             color: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 40),
+            padding:
+                const EdgeInsets.symmetric(vertical: 14, horizontal: 40),
             child: Row(
               children: [
                 Expanded(child: Container(height: 1.5, color: _primary)),
                 Container(
                   width: 32,
                   height: 32,
-                  decoration: const BoxDecoration(color: _primary, shape: BoxShape.circle),
+                  decoration: const BoxDecoration(
+                      color: _primary, shape: BoxShape.circle),
                   alignment: Alignment.center,
-                  child: const Text("3", style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
+                  child: const Text("3",
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold)),
                 ),
                 const SizedBox(width: 8),
-                const Text("Pembayaran", style: TextStyle(color: _primary, fontSize: 13, fontWeight: FontWeight.w600)),
-                Expanded(child: Container(height: 1.5, color: Colors.grey.shade300)),
+                const Text("Pembayaran",
+                    style: TextStyle(
+                        color: _primary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600)),
+                Expanded(
+                    child:
+                        Container(height: 1.5, color: Colors.grey.shade300)),
               ],
             ),
           ),
 
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Column(
                 children: [
+                  // ── TIMER ──
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 12),
                     decoration: BoxDecoration(
-                      color: _isExpired ? const Color(0xFFFFEBEE) : const Color(0xFFFFF8E1),
+                      color: _isExpired
+                          ? const Color(0xFFFFEBEE)
+                          : const Color(0xFFFFF8E1),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: _isExpired ? const Color(0xFFEF9A9A) : const Color(0xFFFFCC80),
+                        color: _isExpired
+                            ? const Color(0xFFEF9A9A)
+                            : const Color(0xFFFFCC80),
                       ),
                     ),
                     child: Row(
                       children: [
                         Icon(
-                          _isExpired ? Icons.cancel_rounded : Icons.access_time_rounded,
-                          color: _isExpired ? Colors.red : const Color(0xFFE65100),
+                          _isExpired
+                              ? Icons.cancel_rounded
+                              : Icons.access_time_rounded,
+                          color: _isExpired
+                              ? Colors.red
+                              : const Color(0xFFE65100),
                           size: 20,
                         ),
                         const SizedBox(width: 10),
@@ -342,14 +370,20 @@ class _PaymentPageState extends State<PaymentPage>
                           child: _isExpired
                               ? const Text(
                                   "Waktu pembayaran habis. Pesanan ini telah dibatalkan.",
-                                  style: TextStyle(fontSize: 12, color: Colors.red, fontWeight: FontWeight.w600),
+                                  style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.red,
+                                      fontWeight: FontWeight.w600),
                                 )
                               : Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
                                   children: [
                                     const Text(
                                       "Selesaikan pembayaran sebelum waktu habis",
-                                      style: TextStyle(fontSize: 12, color: Color(0xFF5D3A00)),
+                                      style: TextStyle(
+                                          fontSize: 12,
+                                          color: Color(0xFF5D3A00)),
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
@@ -370,6 +404,7 @@ class _PaymentPageState extends State<PaymentPage>
 
                   const SizedBox(height: 14),
 
+                  // ── DETAIL PESANAN ──
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(16),
@@ -377,26 +412,44 @@ class _PaymentPageState extends State<PaymentPage>
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(14),
                       boxShadow: [
-                        BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8, offset: const Offset(0, 2)),
+                        BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2)),
                       ],
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text("Detail Pesanan", style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.black87)),
+                        const Text("Detail Pesanan",
+                            style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87)),
                         const SizedBox(height: 12),
-                        _buildRow("Kode Booking", widget.bookingData['booking_code'] ?? "-"),
-                        _buildRow("Rute", "${widget.bookingData['origin'] ?? '-'} → ${widget.bookingData['destination'] ?? '-'}"),
-                        _buildRow("Tanggal", widget.bookingData['departure_date'] ?? "-"),
-                        _buildRow("Jam", widget.bookingData['departure_time'] ?? "-"),
-                        _buildRow("Bus", widget.bookingData['bus_name'] ?? "-"),
+                        _buildRow("Kode Booking",
+                            widget.bookingData['booking_code'] ?? "-"),
+                        _buildRow(
+                            "Rute",
+                            "${widget.bookingData['origin'] ?? '-'} → ${widget.bookingData['destination'] ?? '-'}"),
+                        _buildRow("Tanggal",
+                            widget.bookingData['departure_date'] ?? "-"),
+                        _buildRow(
+                            "Jam", widget.bookingData['departure_time'] ?? "-"),
+                        _buildRow(
+                            "Bus", widget.bookingData['bus_name'] ?? "-"),
                         const SizedBox(height: 14),
-                        const Text("Penumpang", style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.black87)),
+                        const Text("Penumpang",
+                            style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black87)),
                         const SizedBox(height: 8),
                         if (passengers.isNotEmpty)
                           ...passengers.map((p) => Container(
                                 margin: const EdgeInsets.only(bottom: 8),
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 10),
                                 decoration: BoxDecoration(
                                   color: const Color(0xFFF5EAEA),
                                   borderRadius: BorderRadius.circular(10),
@@ -406,19 +459,27 @@ class _PaymentPageState extends State<PaymentPage>
                                     Container(
                                       width: 36,
                                       height: 36,
-                                      decoration: BoxDecoration(color: _primary, borderRadius: BorderRadius.circular(8)),
+                                      decoration: BoxDecoration(
+                                          color: _primary,
+                                          borderRadius:
+                                              BorderRadius.circular(8)),
                                       alignment: Alignment.center,
                                       child: Text(
                                         p['seat']?.toString() ?? "-",
-                                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                        style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold),
                                       ),
                                     ),
                                     const SizedBox(width: 12),
                                     Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(p['passenger_name'] ?? "-"),
-                                        Text(p['phone'] ?? "", style: const TextStyle(fontSize: 11)),
+                                        Text(p['phone'] ?? "",
+                                            style: const TextStyle(
+                                                fontSize: 11)),
                                       ],
                                     ),
                                   ],
@@ -426,17 +487,34 @@ class _PaymentPageState extends State<PaymentPage>
                               ))
                         else
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                            decoration: BoxDecoration(color: const Color(0xFFF5EAEA), borderRadius: BorderRadius.circular(10)),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 10),
+                            decoration: BoxDecoration(
+                                color: const Color(0xFFF5EAEA),
+                                borderRadius: BorderRadius.circular(10)),
                             child: Row(
                               children: [
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                  decoration: BoxDecoration(color: _primary, borderRadius: BorderRadius.circular(8)),
-                                  child: Text(seats.join(", "), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 6),
+                                  decoration: BoxDecoration(
+                                      color: _primary,
+                                      borderRadius:
+                                          BorderRadius.circular(8)),
+                                  child: Text(seats.join(", "),
+                                      style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 13)),
                                 ),
                                 const SizedBox(width: 12),
-                                Text(widget.bookingData['passenger_name'] ?? "-", style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.black87)),
+                                Text(
+                                    widget.bookingData['passenger_name'] ??
+                                        "-",
+                                    style: const TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.black87)),
                               ],
                             ),
                           ),
@@ -446,20 +524,23 @@ class _PaymentPageState extends State<PaymentPage>
 
                   const SizedBox(height: 14),
 
+                  // ── RINCIAN HARGA ──
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
                       color: const Color(0xFFFDF0EF),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFFEFD5D5)),
+                      border:
+                          Border.all(color: const Color(0xFFEFD5D5)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         if (hasPromo) ...[
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 7),
                             margin: const EdgeInsets.only(bottom: 10),
                             decoration: BoxDecoration(
                               color: const Color(0xFFE8F5E9),
@@ -467,7 +548,8 @@ class _PaymentPageState extends State<PaymentPage>
                             ),
                             child: Row(
                               children: [
-                                const Icon(Icons.local_offer_rounded, color: Colors.green, size: 14),
+                                const Icon(Icons.local_offer_rounded,
+                                    color: Colors.green, size: 14),
                                 const SizedBox(width: 6),
                                 Expanded(
                                   child: Text(
@@ -483,19 +565,21 @@ class _PaymentPageState extends State<PaymentPage>
                             ),
                           ),
                         ],
-
                         Text(
                           "$seatCount Kursi x ${formatPrice(pricePerSeat)}",
-                          style: const TextStyle(fontSize: 12, color: Colors.black54),
+                          style: const TextStyle(
+                              fontSize: 12, color: Colors.black54),
                         ),
-
                         const SizedBox(height: 8),
-
                         if (hasPromo) ...[
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            mainAxisAlignment:
+                                MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text("Harga Normal", style: TextStyle(fontSize: 13, color: Colors.black54)),
+                              const Text("Harga Normal",
+                                  style: TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.black54)),
                               Text(
                                 formatPrice(totalNormal),
                                 style: const TextStyle(
@@ -508,12 +592,17 @@ class _PaymentPageState extends State<PaymentPage>
                           ),
                           const SizedBox(height: 4),
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            mainAxisAlignment:
+                                MainAxisAlignment.spaceBetween,
                             children: [
-                              Text('Diskon "$promoTitle"', style: const TextStyle(fontSize: 13, color: Colors.green)),
+                              Text('Diskon "$promoTitle"',
+                                  style: const TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.green)),
                               Text(
                                 '- ${formatPrice(double.tryParse(discountAmount.toString())?.toInt() ?? 0)}',
-                                style: const TextStyle(fontSize: 13, color: Colors.green),
+                                style: const TextStyle(
+                                    fontSize: 13, color: Colors.green),
                               ),
                             ],
                           ),
@@ -522,12 +611,20 @@ class _PaymentPageState extends State<PaymentPage>
                             child: Divider(height: 1),
                           ),
                         ],
-
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          mainAxisAlignment:
+                              MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text("Total Pembayaran", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black87)),
-                            Text(formatPrice(totalPrice), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: _primary)),
+                            const Text("Total Pembayaran",
+                                style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.black87)),
+                            Text(formatPrice(totalPrice),
+                                style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: _primary)),
                           ],
                         ),
                         const SizedBox(height: 6),
@@ -535,7 +632,10 @@ class _PaymentPageState extends State<PaymentPage>
                           onTap: () {},
                           child: const Text(
                             "Lakukan Pembayaran pada pesanan",
-                            style: TextStyle(fontSize: 12, color: _primary, decoration: TextDecoration.underline),
+                            style: TextStyle(
+                                fontSize: 12,
+                                color: _primary,
+                                decoration: TextDecoration.underline),
                           ),
                         ),
                       ],
@@ -546,6 +646,7 @@ class _PaymentPageState extends State<PaymentPage>
             ),
           ),
 
+          // ── TOMBOL BAYAR ──
           Container(
             color: Colors.white,
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
@@ -555,19 +656,26 @@ class _PaymentPageState extends State<PaymentPage>
                   width: double.infinity,
                   height: 52,
                   child: ElevatedButton(
-                    onPressed: (_isExpired || _isLoadingMidtrans || _tokenRequested)
-                        ? null
-                        : () async => await openMidtrans(bookingId),
+                    onPressed:
+                        (_isExpired || _isLoadingMidtrans || _tokenRequested)
+                            ? null
+                            : () async => await openMidtrans(bookingId),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: _primary,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
                       elevation: 0,
+                      disabledBackgroundColor: Colors.grey.shade300,
                     ),
                     child: _isLoadingMidtrans
-                        ? const CircularProgressIndicator(color: Colors.white)
+                        ? const CircularProgressIndicator(
+                            color: Colors.white)
                         : const Text(
                             "Bayar dengan Midtrans",
-                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white),
+                            style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white),
                           ),
                   ),
                 ),
@@ -582,8 +690,10 @@ class _PaymentPageState extends State<PaymentPage>
                           ? null
                           : () async => await _checkStatus(bookingId),
                       style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Color(0xFF7B2D2D), width: 1.5),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        side: const BorderSide(
+                            color: Color(0xFF7B2D2D), width: 1.5),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
                       ),
                       child: _isLoadingCheck
                           ? const SizedBox(
@@ -619,8 +729,14 @@ class _PaymentPageState extends State<PaymentPage>
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(title, style: const TextStyle(fontSize: 13, color: Colors.black54)),
-          Text(value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Colors.black87)),
+          Text(title,
+              style:
+                  const TextStyle(fontSize: 13, color: Colors.black54)),
+          Text(value,
+              style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black87)),
         ],
       ),
     );
