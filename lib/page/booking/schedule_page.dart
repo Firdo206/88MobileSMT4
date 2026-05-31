@@ -121,7 +121,7 @@ class _SchedulePageState extends State<SchedulePage> {
     );
   }
 
-  // ── One Way ───────────────────────────────────────────────
+
   Widget _buildOneWayBody() {
     if (filteredSchedules.isEmpty) {
       return const Center(
@@ -137,7 +137,7 @@ class _SchedulePageState extends State<SchedulePage> {
     );
   }
 
-  // ── Round Trip ────────────────────────────────────────────
+
   Widget _buildRoundTripBody() {
     return DefaultTabController(
       length: 2,
@@ -159,7 +159,7 @@ class _SchedulePageState extends State<SchedulePage> {
           Expanded(
             child: TabBarView(
               children: [
-                // ── Tab Pergi ──
+
                 filteredSchedules.isEmpty
                     ? const Center(
                         child: Text("Tidak ada jadwal pergi", style: TextStyle(color: Colors.grey, fontSize: 16)),
@@ -172,7 +172,7 @@ class _SchedulePageState extends State<SchedulePage> {
                         ],
                       ),
 
-                // ── Tab Pulang ──
+
                 filteredReturnSchedules.isEmpty
                     ? const Center(
                         child: Text("Tidak ada jadwal pulang", style: TextStyle(color: Colors.grey, fontSize: 16)),
@@ -245,7 +245,7 @@ class _SchedulePageState extends State<SchedulePage> {
   }
 }
 
-// ── Schedule Card ─────────────────────────────────────────────────────────────
+
 class _ScheduleCard extends StatelessWidget {
   final dynamic item;
   final String Function(dynamic) formatPrice;
@@ -412,7 +412,7 @@ class _ScheduleCard extends StatelessWidget {
   }
 }
 
-// ── Duration line widget ──────────────────────────────────────────────────────
+
 class _DurationLine extends StatelessWidget {
   final String duration;
   const _DurationLine({required this.duration});

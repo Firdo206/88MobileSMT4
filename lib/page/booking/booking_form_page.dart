@@ -14,11 +14,7 @@ class BookingFormPage extends StatefulWidget {
   final dynamic data;
   final Promo? promo;
 
-  const BookingFormPage({
-    super.key,
-    required this.data,
-    this.promo,
-  });
+  const BookingFormPage({super.key, required this.data, this.promo});
 
   @override
   State<BookingFormPage> createState() => _BookingFormPageState();
@@ -26,20 +22,20 @@ class BookingFormPage extends StatefulWidget {
 
 class _BookingFormPageState extends State<BookingFormPage> {
   DateTime? selectedDate;
-  final TextEditingController jumlahController = TextEditingController(text: "1");
+  final TextEditingController jumlahController = TextEditingController(
+    text: "1",
+  );
   final TextEditingController catatanController = TextEditingController();
   final TextEditingController _promoController = TextEditingController();
 
   LatLng? selectedLocation;
   String? selectedAddress;
 
-  // 🔥 Promo state
   int? userId;
   Promo? _appliedPromo;
   String? _promoError;
   bool isCheckingPromo = false;
 
-  // 🚌 Bus state
   List<dynamic> _busList = [];
   dynamic _selectedBus;
   bool _isLoadingBus = false;
@@ -71,8 +67,21 @@ class _BookingFormPageState extends State<BookingFormPage> {
   }
 
   String formatDate(DateTime date) {
-    const months = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
-        'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'];
+    const months = [
+      '',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'Mei',
+      'Jun',
+      'Jul',
+      'Ags',
+      'Sep',
+      'Okt',
+      'Nov',
+      'Des',
+    ];
     return "${date.day} ${months[date.month]} ${date.year}";
   }
 
@@ -98,13 +107,12 @@ class _BookingFormPageState extends State<BookingFormPage> {
     if (picked != null) {
       setState(() {
         selectedDate = picked;
-        _selectedBus = null; // reset bus saat tanggal berubah
+        _selectedBus = null;
       });
       _fetchAvailableBuses();
     }
   }
 
-  // 🚌 Fetch bus tersedia berdasarkan tanggal + durasi paket
   Future<void> _fetchAvailableBuses() async {
     if (selectedDate == null) return;
     setState(() {
@@ -119,7 +127,9 @@ class _BookingFormPageState extends State<BookingFormPage> {
 
     try {
       final res = await http.get(
-        Uri.parse("${ApiService.baseUrl}/buses/available?date=$dateStr&duration=$duration"),
+        Uri.parse(
+          "${ApiService.baseUrl}/buses/available?date=$dateStr&duration=$duration",
+        ),
         headers: {"Accept": "application/json"},
       );
       final body = jsonDecode(res.body);
@@ -146,7 +156,9 @@ class _BookingFormPageState extends State<BookingFormPage> {
   Future<void> _openMapPicker() async {
     final result = await Navigator.push<Map<String, dynamic>>(
       context,
-      MaterialPageRoute(builder: (_) => MapPickerPage(initialLocation: selectedLocation)),
+      MaterialPageRoute(
+        builder: (_) => MapPickerPage(initialLocation: selectedLocation),
+      ),
     );
     if (result != null) {
       setState(() {
@@ -157,7 +169,6 @@ class _BookingFormPageState extends State<BookingFormPage> {
     }
   }
 
-  // 🔥 Apply promo
   Future<void> _applyPromoCode() async {
     final code = _promoController.text.trim().toUpperCase();
     if (code.isEmpty) {
@@ -220,7 +231,9 @@ class _BookingFormPageState extends State<BookingFormPage> {
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Promo "${promo.title}" berhasil diterapkan! Hemat ${promo.discountLabel}'),
+            content: Text(
+              'Promo "${promo.title}" berhasil diterapkan! Hemat ${promo.discountLabel}',
+            ),
             backgroundColor: Colors.green,
           ),
         );
@@ -245,7 +258,6 @@ class _BookingFormPageState extends State<BookingFormPage> {
     });
   }
 
-  // 🚌 Dialog bus tidak tersedia
   void _showBusUnavailableDialog(dynamic bus) {
     final duration = widget.data['duration_days'] ?? 1;
     showDialog(
@@ -266,8 +278,11 @@ class _BookingFormPageState extends State<BookingFormPage> {
                   color: Colors.red.shade50,
                   shape: BoxShape.circle,
                 ),
-                child: Icon(Icons.directions_bus_rounded,
-                    color: Colors.red.shade400, size: 28),
+                child: Icon(
+                  Icons.directions_bus_rounded,
+                  color: Colors.red.shade400,
+                  size: 28,
+                ),
               ),
               const SizedBox(height: 14),
               const Text(
@@ -278,7 +293,11 @@ class _BookingFormPageState extends State<BookingFormPage> {
               Text(
                 "${bus['name']} sudah dipesan pada tanggal yang dipilih hingga $duration hari ke depan.",
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.grey, fontSize: 13, height: 1.5),
+                style: const TextStyle(
+                  color: Colors.grey,
+                  fontSize: 13,
+                  height: 1.5,
+                ),
               ),
               const SizedBox(height: 18),
               SizedBox(
@@ -289,11 +308,17 @@ class _BookingFormPageState extends State<BookingFormPage> {
                     backgroundColor: _primary,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
-                  child: const Text("Mengerti",
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                  child: const Text(
+                    "Mengerti",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -329,9 +354,11 @@ class _BookingFormPageState extends State<BookingFormPage> {
                     ),
                   ),
                   Positioned(
-                    top: -30, right: -30,
+                    top: -30,
+                    right: -30,
                     child: Container(
-                      width: 150, height: 150,
+                      width: 150,
+                      height: 150,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: Colors.white.withOpacity(0.06),
@@ -339,9 +366,11 @@ class _BookingFormPageState extends State<BookingFormPage> {
                     ),
                   ),
                   Positioned(
-                    bottom: -20, left: -20,
+                    bottom: -20,
+                    left: -20,
                     child: Container(
-                      width: 100, height: 100,
+                      width: 100,
+                      height: 100,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: Colors.white.withOpacity(0.06),
@@ -349,29 +378,45 @@ class _BookingFormPageState extends State<BookingFormPage> {
                     ),
                   ),
                   Positioned(
-                    bottom: 24, left: 20, right: 20,
+                    bottom: 24,
+                    left: 20,
+                    right: 20,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: const Text(
                             "PAKET WISATA",
-                            style: TextStyle(color: Colors.white70, fontSize: 11,
-                                letterSpacing: 1.5, fontWeight: FontWeight.w600),
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 11,
+                              letterSpacing: 1.5,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 8),
-                        const Text("Detail Perjalanan",
-                            style: TextStyle(color: Colors.white, fontSize: 22,
-                                fontWeight: FontWeight.bold)),
+                        const Text(
+                          "Detail Perjalanan",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                         const SizedBox(height: 4),
-                        const Text("Lengkapi data perjalanan anda",
-                            style: TextStyle(color: Colors.white70, fontSize: 13)),
+                        const Text(
+                          "Lengkapi data perjalanan anda",
+                          style: TextStyle(color: Colors.white70, fontSize: 13),
+                        ),
                       ],
                     ),
                   ),
@@ -385,7 +430,6 @@ class _BookingFormPageState extends State<BookingFormPage> {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  /// TANGGAL
                   _sectionCard(
                     icon: Icons.calendar_month_rounded,
                     title: "Tanggal Keberangkatan",
@@ -394,7 +438,10 @@ class _BookingFormPageState extends State<BookingFormPage> {
                       onTap: pickDate,
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 200),
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 16,
+                        ),
                         decoration: BoxDecoration(
                           color: selectedDate != null
                               ? _primary.withOpacity(0.06)
@@ -409,22 +456,33 @@ class _BookingFormPageState extends State<BookingFormPage> {
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.event_rounded,
-                                color: selectedDate != null ? _primary : Colors.grey, size: 20),
+                            Icon(
+                              Icons.event_rounded,
+                              color: selectedDate != null
+                                  ? _primary
+                                  : Colors.grey,
+                              size: 20,
+                            ),
                             const SizedBox(width: 12),
                             Text(
                               selectedDate == null
                                   ? "Pilih tanggal keberangkatan"
                                   : formatDate(selectedDate!),
                               style: TextStyle(
-                                color: selectedDate != null ? _primary : Colors.grey,
+                                color: selectedDate != null
+                                    ? _primary
+                                    : Colors.grey,
                                 fontWeight: selectedDate != null
-                                    ? FontWeight.w600 : FontWeight.normal,
+                                    ? FontWeight.w600
+                                    : FontWeight.normal,
                                 fontSize: 14,
                               ),
                             ),
                             const Spacer(),
-                            Icon(Icons.chevron_right_rounded, color: Colors.grey.shade400),
+                            Icon(
+                              Icons.chevron_right_rounded,
+                              color: Colors.grey.shade400,
+                            ),
                           ],
                         ),
                       ),
@@ -433,7 +491,6 @@ class _BookingFormPageState extends State<BookingFormPage> {
 
                   const SizedBox(height: 14),
 
-                  /// JUMLAH PESERTA
                   _sectionCard(
                     icon: Icons.people_alt_rounded,
                     title: "Jumlah Peserta",
@@ -443,12 +500,16 @@ class _BookingFormPageState extends State<BookingFormPage> {
                         GestureDetector(
                           onTap: _decrement,
                           child: Container(
-                            width: 44, height: 44,
+                            width: 44,
+                            height: 44,
                             decoration: BoxDecoration(
                               color: _primary.withOpacity(0.08),
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: const Icon(Icons.remove_rounded, color: _primary),
+                            child: const Icon(
+                              Icons.remove_rounded,
+                              color: _primary,
+                            ),
                           ),
                         ),
                         Expanded(
@@ -456,13 +517,21 @@ class _BookingFormPageState extends State<BookingFormPage> {
                             controller: jumlahController,
                             keyboardType: TextInputType.number,
                             textAlign: TextAlign.center,
-                            style: const TextStyle(fontSize: 20,
-                                fontWeight: FontWeight.bold, color: _primary),
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: _primary,
+                            ),
                             decoration: const InputDecoration(
                               border: InputBorder.none,
-                              suffix: Text("orang",
-                                  style: TextStyle(fontSize: 13, color: Colors.grey,
-                                      fontWeight: FontWeight.normal)),
+                              suffix: Text(
+                                "orang",
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.normal,
+                                ),
+                              ),
                             ),
                             onChanged: (_) => setState(() {}),
                           ),
@@ -470,12 +539,16 @@ class _BookingFormPageState extends State<BookingFormPage> {
                         GestureDetector(
                           onTap: _increment,
                           child: Container(
-                            width: 44, height: 44,
+                            width: 44,
+                            height: 44,
                             decoration: BoxDecoration(
                               color: _primary,
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: const Icon(Icons.add_rounded, color: Colors.white),
+                            child: const Icon(
+                              Icons.add_rounded,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ],
@@ -484,7 +557,6 @@ class _BookingFormPageState extends State<BookingFormPage> {
 
                   const SizedBox(height: 14),
 
-                  // 🚌 PILIH BUS
                   _sectionCard(
                     icon: Icons.directions_bus_rounded,
                     title: "Pilih Bus",
@@ -494,192 +566,201 @@ class _BookingFormPageState extends State<BookingFormPage> {
                             child: Padding(
                               padding: EdgeInsets.symmetric(vertical: 12),
                               child: CircularProgressIndicator(
-                                  color: _primary, strokeWidth: 2),
+                                color: _primary,
+                                strokeWidth: 2,
+                              ),
                             ),
                           )
                         : selectedDate == null
-                            ? Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 12),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFF8F8F8),
-                                  borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(color: Colors.grey.shade200),
+                        ? Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 12,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF8F8F8),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: Colors.grey.shade200),
+                            ),
+                            child: const Row(
+                              children: [
+                                Icon(
+                                  Icons.info_outline_rounded,
+                                  color: Colors.grey,
+                                  size: 16,
                                 ),
-                                child: const Row(
-                                  children: [
-                                    Icon(Icons.info_outline_rounded,
-                                        color: Colors.grey, size: 16),
-                                    SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text(
-                                        "Pilih tanggal keberangkatan terlebih dahulu",
-                                        style: TextStyle(
-                                            color: Colors.grey, fontSize: 13),
-                                      ),
+                                SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    "Pilih tanggal keberangkatan terlebih dahulu",
+                                    style: TextStyle(
+                                      color: Colors.grey,
+                                      fontSize: 13,
                                     ),
-                                  ],
+                                  ),
                                 ),
-                              )
-                            : _busList.isEmpty
-                                ? Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 12, vertical: 12),
-                                    decoration: BoxDecoration(
-                                      color: Colors.orange.shade50,
-                                      borderRadius: BorderRadius.circular(10),
-                                      border: Border.all(
-                                          color: Colors.orange.shade200),
+                              ],
+                            ),
+                          )
+                        : _busList.isEmpty
+                        ? Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 12,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.shade50,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: Colors.orange.shade200),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.warning_amber_rounded,
+                                  color: Colors.orange.shade600,
+                                  size: 16,
+                                ),
+                                const SizedBox(width: 8),
+                                const Expanded(
+                                  child: Text(
+                                    "Tidak ada bus tersedia pada tanggal ini",
+                                    style: TextStyle(
+                                      color: Colors.orange,
+                                      fontSize: 13,
                                     ),
-                                    child: Row(
-                                      children: [
-                                        Icon(Icons.warning_amber_rounded,
-                                            color: Colors.orange.shade600,
-                                            size: 16),
-                                        const SizedBox(width: 8),
-                                        const Expanded(
-                                          child: Text(
-                                            "Tidak ada bus tersedia pada tanggal ini",
-                                            style: TextStyle(
-                                                color: Colors.orange, fontSize: 13),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : Column(
+                            children: _busList.map((bus) {
+                              final bool available = bus['available'] == true;
+                              final bool isSelected =
+                                  _selectedBus?['id'] == bus['id'];
+                              return GestureDetector(
+                                onTap: () {
+                                  if (!available) {
+                                    _showBusUnavailableDialog(bus);
+                                    return;
+                                  }
+                                  setState(() => _selectedBus = bus);
+                                },
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 200),
+                                  margin: const EdgeInsets.only(bottom: 8),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                    vertical: 12,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: !available
+                                        ? Colors.grey.shade100
+                                        : isSelected
+                                        ? _primary.withOpacity(0.07)
+                                        : const Color(0xFFF8F8F8),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: !available
+                                          ? Colors.grey.shade300
+                                          : isSelected
+                                          ? _primary
+                                          : Colors.grey.shade200,
+                                      width: isSelected ? 1.5 : 1,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 38,
+                                        height: 38,
+                                        decoration: BoxDecoration(
+                                          color: !available
+                                              ? Colors.grey.shade200
+                                              : isSelected
+                                              ? _primary.withOpacity(0.12)
+                                              : _primary.withOpacity(0.07),
+                                          borderRadius: BorderRadius.circular(
+                                            10,
                                           ),
                                         ),
-                                      ],
-                                    ),
-                                  )
-                                : Column(
-                                    children: _busList.map((bus) {
-                                      final bool available =
-                                          bus['available'] == true;
-                                      final bool isSelected =
-                                          _selectedBus?['id'] == bus['id'];
-                                      return GestureDetector(
-                                        onTap: () {
-                                          if (!available) {
-                                            _showBusUnavailableDialog(bus);
-                                            return;
-                                          }
-                                          setState(() => _selectedBus = bus);
-                                        },
-                                        child: AnimatedContainer(
-                                          duration:
-                                              const Duration(milliseconds: 200),
-                                          margin:
-                                              const EdgeInsets.only(bottom: 8),
+                                        child: Icon(
+                                          Icons.directions_bus_rounded,
+                                          color: !available
+                                              ? Colors.grey.shade400
+                                              : _primary,
+                                          size: 20,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              bus['name'] ?? '-',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.w600,
+                                                fontSize: 13,
+                                                color: !available
+                                                    ? Colors.grey
+                                                    : Colors.black87,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              "Kapasitas: ${bus['capacity']} kursi",
+                                              style: TextStyle(
+                                                fontSize: 11,
+                                                color: !available
+                                                    ? Colors.grey.shade400
+                                                    : Colors.grey,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      if (!available)
+                                        Container(
                                           padding: const EdgeInsets.symmetric(
-                                              horizontal: 14, vertical: 12),
+                                            horizontal: 8,
+                                            vertical: 4,
+                                          ),
                                           decoration: BoxDecoration(
-                                            color: !available
-                                                ? Colors.grey.shade100
-                                                : isSelected
-                                                    ? _primary.withOpacity(0.07)
-                                                    : const Color(0xFFF8F8F8),
-                                            borderRadius:
-                                                BorderRadius.circular(12),
+                                            color: Colors.red.shade50,
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
                                             border: Border.all(
-                                              color: !available
-                                                  ? Colors.grey.shade300
-                                                  : isSelected
-                                                      ? _primary
-                                                      : Colors.grey.shade200,
-                                              width: isSelected ? 1.5 : 1,
+                                              color: Colors.red.shade200,
                                             ),
                                           ),
-                                          child: Row(
-                                            children: [
-                                              Container(
-                                                width: 38,
-                                                height: 38,
-                                                decoration: BoxDecoration(
-                                                  color: !available
-                                                      ? Colors.grey.shade200
-                                                      : isSelected
-                                                          ? _primary
-                                                              .withOpacity(0.12)
-                                                          : _primary
-                                                              .withOpacity(0.07),
-                                                  borderRadius:
-                                                      BorderRadius.circular(10),
-                                                ),
-                                                child: Icon(
-                                                  Icons.directions_bus_rounded,
-                                                  color: !available
-                                                      ? Colors.grey.shade400
-                                                      : _primary,
-                                                  size: 20,
-                                                ),
-                                              ),
-                                              const SizedBox(width: 12),
-                                              Expanded(
-                                                child: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    Text(
-                                                      bus['name'] ?? '-',
-                                                      style: TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.w600,
-                                                        fontSize: 13,
-                                                        color: !available
-                                                            ? Colors.grey
-                                                            : Colors.black87,
-                                                      ),
-                                                    ),
-                                                    const SizedBox(height: 2),
-                                                    Text(
-                                                      "Kapasitas: ${bus['capacity']} kursi",
-                                                      style: TextStyle(
-                                                        fontSize: 11,
-                                                        color: !available
-                                                            ? Colors.grey.shade400
-                                                            : Colors.grey,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                              if (!available)
-                                                Container(
-                                                  padding: const EdgeInsets
-                                                      .symmetric(
-                                                      horizontal: 8,
-                                                      vertical: 4),
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.red.shade50,
-                                                    borderRadius:
-                                                        BorderRadius.circular(8),
-                                                    border: Border.all(
-                                                        color: Colors
-                                                            .red.shade200),
-                                                  ),
-                                                  child: Text(
-                                                    "Penuh",
-                                                    style: TextStyle(
-                                                        color:
-                                                            Colors.red.shade400,
-                                                        fontSize: 11,
-                                                        fontWeight:
-                                                            FontWeight.w600),
-                                                  ),
-                                                )
-                                              else if (isSelected)
-                                                const Icon(
-                                                  Icons.check_circle_rounded,
-                                                  color: _primary,
-                                                  size: 20,
-                                                ),
-                                            ],
+                                          child: Text(
+                                            "Penuh",
+                                            style: TextStyle(
+                                              color: Colors.red.shade400,
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w600,
+                                            ),
                                           ),
+                                        )
+                                      else if (isSelected)
+                                        const Icon(
+                                          Icons.check_circle_rounded,
+                                          color: _primary,
+                                          size: 20,
                                         ),
-                                      );
-                                    }).toList(),
+                                    ],
                                   ),
+                                ),
+                              );
+                            }).toList(),
+                          ),
                   ),
 
                   const SizedBox(height: 14),
 
-                  /// LOKASI PENJEMPUTAN
                   _sectionCard(
                     icon: Icons.location_on_rounded,
                     title: "Lokasi Penjemputan",
@@ -690,7 +771,10 @@ class _BookingFormPageState extends State<BookingFormPage> {
                           onTap: _openMapPicker,
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 200),
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 14,
+                            ),
                             decoration: BoxDecoration(
                               color: selectedLocation != null
                                   ? _primary.withOpacity(0.06)
@@ -705,24 +789,34 @@ class _BookingFormPageState extends State<BookingFormPage> {
                             ),
                             child: Row(
                               children: [
-                                Icon(Icons.map_rounded,
-                                    color: selectedLocation != null ? _primary : Colors.grey,
-                                    size: 20),
+                                Icon(
+                                  Icons.map_rounded,
+                                  color: selectedLocation != null
+                                      ? _primary
+                                      : Colors.grey,
+                                  size: 20,
+                                ),
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Text(
                                     selectedAddress ?? "Pilih lokasi di peta",
                                     style: TextStyle(
-                                      color: selectedLocation != null ? _primary : Colors.grey,
+                                      color: selectedLocation != null
+                                          ? _primary
+                                          : Colors.grey,
                                       fontWeight: selectedLocation != null
-                                          ? FontWeight.w600 : FontWeight.normal,
+                                          ? FontWeight.w600
+                                          : FontWeight.normal,
                                       fontSize: 13,
                                     ),
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
-                                Icon(Icons.chevron_right_rounded, color: Colors.grey.shade400),
+                                Icon(
+                                  Icons.chevron_right_rounded,
+                                  color: Colors.grey.shade400,
+                                ),
                               ],
                             ),
                           ),
@@ -738,21 +832,27 @@ class _BookingFormPageState extends State<BookingFormPage> {
                                   initialCenter: selectedLocation!,
                                   initialZoom: 15,
                                   interactionOptions: const InteractionOptions(
-                                      flags: InteractiveFlag.none),
+                                    flags: InteractiveFlag.none,
+                                  ),
                                 ),
                                 children: [
                                   TileLayer(
                                     urlTemplate:
                                         'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                                    userAgentPackageName: 'com.example.app88trans',
+                                    userAgentPackageName:
+                                        'com.example.app88trans',
                                   ),
                                   MarkerLayer(
                                     markers: [
                                       Marker(
                                         point: selectedLocation!,
-                                        width: 40, height: 40,
-                                        child: const Icon(Icons.location_pin,
-                                            color: _primary, size: 40),
+                                        width: 40,
+                                        height: 40,
+                                        child: const Icon(
+                                          Icons.location_pin,
+                                          color: _primary,
+                                          size: 40,
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -768,20 +868,30 @@ class _BookingFormPageState extends State<BookingFormPage> {
                           style: const TextStyle(fontSize: 13),
                           decoration: InputDecoration(
                             hintText: "Catatan tambahan (opsional)",
-                            hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13),
+                            hintStyle: TextStyle(
+                              color: Colors.grey.shade400,
+                              fontSize: 13,
+                            ),
                             filled: true,
                             fillColor: const Color(0xFFF8F8F8),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.grey.shade200),
+                              borderSide: BorderSide(
+                                color: Colors.grey.shade200,
+                              ),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.grey.shade200),
+                              borderSide: BorderSide(
+                                color: Colors.grey.shade200,
+                              ),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: _primary, width: 1.5),
+                              borderSide: const BorderSide(
+                                color: _primary,
+                                width: 1.5,
+                              ),
                             ),
                             contentPadding: const EdgeInsets.all(12),
                           ),
@@ -792,7 +902,6 @@ class _BookingFormPageState extends State<BookingFormPage> {
 
                   const SizedBox(height: 14),
 
-                  // 🔥 CARD KODE PROMO
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(16),
@@ -818,14 +927,20 @@ class _BookingFormPageState extends State<BookingFormPage> {
                                 color: _primary.withOpacity(0.08),
                                 borderRadius: BorderRadius.circular(10),
                               ),
-                              child: const Icon(Icons.local_offer_outlined,
-                                  color: _primary, size: 18),
+                              child: const Icon(
+                                Icons.local_offer_outlined,
+                                color: _primary,
+                                size: 18,
+                              ),
                             ),
                             const SizedBox(width: 10),
                             const Text(
                               "Kode Promo",
-                              style: TextStyle(fontWeight: FontWeight.w600,
-                                  fontSize: 14, color: Colors.black87),
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                                color: Colors.black87,
+                              ),
                             ),
                           ],
                         ),
@@ -834,40 +949,54 @@ class _BookingFormPageState extends State<BookingFormPage> {
                         if (activePromo != null) ...[
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 10),
+                              horizontal: 12,
+                              vertical: 10,
+                            ),
                             decoration: BoxDecoration(
                               color: const Color(0xFFE8F5E9),
                               borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: Colors.green.withOpacity(0.4)),
+                              border: Border.all(
+                                color: Colors.green.withOpacity(0.4),
+                              ),
                             ),
                             child: Row(
                               children: [
-                                const Icon(Icons.check_circle_rounded,
-                                    color: Colors.green, size: 18),
+                                const Icon(
+                                  Icons.check_circle_rounded,
+                                  color: Colors.green,
+                                  size: 18,
+                                ),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         activePromo!.title,
                                         style: const TextStyle(
-                                            color: Colors.green,
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 13),
+                                          color: Colors.green,
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 13,
+                                        ),
                                       ),
                                       Text(
                                         'Hemat ${activePromo!.discountLabel}',
                                         style: const TextStyle(
-                                            color: Colors.green, fontSize: 11),
+                                          color: Colors.green,
+                                          fontSize: 11,
+                                        ),
                                       ),
                                     ],
                                   ),
                                 ),
                                 GestureDetector(
                                   onTap: _removePromo,
-                                  child: const Icon(Icons.close_rounded,
-                                      color: Colors.red, size: 18),
+                                  child: const Icon(
+                                    Icons.close_rounded,
+                                    color: Colors.red,
+                                    size: 18,
+                                  ),
                                 ),
                               ],
                             ),
@@ -878,33 +1007,50 @@ class _BookingFormPageState extends State<BookingFormPage> {
                               Expanded(
                                 child: TextField(
                                   controller: _promoController,
-                                  textCapitalization: TextCapitalization.characters,
-                                  style: const TextStyle(fontSize: 14,
-                                      fontWeight: FontWeight.w600, letterSpacing: 1.2),
+                                  textCapitalization:
+                                      TextCapitalization.characters,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 1.2,
+                                  ),
                                   decoration: InputDecoration(
                                     hintText: "Contoh: DINERY",
                                     hintStyle: const TextStyle(
-                                        fontSize: 13, color: Colors.grey,
-                                        fontWeight: FontWeight.normal, letterSpacing: 0),
+                                      fontSize: 13,
+                                      color: Colors.grey,
+                                      fontWeight: FontWeight.normal,
+                                      letterSpacing: 0,
+                                    ),
                                     filled: true,
                                     fillColor: const Color(0xFFF7F7F7),
                                     contentPadding: const EdgeInsets.symmetric(
-                                        horizontal: 12, vertical: 12),
+                                      horizontal: 12,
+                                      vertical: 12,
+                                    ),
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(10),
-                                      borderSide: BorderSide(color: Colors.grey.shade300),
+                                      borderSide: BorderSide(
+                                        color: Colors.grey.shade300,
+                                      ),
                                     ),
                                     enabledBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(10),
-                                      borderSide: BorderSide(color: Colors.grey.shade300),
+                                      borderSide: BorderSide(
+                                        color: Colors.grey.shade300,
+                                      ),
                                     ),
                                     focusedBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(10),
-                                      borderSide: const BorderSide(color: _primary),
+                                      borderSide: const BorderSide(
+                                        color: _primary,
+                                      ),
                                     ),
                                     errorText: _promoError,
                                     errorStyle: const TextStyle(
-                                        fontSize: 11, color: Colors.red),
+                                      fontSize: 11,
+                                      color: Colors.red,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -912,23 +1058,35 @@ class _BookingFormPageState extends State<BookingFormPage> {
                               SizedBox(
                                 height: 48,
                                 child: ElevatedButton(
-                                  onPressed: isCheckingPromo ? null : _applyPromoCode,
+                                  onPressed: isCheckingPromo
+                                      ? null
+                                      : _applyPromoCode,
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: _primary,
                                     shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10)),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
                                     elevation: 0,
-                                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                    ),
                                   ),
                                   child: isCheckingPromo
                                       ? const SizedBox(
-                                          width: 18, height: 18,
+                                          width: 18,
+                                          height: 18,
                                           child: CircularProgressIndicator(
-                                              color: Colors.white, strokeWidth: 2),
+                                            color: Colors.white,
+                                            strokeWidth: 2,
+                                          ),
                                         )
-                                      : const Text("Pakai",
-                                          style: TextStyle(color: Colors.white,
-                                              fontWeight: FontWeight.w600)),
+                                      : const Text(
+                                          "Pakai",
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
                                 ),
                               ),
                             ],
@@ -939,8 +1097,6 @@ class _BookingFormPageState extends State<BookingFormPage> {
                   ),
 
                   const SizedBox(height: 30),
-
-                  /// BUTTON LANJUT
                   SizedBox(
                     width: double.infinity,
                     height: 54,
@@ -949,7 +1105,8 @@ class _BookingFormPageState extends State<BookingFormPage> {
                         backgroundColor: _primary,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14)),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
                       ),
                       onPressed: () {
                         if (selectedDate == null) {
@@ -961,23 +1118,30 @@ class _BookingFormPageState extends State<BookingFormPage> {
 
                         if (_selectedBus == null) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Pilih bus terlebih dahulu")),
+                            const SnackBar(
+                              content: Text("Pilih bus terlebih dahulu"),
+                            ),
                           );
                           return;
                         }
 
                         int jumlah = int.parse(jumlahController.text);
                         double harga = double.parse(
-                            widget.data['price_per_person'].toString());
+                          widget.data['price_per_person'].toString(),
+                        );
 
                         double discount = 0;
                         if (activePromo != null) {
-                          discount = activePromo!.discountType.trim().toLowerCase() == 'percent'
+                          discount =
+                              activePromo!.discountType.trim().toLowerCase() ==
+                                  'percent'
                               ? harga * (activePromo!.discountValue / 100)
                               : activePromo!.discountValue;
                         }
-                        double hargaFinal =
-                            (harga - discount).clamp(0, double.infinity);
+                        double hargaFinal = (harga - discount).clamp(
+                          0,
+                          double.infinity,
+                        );
                         double total = hargaFinal;
 
                         Navigator.push(
@@ -999,12 +1163,20 @@ class _BookingFormPageState extends State<BookingFormPage> {
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text("Lanjutkan",
-                              style: TextStyle(fontSize: 16,
-                                  fontWeight: FontWeight.bold, color: Colors.white)),
+                          Text(
+                            "Lanjutkan",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
                           SizedBox(width: 8),
-                          Icon(Icons.arrow_forward_rounded,
-                              color: Colors.white, size: 20),
+                          Icon(
+                            Icons.arrow_forward_rounded,
+                            color: Colors.white,
+                            size: 20,
+                          ),
                         ],
                       ),
                     ),
@@ -1054,13 +1226,23 @@ class _BookingFormPageState extends State<BookingFormPage> {
                 child: Icon(icon, color: _primary, size: 18),
               ),
               const SizedBox(width: 10),
-              Text(title,
-                  style: const TextStyle(fontWeight: FontWeight.w600,
-                      fontSize: 14, color: Colors.black87)),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                  color: Colors.black87,
+                ),
+              ),
               if (required) ...[
                 const SizedBox(width: 4),
-                const Text("*",
-                    style: TextStyle(color: _primary, fontWeight: FontWeight.bold)),
+                const Text(
+                  "*",
+                  style: TextStyle(
+                    color: _primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ],
           ),

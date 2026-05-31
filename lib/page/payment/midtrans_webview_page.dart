@@ -40,8 +40,6 @@ class _MidtransWebViewPageState extends State<MidtransWebViewPage> {
           onNavigationRequest: (request) {
             final url = request.url;
             debugPrint("NAVIGATING TO: $url");
-
-            // Deteksi hasil pembayaran dari URL callback Midtrans
             if (url.contains('transaction_status=settlement') ||
                 url.contains('transaction_status=capture')) {
               widget.onResult('settlement');
@@ -178,8 +176,8 @@ class _MidtransWebViewPageState extends State<MidtransWebViewPage> {
                     flex: 2,
                     child: ElevatedButton(
                       onPressed: () {
-                        Navigator.pop(context); // tutup dialog
-                        Navigator.pop(context); // tutup webview
+                        Navigator.pop(context);
+                        Navigator.pop(context); 
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: _primary,

@@ -459,8 +459,6 @@ class _PaketDetailPageState extends State<PaketDetailPage> {
       ),
     );
   }
-
-  // ── Section title ──────────────────────────────────────────────
   Widget _sectionTitle(String text) {
     return Row(
       children: [
@@ -484,8 +482,6 @@ class _PaketDetailPageState extends State<PaketDetailPage> {
       ],
     );
   }
-
-  // ── Fasilitas card ─────────────────────────────────────────────
   Widget _buildFasilitasCard({
     required String title,
     required IconData icon,
@@ -569,8 +565,6 @@ class _PaketDetailPageState extends State<PaketDetailPage> {
       ),
     );
   }
-
-  // ── Jaminan card ───────────────────────────────────────────────
   Widget _buildJaminanCard({
     required IconData icon,
     required Color iconColor,
@@ -638,8 +632,6 @@ class _PaketDetailPageState extends State<PaketDetailPage> {
       ),
     );
   }
-
-  // ── Harga normal ───────────────────────────────────────────────
   Widget _buildPriceNormal() {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -688,8 +680,6 @@ class _PaketDetailPageState extends State<PaketDetailPage> {
       ),
     );
   }
-
-  // ── Harga dengan promo ─────────────────────────────────────────
   Widget _buildPriceWithPromo() {
     return Container(
       decoration: BoxDecoration(

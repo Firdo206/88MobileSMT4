@@ -4,7 +4,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'api_service.dart';
 
 class RefundService {
-  /// ================= CHECK REFUND =================
   static Future<Map<String, dynamic>> checkRefund({
     required int bookingId,
     required int userId,
@@ -22,8 +21,6 @@ class RefundService {
       throw data["message"] ?? "Gagal check refund";
     }
   }
-
-  /// ================= SUBMIT REFUND =================
   static Future<Map<String, dynamic>> submitRefund({
     required int bookingId,
     required int userId,
@@ -32,13 +29,6 @@ class RefundService {
     required String accountNumber,
     required String accountName,
   }) async {
-    // ← TAMBAH SEMENTARA
-    print("=== SUBMIT REFUND ===");
-    print("bookingId: $bookingId");
-    print("userId: $userId");
-    print("reason: $reason");
-    print("====================");
-
     final response = await http.post(
       Uri.parse("${ApiService.refundSubmit}/$bookingId"),
       headers: {'Accept': 'application/json'},
@@ -51,19 +41,13 @@ class RefundService {
       },
     );
 
-    // ← TAMBAH SEMENTARA
-    print("=== RESPONSE ===");
-    print("status: ${response.statusCode}");
-    print("body: ${response.body}");
-    print("================");
-
     final data = jsonDecode(response.body);
 
     if (response.statusCode == 200) {
       return data;
     } else {
       final message = data["message"]?.toString() ?? "Refund gagal";
-      throw message; // ← casting ke String dulu
+      throw message;
     }
   }
 }

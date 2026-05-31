@@ -40,7 +40,6 @@ class Promo {
   });
 
   factory Promo.fromJson(Map<String, dynamic> json) {
-    // Helper — handle String / int / double / null dari MySQL decimal
     double? parseDouble(dynamic val) {
       if (val == null) return null;
       if (val is double) return val;

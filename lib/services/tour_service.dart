@@ -17,8 +17,6 @@ class TourService {
       throw Exception("Gagal ambil data");
     }
   }
-
-  
   static Future<Map<String, dynamic>> getTourDetail(int id) async {
     final response = await http.get(
       Uri.parse("${ApiService.baseUrl}/tour-packages/$id"),

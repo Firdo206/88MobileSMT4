@@ -40,7 +40,7 @@ class _PassengerPageState extends State<PassengerPage> {
   int? userId;
   bool isLoading = false;
   bool isCheckingPromo = false;
-  Promo? _appliedPromo; // promo yang berhasil divalidasi
+  Promo? _appliedPromo;
   String? _promoError;
 
   static const Color _primary = Color(0xFF7B2D2D);
@@ -48,7 +48,6 @@ class _PassengerPageState extends State<PassengerPage> {
   double get pricePerSeat =>
       double.tryParse(widget.price?.toString() ?? '0') ?? 0;
 
-  // Gunakan _appliedPromo jika ada, fallback ke widget.promo
   Promo? get activePromo => _appliedPromo ?? widget.promo;
 
   double get discountPerSeat {
@@ -62,20 +61,24 @@ class _PassengerPageState extends State<PassengerPage> {
   double get finalPricePerSeat =>
       (pricePerSeat - discountPerSeat).clamp(0, double.infinity);
 
-  double get totalFinalPrice =>
-      finalPricePerSeat * widget.selectedSeats.length;
+  double get totalFinalPrice => finalPricePerSeat * widget.selectedSeats.length;
 
   @override
   void initState() {
     super.initState();
     nameControllers = List.generate(
-        widget.selectedSeats.length, (_) => TextEditingController());
+      widget.selectedSeats.length,
+      (_) => TextEditingController(),
+    );
     ktpControllers = List.generate(
-        widget.selectedSeats.length, (_) => TextEditingController());
+      widget.selectedSeats.length,
+      (_) => TextEditingController(),
+    );
     phoneControllers = List.generate(
-        widget.selectedSeats.length, (_) => TextEditingController());
+      widget.selectedSeats.length,
+      (_) => TextEditingController(),
+    );
 
-    // Jika sudah ada promo dari halaman sebelumnya, isi otomatis
     if (widget.promo?.promoCode != null) {
       _promoController.text = widget.promo!.promoCode!;
     }
@@ -101,94 +104,91 @@ class _PassengerPageState extends State<PassengerPage> {
     });
   }
 
-  // Validasi kode promo ke API
- Future<void> _applyPromoCode() async {
-  final code = _promoController.text.trim().toUpperCase();
-  if (code.isEmpty) {
-    setState(() => _promoError = "Masukkan kode promo terlebih dahulu");
-    return;
-  }
-
-  setState(() {
-    isCheckingPromo = true;
-    _promoError = null;
-    _appliedPromo = null;
-  });
-
-  try {
-    // Step 1: Ambil semua promo aktif, cari yang cocok dengan kode
-    final listResponse = await http.get(
-      Uri.parse("${ApiService.baseUrl}/promo/active"),
-      headers: {"Accept": "application/json"},
-    );
-
-    print("PROMO LIST STATUS: ${listResponse.statusCode}");
-    print("PROMO LIST BODY: ${listResponse.body}");
-
-    if (listResponse.statusCode != 200) {
-      setState(() => _promoError = "Gagal mengambil data promo");
+  Future<void> _applyPromoCode() async {
+    final code = _promoController.text.trim().toUpperCase();
+    if (code.isEmpty) {
+      setState(() => _promoError = "Masukkan kode promo terlebih dahulu");
       return;
     }
 
-    final listData = jsonDecode(listResponse.body);
-    final List promos = listData['data'] ?? [];
+    setState(() {
+      isCheckingPromo = true;
+      _promoError = null;
+      _appliedPromo = null;
+    });
 
-    // Cari promo by kode
-    final matched = promos.firstWhere(
-      (p) => (p['promo_code'] ?? '').toString().toUpperCase() == code,
-      orElse: () => null,
-    );
-
-    if (matched == null) {
-      setState(() => _promoError = "Kode promo tidak ditemukan");
-      return;
-    }
-
-    final promoId = matched['id'];
-    final originalPrice = pricePerSeat * widget.selectedSeats.length;
-
-    // Step 2: Apply promo
-    final applyResponse = await http.post(
-      Uri.parse("${ApiService.baseUrl}/promo/apply"),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({
-        "promo_id": promoId,
-        "original_price": originalPrice,
-        "user_id": userId,
-      }),
-    );
-
-    print("APPLY STATUS: ${applyResponse.statusCode}");
-    print("APPLY BODY: ${applyResponse.body}");
-
-    final applyData = jsonDecode(applyResponse.body);
-
-    if (applyResponse.statusCode == 200 && applyData['success'] == true) {
-      // Buat objek Promo dari data matched
-      final promo = Promo.fromJson(matched);
-      setState(() {
-        _appliedPromo = promo;
-        _promoError = null;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Promo "${promo.title}" berhasil diterapkan! Hemat ${promo.discountLabel}'),
-          backgroundColor: Colors.green,
-        ),
+    try {
+      final listResponse = await http.get(
+        Uri.parse("${ApiService.baseUrl}/promo/active"),
+        headers: {"Accept": "application/json"},
       );
-    } else {
-      setState(() {
-        _promoError = applyData['message'] ?? "Promo tidak dapat diterapkan";
-        _appliedPromo = null;
-      });
+
+      print("PROMO LIST STATUS: ${listResponse.statusCode}");
+      print("PROMO LIST BODY: ${listResponse.body}");
+
+      if (listResponse.statusCode != 200) {
+        setState(() => _promoError = "Gagal mengambil data promo");
+        return;
+      }
+
+      final listData = jsonDecode(listResponse.body);
+      final List promos = listData['data'] ?? [];
+
+      final matched = promos.firstWhere(
+        (p) => (p['promo_code'] ?? '').toString().toUpperCase() == code,
+        orElse: () => null,
+      );
+
+      if (matched == null) {
+        setState(() => _promoError = "Kode promo tidak ditemukan");
+        return;
+      }
+
+      final promoId = matched['id'];
+      final originalPrice = pricePerSeat * widget.selectedSeats.length;
+
+      final applyResponse = await http.post(
+        Uri.parse("${ApiService.baseUrl}/promo/apply"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "promo_id": promoId,
+          "original_price": originalPrice,
+          "user_id": userId,
+        }),
+      );
+
+      print("APPLY STATUS: ${applyResponse.statusCode}");
+      print("APPLY BODY: ${applyResponse.body}");
+
+      final applyData = jsonDecode(applyResponse.body);
+
+      if (applyResponse.statusCode == 200 && applyData['success'] == true) {
+        final promo = Promo.fromJson(matched);
+        setState(() {
+          _appliedPromo = promo;
+          _promoError = null;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Promo "${promo.title}" berhasil diterapkan! Hemat ${promo.discountLabel}',
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        setState(() {
+          _promoError = applyData['message'] ?? "Promo tidak dapat diterapkan";
+          _appliedPromo = null;
+        });
+      }
+    } catch (e) {
+      print("ERROR: $e");
+      setState(() => _promoError = "Terjadi kesalahan, coba lagi");
+    } finally {
+      setState(() => isCheckingPromo = false);
     }
-  } catch (e) {
-    print("ERROR: $e");
-    setState(() => _promoError = "Terjadi kesalahan, coba lagi");
-  } finally {
-    setState(() => isCheckingPromo = false);
   }
-}
 
   void _removePromo() {
     setState(() {
@@ -203,8 +203,10 @@ class _PassengerPageState extends State<PassengerPage> {
       if (nameControllers[i].text.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text(
-                  "Nama penumpang kursi ${widget.selectedSeats[i]} wajib diisi")),
+            content: Text(
+              "Nama penumpang kursi ${widget.selectedSeats[i]} wajib diisi",
+            ),
+          ),
         );
         return;
       }
@@ -213,7 +215,8 @@ class _PassengerPageState extends State<PassengerPage> {
     if (userId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: Text("User tidak ditemukan, silakan login ulang")),
+          content: Text("User tidak ditemukan, silakan login ulang"),
+        ),
       );
       return;
     }
@@ -221,13 +224,15 @@ class _PassengerPageState extends State<PassengerPage> {
     setState(() => isLoading = true);
 
     try {
-      final List passengers =
-          List.generate(widget.selectedSeats.length, (i) => {
-                "seat": widget.selectedSeats[i],
-                "passenger_name": nameControllers[i].text,
-                "phone": phoneControllers[i].text,
-                "ktp": ktpControllers[i].text,
-              });
+      final List passengers = List.generate(
+        widget.selectedSeats.length,
+        (i) => {
+          "seat": widget.selectedSeats[i],
+          "passenger_name": nameControllers[i].text,
+          "phone": phoneControllers[i].text,
+          "ktp": ktpControllers[i].text,
+        },
+      );
 
       final Map<String, dynamic> requestBody = {
         "user_id": userId,
@@ -240,16 +245,17 @@ class _PassengerPageState extends State<PassengerPage> {
 
       if (activePromo != null) {
         requestBody["promo_id"] = activePromo!.id;
-        requestBody["promo_title"] = activePromo!.title; 
+        requestBody["promo_title"] = activePromo!.title;
         requestBody["final_price"] = totalFinalPrice;
-        requestBody["discount_amount"] = discountPerSeat * widget.selectedSeats.length;
+        requestBody["discount_amount"] =
+            discountPerSeat * widget.selectedSeats.length;
       }
 
       final response = await http.post(
         Uri.parse("${ApiService.baseUrl}/book-seats"),
         headers: {
           "Content-Type": "application/json",
-          "Accept": "application/json"
+          "Accept": "application/json",
         },
         body: jsonEncode(requestBody),
       );
@@ -293,12 +299,13 @@ class _PassengerPageState extends State<PassengerPage> {
                     apiData['departure_date'] ?? widget.departureDate,
                 'passenger_name': nameControllers[0].text,
                 'passengers': List.generate(
-                    widget.selectedSeats.length,
-                    (i) => {
-                          'seat': widget.selectedSeats[i],
-                          'passenger_name': nameControllers[i].text,
-                          'phone': phoneControllers[i].text,
-                        }),
+                  widget.selectedSeats.length,
+                  (i) => {
+                    'seat': widget.selectedSeats[i],
+                    'passenger_name': nameControllers[i].text,
+                    'phone': phoneControllers[i].text,
+                  },
+                ),
                 if (activePromo != null) 'promo_title': activePromo!.title,
                 if (activePromo != null)
                   'discount_amount':
@@ -316,9 +323,9 @@ class _PassengerPageState extends State<PassengerPage> {
     } catch (e) {
       setState(() => isLoading = false);
       print("ERROR: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Terjadi kesalahan server")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Terjadi kesalahan server")));
     }
   }
 
@@ -339,7 +346,10 @@ class _PassengerPageState extends State<PassengerPage> {
         title: const Text(
           "Pesan Tiket",
           style: TextStyle(
-              color: Colors.black87, fontWeight: FontWeight.w600, fontSize: 16),
+            color: Colors.black87,
+            fontWeight: FontWeight.w600,
+            fontSize: 16,
+          ),
         ),
         backgroundColor: Colors.white,
         elevation: 0,
@@ -351,8 +361,7 @@ class _PassengerPageState extends State<PassengerPage> {
           _StepIndicator(currentStep: 2),
           Expanded(
             child: SingleChildScrollView(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -413,7 +422,9 @@ class _PassengerPageState extends State<PassengerPage> {
                                     const Text(
                                       "Otomatis dari akun kamu",
                                       style: TextStyle(
-                                          fontSize: 11, color: Colors.grey),
+                                        fontSize: 11,
+                                        color: Colors.grey,
+                                      ),
                                     ),
                                 ],
                               ),
@@ -429,7 +440,9 @@ class _PassengerPageState extends State<PassengerPage> {
                           ),
                           const SizedBox(height: 14),
                           _FormLabel(
-                              label: "No.KTP/Identitas", required: false),
+                            label: "No.KTP/Identitas",
+                            required: false,
+                          ),
                           const SizedBox(height: 6),
                           _InputField(
                             controller: ktpControllers[i],
@@ -448,7 +461,6 @@ class _PassengerPageState extends State<PassengerPage> {
                     );
                   }),
 
-                  // ── Kolom Input Kode Promo ──────────────────────────────
                   Container(
                     width: double.infinity,
                     margin: const EdgeInsets.only(bottom: 14),
@@ -469,8 +481,11 @@ class _PassengerPageState extends State<PassengerPage> {
                       children: [
                         const Row(
                           children: [
-                            Icon(Icons.local_offer_outlined,
-                                color: _primary, size: 16),
+                            Icon(
+                              Icons.local_offer_outlined,
+                              color: _primary,
+                              size: 16,
+                            ),
                             SizedBox(width: 6),
                             Text(
                               "Kode Promo",
@@ -484,21 +499,26 @@ class _PassengerPageState extends State<PassengerPage> {
                         ),
                         const SizedBox(height: 10),
 
-                        // Jika promo sudah diterapkan
                         if (activePromo != null) ...[
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 10),
+                              horizontal: 12,
+                              vertical: 10,
+                            ),
                             decoration: BoxDecoration(
                               color: const Color(0xFFE8F5E9),
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(
-                                  color: Colors.green.withOpacity(0.4)),
+                                color: Colors.green.withOpacity(0.4),
+                              ),
                             ),
                             child: Row(
                               children: [
-                                const Icon(Icons.check_circle_rounded,
-                                    color: Colors.green, size: 18),
+                                const Icon(
+                                  Icons.check_circle_rounded,
+                                  color: Colors.green,
+                                  size: 18,
+                                ),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Column(
@@ -525,14 +545,16 @@ class _PassengerPageState extends State<PassengerPage> {
                                 ),
                                 GestureDetector(
                                   onTap: _removePromo,
-                                  child: const Icon(Icons.close_rounded,
-                                      color: Colors.red, size: 18),
+                                  child: const Icon(
+                                    Icons.close_rounded,
+                                    color: Colors.red,
+                                    size: 18,
+                                  ),
                                 ),
                               ],
                             ),
                           ),
                         ] else ...[
-                          // Input + tombol pakai
                           Row(
                             children: [
                               Expanded(
@@ -541,42 +563,47 @@ class _PassengerPageState extends State<PassengerPage> {
                                   textCapitalization:
                                       TextCapitalization.characters,
                                   style: const TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      letterSpacing: 1.2),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 1.2,
+                                  ),
                                   decoration: InputDecoration(
                                     hintText: "Contoh: DINERY",
                                     hintStyle: const TextStyle(
-                                        fontSize: 13,
-                                        color: Colors.grey,
-                                        fontWeight: FontWeight.normal,
-                                        letterSpacing: 0),
+                                      fontSize: 13,
+                                      color: Colors.grey,
+                                      fontWeight: FontWeight.normal,
+                                      letterSpacing: 0,
+                                    ),
                                     filled: true,
                                     fillColor: const Color(0xFFF7F7F7),
-                                    contentPadding:
-                                        const EdgeInsets.symmetric(
-                                            horizontal: 12, vertical: 12),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 12,
+                                    ),
                                     border: OutlineInputBorder(
-                                      borderRadius:
-                                          BorderRadius.circular(10),
+                                      borderRadius: BorderRadius.circular(10),
                                       borderSide: BorderSide(
-                                          color: Colors.grey.shade300),
+                                        color: Colors.grey.shade300,
+                                      ),
                                     ),
                                     enabledBorder: OutlineInputBorder(
-                                      borderRadius:
-                                          BorderRadius.circular(10),
+                                      borderRadius: BorderRadius.circular(10),
                                       borderSide: BorderSide(
-                                          color: Colors.grey.shade300),
+                                        color: Colors.grey.shade300,
+                                      ),
                                     ),
                                     focusedBorder: OutlineInputBorder(
-                                      borderRadius:
-                                          BorderRadius.circular(10),
+                                      borderRadius: BorderRadius.circular(10),
                                       borderSide: const BorderSide(
-                                          color: _primary),
+                                        color: _primary,
+                                      ),
                                     ),
                                     errorText: _promoError,
                                     errorStyle: const TextStyle(
-                                        fontSize: 11, color: Colors.red),
+                                      fontSize: 11,
+                                      color: Colors.red,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -590,25 +617,28 @@ class _PassengerPageState extends State<PassengerPage> {
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: _primary,
                                     shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(10)),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
                                     elevation: 0,
                                     padding: const EdgeInsets.symmetric(
-                                        horizontal: 16),
+                                      horizontal: 16,
+                                    ),
                                   ),
                                   child: isCheckingPromo
                                       ? const SizedBox(
                                           width: 18,
                                           height: 18,
                                           child: CircularProgressIndicator(
-                                              color: Colors.white,
-                                              strokeWidth: 2),
+                                            color: Colors.white,
+                                            strokeWidth: 2,
+                                          ),
                                         )
                                       : const Text(
                                           "Pakai",
                                           style: TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.w600),
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w600,
+                                          ),
                                         ),
                                 ),
                               ),
@@ -622,8 +652,9 @@ class _PassengerPageState extends State<PassengerPage> {
                   _PriceSummaryCard(
                     selectedSeats: widget.selectedSeats,
                     pricePerSeat: widget.price,
-                    finalPricePerSeat:
-                        activePromo != null ? finalPricePerSeat : null,
+                    finalPricePerSeat: activePromo != null
+                        ? finalPricePerSeat
+                        : null,
                     discountAmount: activePromo != null
                         ? discountPerSeat * widget.selectedSeats.length
                         : null,
@@ -649,7 +680,8 @@ class _PassengerPageState extends State<PassengerPage> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _primary,
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   elevation: 0,
                 ),
                 child: isLoading
@@ -657,7 +689,9 @@ class _PassengerPageState extends State<PassengerPage> {
                         width: 22,
                         height: 22,
                         child: CircularProgressIndicator(
-                            color: Colors.white, strokeWidth: 2),
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
                       )
                     : const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -665,13 +699,17 @@ class _PassengerPageState extends State<PassengerPage> {
                           Text(
                             "Lanjutkan",
                             style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white),
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
                           ),
                           SizedBox(width: 6),
-                          Icon(Icons.arrow_forward,
-                              color: Colors.white, size: 18),
+                          Icon(
+                            Icons.arrow_forward,
+                            color: Colors.white,
+                            size: 18,
+                          ),
                         ],
                       ),
               ),
@@ -683,7 +721,6 @@ class _PassengerPageState extends State<PassengerPage> {
   }
 }
 
-// ── Step Indicator ────────────────────────────────────────────────────────────
 class _StepIndicator extends StatelessWidget {
   final int currentStep;
   const _StepIndicator({required this.currentStep});
@@ -697,38 +734,41 @@ class _StepIndicator extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Expanded(
-              child: Container(height: 1.5, color: const Color(0xFF7B2D2D))),
+            child: Container(height: 1.5, color: const Color(0xFF7B2D2D)),
+          ),
           Container(
             width: 32,
             height: 32,
             decoration: const BoxDecoration(
-                color: Color(0xFF7B2D2D), shape: BoxShape.circle),
+              color: Color(0xFF7B2D2D),
+              shape: BoxShape.circle,
+            ),
             alignment: Alignment.center,
             child: Text(
               "$currentStep",
               style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold),
+                color: Colors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
           const SizedBox(width: 8),
           const Text(
             "Data Penumpang",
             style: TextStyle(
-                color: Color(0xFF7B2D2D),
-                fontSize: 13,
-                fontWeight: FontWeight.w600),
+              color: Color(0xFF7B2D2D),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
           ),
-          Expanded(
-              child: Container(height: 1.5, color: Colors.grey.shade300)),
+          Expanded(child: Container(height: 1.5, color: Colors.grey.shade300)),
         ],
       ),
     );
   }
 }
 
-// ── Form Label ────────────────────────────────────────────────────────────────
 class _FormLabel extends StatelessWidget {
   final String label;
   final bool required;
@@ -740,11 +780,16 @@ class _FormLabel extends StatelessWidget {
       text: TextSpan(
         text: label,
         style: const TextStyle(
-            fontSize: 13, fontWeight: FontWeight.w500, color: Colors.black87),
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+          color: Colors.black87,
+        ),
         children: required
             ? const [
                 TextSpan(
-                    text: " *", style: TextStyle(color: Color(0xFF7B2D2D)))
+                  text: " *",
+                  style: TextStyle(color: Color(0xFF7B2D2D)),
+                ),
               ]
             : [],
       ),
@@ -752,7 +797,6 @@ class _FormLabel extends StatelessWidget {
   }
 }
 
-// ── Input Field ───────────────────────────────────────────────────────────────
 class _InputField extends StatelessWidget {
   final TextEditingController controller;
   final String hint;
@@ -774,10 +818,11 @@ class _InputField extends StatelessWidget {
         hintText: hint,
         hintStyle: const TextStyle(fontSize: 14, color: Colors.grey),
         filled: true,
-        fillColor:
-            readOnly ? const Color(0xFFEEEEEE) : const Color(0xFFF7F7F7),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        fillColor: readOnly ? const Color(0xFFEEEEEE) : const Color(0xFFF7F7F7),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 12,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
           borderSide: BorderSide(color: Colors.grey.shade300),
@@ -795,7 +840,6 @@ class _InputField extends StatelessWidget {
   }
 }
 
-// ── Price Summary Card ────────────────────────────────────────────────────────
 class _PriceSummaryCard extends StatelessWidget {
   final List selectedSeats;
   final dynamic pricePerSeat;
@@ -846,30 +890,40 @@ class _PriceSummaryCard extends StatelessWidget {
           const SizedBox(height: 8),
           Row(
             children: [
-              Text(origin ?? '-',
-                  style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87)),
+              Text(
+                origin ?? '-',
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
+              ),
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 6),
-                child: Icon(Icons.arrow_forward,
-                    size: 14, color: Colors.black54),
+                child: Icon(
+                  Icons.arrow_forward,
+                  size: 14,
+                  color: Colors.black54,
+                ),
               ),
-              Text(destination ?? '-',
-                  style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87)),
+              Text(
+                destination ?? '-',
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 4),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(departureDate ?? '',
-                  style: const TextStyle(
-                      fontSize: 12, color: Colors.black54)),
+              Text(
+                departureDate ?? '',
+                style: const TextStyle(fontSize: 12, color: Colors.black54),
+              ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
@@ -885,8 +939,7 @@ class _PriceSummaryCard extends StatelessWidget {
                   if (discountAmount != null)
                     Text(
                       '- ${formatPrice(discountAmount!.toInt())}',
-                      style: const TextStyle(
-                          fontSize: 12, color: Colors.green),
+                      style: const TextStyle(fontSize: 12, color: Colors.green),
                     ),
                   Text(
                     formatPrice(totalFinal),

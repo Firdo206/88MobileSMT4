@@ -93,9 +93,9 @@ class _TransferPageState extends State<TransferPage> {
          Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(
-              builder: (_) => const MainPage(initialIndex: 2), // ✅ langsung ke tab Pesanan
+              builder: (_) => const MainPage(initialIndex: 2),
             ),
-            (route) => false, // ✅ hapus semua route
+            (route) => false,
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -134,7 +134,7 @@ class _TransferPageState extends State<TransferPage> {
         child: Column(
           children: [
 
-            // ── Info Rekening ─────────────────────────────
+
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
@@ -182,7 +182,7 @@ class _TransferPageState extends State<TransferPage> {
 
             const SizedBox(height: 16),
 
-            // ── Kode Booking & Total ──────────────────────
+
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
@@ -193,7 +193,7 @@ class _TransferPageState extends State<TransferPage> {
               ),
               child: Column(
                 children: [
-                  // Kode Booking
+
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -225,7 +225,7 @@ class _TransferPageState extends State<TransferPage> {
                     child: Divider(height: 1, color: Color(0xFFF0F0F0)),
                   ),
 
-                  // Total
+
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -249,7 +249,7 @@ class _TransferPageState extends State<TransferPage> {
 
             const SizedBox(height: 16),
 
-            // ── Upload Bukti ──────────────────────────────
+
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
@@ -271,7 +271,7 @@ class _TransferPageState extends State<TransferPage> {
                   ),
                   const SizedBox(height: 12),
 
-                  // Area upload
+
                   GestureDetector(
                     onTap: pickImage,
                     child: Container(
@@ -337,7 +337,7 @@ class _TransferPageState extends State<TransferPage> {
 
             const SizedBox(height: 24),
 
-            // ── Tombol Kirim ──────────────────────────────
+
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(

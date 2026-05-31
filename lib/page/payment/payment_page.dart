@@ -32,11 +32,6 @@ class _PaymentPageState extends State<PaymentPage> {
 
   final _appLinks = AppLinks();
   StreamSubscription? _linkSub;
-
-  // ─────────────────────────────────────────
-  // HELPERS
-  // ─────────────────────────────────────────
-
   String safe(dynamic val) => val?.toString() ?? "-";
 
   String formatPrice(int price) {
@@ -108,25 +103,21 @@ class _PaymentPageState extends State<PaymentPage> {
       }
     });
   }
-
-  // ─────────────────────────────────────────
-  // COUNTDOWN
-  // ─────────────────────────────────────────
-
   DateTime? _parseDateTime(dynamic raw) {
     if (raw == null) return null;
     final str = raw.toString().trim();
     if (str.isEmpty) return null;
     return DateTime.tryParse(str);
   }
-
   void _startCountdown() {
     DateTime? expiry = _parseDateTime(widget.data['expired_at']);
     if (expiry == null) {
       final created = _parseDateTime(widget.data['created_at']);
       if (created != null) {
         expiry = created.add(const Duration(hours: 1));
-        debugPrint("TIMER: expired_at tidak ada, pakai created_at + 1 jam => $expiry");
+        debugPrint(
+          "TIMER: expired_at tidak ada, pakai created_at + 1 jam => $expiry",
+        );
       }
     }
 
@@ -166,11 +157,6 @@ class _PaymentPageState extends State<PaymentPage> {
     final s = (d.inSeconds % 60).toString().padLeft(2, '0');
     return '$h:$m:$s';
   }
-
-  // ─────────────────────────────────────────
-  // MIDTRANS — pakai WebView
-  // ─────────────────────────────────────────
-
   Future<String?> _getSnapToken(int id) async {
     try {
       final endpoint = type == "tour"
@@ -242,7 +228,7 @@ class _PaymentPageState extends State<PaymentPage> {
                 ),
               );
             }
-            // cancel → tidak perlu action
+
           },
         ),
       ),
@@ -250,11 +236,6 @@ class _PaymentPageState extends State<PaymentPage> {
 
     if (mounted) setState(() => _sudahBayar = true);
   }
-
-  // ─────────────────────────────────────────
-  // CEK STATUS PEMBAYARAN
-  // ─────────────────────────────────────────
-
   Future<void> _checkStatus() async {
     if (_isLoadingCheck) return;
     if (mounted) setState(() => _isLoadingCheck = true);
@@ -291,11 +272,6 @@ class _PaymentPageState extends State<PaymentPage> {
       (route) => false,
     );
   }
-
-  // ─────────────────────────────────────────
-  // EXIT DIALOG
-  // ─────────────────────────────────────────
-
   Future<bool> _showExitDialog() async {
     return await showDialog<bool>(
           context: context,
@@ -381,7 +357,6 @@ class _PaymentPageState extends State<PaymentPage> {
         ) ??
         false;
   }
-
   Future<void> _handleBack() async {
     final keluar = await _showExitDialog();
     if (keluar && mounted) {
@@ -393,9 +368,9 @@ class _PaymentPageState extends State<PaymentPage> {
     }
   }
 
-  // ─────────────────────────────────────────
-  // BUILD
-  // ─────────────────────────────────────────
+
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -584,7 +559,7 @@ class _PaymentPageState extends State<PaymentPage> {
               ),
             ),
 
-            // ── TOMBOL BAYAR ──
+
             Container(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
               decoration: BoxDecoration(
@@ -606,8 +581,8 @@ class _PaymentPageState extends State<PaymentPage> {
                     child: ElevatedButton(
                       onPressed:
                           (_isExpired || _isLoadingMidtrans || _tokenRequested)
-                              ? null
-                              : _openMidtrans,
+                          ? null
+                          : _openMidtrans,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primary,
                         elevation: 0,
@@ -617,8 +592,7 @@ class _PaymentPageState extends State<PaymentPage> {
                         disabledBackgroundColor: Colors.grey.shade300,
                       ),
                       child: _isLoadingMidtrans
-                          ? const CircularProgressIndicator(
-                              color: Colors.white)
+                          ? const CircularProgressIndicator(color: Colors.white)
                           : const Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
@@ -683,9 +657,9 @@ class _PaymentPageState extends State<PaymentPage> {
     );
   }
 
-  // ─────────────────────────────────────────
-  // WIDGET HELPERS
-  // ─────────────────────────────────────────
+
+
+
 
   Widget _buildTimer() {
     return Container(
@@ -695,8 +669,7 @@ class _PaymentPageState extends State<PaymentPage> {
         color: _isExpired ? const Color(0xFFFFEBEE) : Colors.orange.shade50,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color:
-              _isExpired ? const Color(0xFFEF9A9A) : Colors.orange.shade200,
+          color: _isExpired ? const Color(0xFFEF9A9A) : Colors.orange.shade200,
         ),
       ),
       child: Row(
@@ -704,7 +677,9 @@ class _PaymentPageState extends State<PaymentPage> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: (_isExpired ? Colors.red : Colors.orange).withOpacity(0.15),
+              color: (_isExpired ? Colors.red : Colors.orange).withOpacity(
+                0.15,
+              ),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
@@ -735,8 +710,7 @@ class _PaymentPageState extends State<PaymentPage> {
           if (!_isExpired) ...[
             const SizedBox(width: 8),
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
                 color: Colors.orange.shade700,
                 borderRadius: BorderRadius.circular(8),

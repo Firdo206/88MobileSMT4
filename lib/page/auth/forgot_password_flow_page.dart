@@ -4,23 +4,17 @@ import '../../services/auth_service.dart';
 
 class ForgotPasswordFlowPage extends StatefulWidget {
   final String email;
-
   const ForgotPasswordFlowPage({super.key, required this.email});
-
   @override
   State<ForgotPasswordFlowPage> createState() => _ForgotPasswordFlowPageState();
 }
-
 class _ForgotPasswordFlowPageState extends State<ForgotPasswordFlowPage>
     with SingleTickerProviderStateMixin {
   int step = 1;
-
   final TextEditingController otpController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-
   bool isLoading = false;
   bool isPasswordHidden = true;
-
   late AnimationController _animController;
   late Animation<double> _fadeAnim;
   late Animation<Offset> _slideAnim;
@@ -55,7 +49,6 @@ class _ForgotPasswordFlowPageState extends State<ForgotPasswordFlowPage>
     _animController.forward();
   }
 
-  // STEP 1 → VERIFY OTP
   void verifyOtp() async {
     setState(() => isLoading = true);
 
@@ -74,7 +67,6 @@ class _ForgotPasswordFlowPageState extends State<ForgotPasswordFlowPage>
     }
   }
 
-  // STEP 2 → RESET PASSWORD
   void resetPassword() async {
     setState(() => isLoading = true);
 
@@ -129,7 +121,6 @@ class _ForgotPasswordFlowPageState extends State<ForgotPasswordFlowPage>
               position: _slideAnim,
               child: Column(
                 children: [
-                  // ── LOGO + ICON ───────────────────────────────
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 28),
@@ -157,7 +148,6 @@ class _ForgotPasswordFlowPageState extends State<ForgotPasswordFlowPage>
                         ),
 
                         const SizedBox(height: 16),
-
                         // Step indicator
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -198,8 +188,6 @@ class _ForgotPasswordFlowPageState extends State<ForgotPasswordFlowPage>
                   ),
 
                   const SizedBox(height: 16),
-
-                  // ── EMAIL BADGE ───────────────────────────────
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(
@@ -232,8 +220,6 @@ class _ForgotPasswordFlowPageState extends State<ForgotPasswordFlowPage>
                   ),
 
                   const SizedBox(height: 16),
-
-                  // ── FORM CARD ─────────────────────────────────
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(20),
@@ -252,7 +238,6 @@ class _ForgotPasswordFlowPageState extends State<ForgotPasswordFlowPage>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         if (step == 1) ...[
-                          // ── LABEL ───────────────────────────────
                           Text(
                             "KODE OTP",
                             style: TextStyle(
@@ -264,8 +249,6 @@ class _ForgotPasswordFlowPageState extends State<ForgotPasswordFlowPage>
                             ),
                           ),
                           const SizedBox(height: 8),
-
-                          // ── OTP INPUT ────────────────────────────
                           Container(
                             decoration: BoxDecoration(
                               color: const Color(0xFFF4F6FB),
@@ -303,7 +286,6 @@ class _ForgotPasswordFlowPageState extends State<ForgotPasswordFlowPage>
                         ],
 
                         if (step == 2) ...[
-                          // ── LABEL ───────────────────────────────
                           Text(
                             "PASSWORD BARU",
                             style: TextStyle(
@@ -315,8 +297,6 @@ class _ForgotPasswordFlowPageState extends State<ForgotPasswordFlowPage>
                             ),
                           ),
                           const SizedBox(height: 8),
-
-                          // ── PASSWORD INPUT ───────────────────────
                           Container(
                             decoration: BoxDecoration(
                               color: const Color(0xFFF4F6FB),
@@ -372,8 +352,6 @@ class _ForgotPasswordFlowPageState extends State<ForgotPasswordFlowPage>
                   ),
 
                   const SizedBox(height: 20),
-
-                  // ── TOMBOL AKSI ───────────────────────────────
                   SizedBox(
                     width: double.infinity,
                     height: 52,
@@ -414,8 +392,6 @@ class _ForgotPasswordFlowPageState extends State<ForgotPasswordFlowPage>
                   ),
 
                   const SizedBox(height: 12),
-
-                  // ── BATAL ─────────────────────────────────────
                   SizedBox(
                     width: double.infinity,
                     height: 46,
@@ -445,8 +421,6 @@ class _ForgotPasswordFlowPageState extends State<ForgotPasswordFlowPage>
     );
   }
 }
-
-// ── STEP DOT WIDGET ────────────────────────────────────────────────────────────
 class _StepDot extends StatelessWidget {
   final bool isActive;
   final String label;
@@ -476,8 +450,6 @@ class _StepDot extends StatelessWidget {
     );
   }
 }
-
-// ── STEP LINE WIDGET ───────────────────────────────────────────────────────────
 class _StepLine extends StatelessWidget {
   final bool isActive;
 

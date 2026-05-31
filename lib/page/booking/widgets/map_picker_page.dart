@@ -18,7 +18,7 @@ class _MapPickerPageState extends State<MapPickerPage> {
   late final MapController mapController;
   final TextEditingController searchCtrl = TextEditingController();
 
-  LatLng center = const LatLng(-8.4095, 115.1889); // default Bali
+  LatLng center = const LatLng(-8.4095, 115.1889);
   List<Map<String, dynamic>> searchResults = [];
   bool isSearching = false;
   bool isLoadingAddress = false;
@@ -30,11 +30,11 @@ class _MapPickerPageState extends State<MapPickerPage> {
     super.initState();
     mapController = MapController();
     if (widget.initialLocation != null) {
-      // Kalau sudah ada lokasi sebelumnya, langsung pakai
+
       center = widget.initialLocation!;
       _reverseGeocode(center);
     } else {
-      // Langsung ke lokasi GPS user
+
       _goToMyLocation();
     }
   }
@@ -46,19 +46,19 @@ class _MapPickerPageState extends State<MapPickerPage> {
     super.dispose();
   }
 
-  /// 📍 Ambil lokasi GPS user
+
   Future<void> _goToMyLocation() async {
     setState(() => isLoadingLocation = true);
 
     try {
-      // Cek apakah location service aktif
+
       final serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
         _showSnack("Aktifkan GPS terlebih dahulu");
         return;
       }
 
-      // Cek & minta permission
+
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
@@ -72,7 +72,7 @@ class _MapPickerPageState extends State<MapPickerPage> {
         return;
       }
 
-      // Ambil posisi
+
       final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
@@ -82,10 +82,10 @@ class _MapPickerPageState extends State<MapPickerPage> {
       if (!mounted) return;
       setState(() => center = myLoc);
 
-      // Pindah kamera ke lokasi user
+
       mapController.move(myLoc, 16);
 
-      // Reverse geocode untuk dapat nama alamat
+
       await _reverseGeocode(myLoc);
     } catch (e) {
       _showSnack("Gagal mendapatkan lokasi");
@@ -99,7 +99,8 @@ class _MapPickerPageState extends State<MapPickerPage> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
-  /// Cari lokasi pakai Nominatim (gratis, tanpa API key)
+
+
   Future<void> _search(String query) async {
     if (query.trim().isEmpty) return;
 
@@ -135,13 +136,12 @@ class _MapPickerPageState extends State<MapPickerPage> {
         });
       }
     } catch (_) {
-      // handle error diam-diam
     } finally {
       setState(() => isSearching = false);
     }
   }
 
-  /// Reverse geocode: koordinat → nama alamat
+  
   Future<void> _reverseGeocode(LatLng point) async {
     setState(() => isLoadingAddress = true);
 
@@ -211,7 +211,6 @@ class _MapPickerPageState extends State<MapPickerPage> {
       ),
       body: Stack(
         children: [
-          /// 🗺️ MAP
           FlutterMap(
             mapController: mapController,
             options: MapOptions(
@@ -240,15 +239,12 @@ class _MapPickerPageState extends State<MapPickerPage> {
               ),
             ],
           ),
-
-          /// 🔍 SEARCH BAR + RESULTS
           Positioned(
             top: 12,
             left: 12,
             right: 12,
             child: Column(
               children: [
-                // Search field
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.white,

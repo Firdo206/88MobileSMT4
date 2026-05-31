@@ -33,8 +33,6 @@ class _ArmadaPageState extends State<ArmadaPage> {
   LatLng? destinationLocation;
 
   bool isLoading = false;
-
-  // ─── Branding warna Bus 88 ─────────────────────────────────
   static const Color kRed = Color(0xFFD32F2F);
   static const Color kRedLight = Color(0xFFFFEBEE);
   static const Color kRedDark = Color(0xFFB71C1C);
@@ -137,7 +135,7 @@ class _ArmadaPageState extends State<ArmadaPage> {
         destination: destinationController.text,
         contactName: contactNameController.text,
         phone: phoneController.text,
-        busId: null, // ✅ selalu null, admin yang memilih
+        busId: null, 
         purpose: purposeController.text,
         passengerCount: passengerCount,
       );
@@ -183,7 +181,6 @@ class _ArmadaPageState extends State<ArmadaPage> {
         children: [
           CustomScrollView(
             slivers: [
-              // ─── APP BAR ─────────────────────────────────────────
               SliverAppBar(
                 pinned: true,
                 expandedHeight: 130,
@@ -292,14 +289,12 @@ class _ArmadaPageState extends State<ArmadaPage> {
                   ),
                 ),
               ),
-
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // ── INFO SEWA ──────────────────────────────────
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
@@ -349,15 +344,12 @@ class _ArmadaPageState extends State<ArmadaPage> {
                             _infoItem("Harga disepakati setelah verifikasi"),
                             _infoItem("Pembayaran aman via Midtrans"),
                             _infoItem("Armada terawat & supir berpengalaman"),
-                            // ✅ tambah info bahwa admin yang pilih bus
                             _infoItem("Armada dipilihkan oleh admin sesuai kebutuhan"),
                           ],
                         ),
                       ),
 
                       const SizedBox(height: 20),
-
-                      // ── FORM CARD ──────────────────────────────────
                       Container(
                         decoration: BoxDecoration(
                           color: kCard,
@@ -441,7 +433,6 @@ class _ArmadaPageState extends State<ArmadaPage> {
                                   ),
 
                                   const SizedBox(height: 18),
-
                                   // Lokasi & Tujuan
                                   _formLabel(
                                     "Lokasi Penjemputan *",
@@ -493,8 +484,6 @@ class _ArmadaPageState extends State<ArmadaPage> {
                                     ),
 
                                   const SizedBox(height: 18),
-
-                                  // ✅ Bus dipilih admin — tampilkan sebagai info, bukan dropdown
                                   _singleLabel("Armada Bus"),
                                   const SizedBox(height: 8),
                                   Container(
@@ -688,9 +677,6 @@ class _ArmadaPageState extends State<ArmadaPage> {
       ),
     );
   }
-
-  // ─── HELPER WIDGETS ─────────────────────────────────────────────────
-
   Widget _infoItem(String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),

@@ -3,8 +3,6 @@ import 'package:http/http.dart' as http;
 import 'api_service.dart';
 
 class ScheduleService {
-
-  // ambil semua jadwal
   static Future<List<dynamic>> getSchedules() async {
 
     final response = await http.get(

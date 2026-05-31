@@ -59,14 +59,14 @@ class SeatItem extends StatelessWidget {
                     color: const Color(0xFF7B2D2D).withOpacity(0.35),
                     blurRadius: 6,
                     offset: const Offset(0, 2),
-                  )
+                  ),
                 ]
               : [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.06),
                     blurRadius: 3,
                     offset: const Offset(0, 1),
-                  )
+                  ),
                 ],
         ),
         child: isBooked

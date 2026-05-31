@@ -15,7 +15,7 @@ class BookingPaketService {
     int? promoId,
     double? discountAmount,
     String? promoTitle,
-    int? busId, // 🚌 tambah busId
+    int? busId, 
   }) async {
 
     final Map<String, dynamic> body = {
@@ -30,7 +30,7 @@ class BookingPaketService {
     if (promoId != null) body["promo_id"] = promoId;
     if (discountAmount != null) body["discount_amount"] = discountAmount;
     if (promoTitle != null) body["promo_title"] = promoTitle;
-    if (busId != null) body["bus_id"] = busId; // 🚌 kirim bus_id
+    if (busId != null) body["bus_id"] = busId; 
 
     final response = await http.post(
       Uri.parse("${ApiService.baseUrl}/tour-bookings"),

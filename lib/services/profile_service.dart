@@ -40,8 +40,6 @@ static Future<bool> uploadAvatar(int userId, File imageFile) async {
   var uri = Uri.parse("${ApiService.baseUrl}/upload-avatar");
 
   var request = http.MultipartRequest('POST', uri);
-
-  // Tambahkan header ini
   request.headers['Accept'] = 'application/json';
 
   request.fields['user_id'] = userId.toString();
@@ -53,8 +51,6 @@ static Future<bool> uploadAvatar(int userId, File imageFile) async {
   var response = await request.send();
 
   final responseBody = await response.stream.bytesToString();
-  print("=== UPLOAD AVATAR STATUS: ${response.statusCode}");
-  print("=== UPLOAD AVATAR BODY: $responseBody");
 
   if (response.statusCode == 200) {
     return true;

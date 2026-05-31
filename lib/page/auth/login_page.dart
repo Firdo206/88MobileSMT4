@@ -6,17 +6,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/google_auth_service.dart';
 import '../../services/api_service.dart';
 import '../navigation/main_page.dart';
-import '../profil/input_phone_page.dart'; 
+import '../profil/input_phone_page.dart';
 import '../../services/notification_service.dart';
-
-
 import 'package:firebase_messaging/firebase_messaging.dart';
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
   Future loginGoogle(BuildContext context) async {
     var account = await GoogleAuthService.signIn();
-
     if (account != null) {
       var result = await AuthService.googleLogin(
         account.id,
@@ -24,10 +21,8 @@ class LoginPage extends StatelessWidget {
         account.email,
         account.photoUrl ?? "",
       );
-
       if (result["status"] == true) {
         final prefs = await SharedPreferences.getInstance();
-
         var user = result["data"];
         prefs.setInt("user_id", user["id"]);
         prefs.setString("name", user["name"]);
@@ -36,37 +31,27 @@ class LoginPage extends StatelessWidget {
         await NotificationService.saveFcmToken(user["id"]);
         await FirebaseMessaging.instance.deleteToken();
         String? newToken = await FirebaseMessaging.instance.getToken();
-
-        print("TOKEN BARU LOGIN: $newToken");
-
         if (newToken != null) {
           await NotificationService.saveFcmToken(user["id"]);
         }
         if (user["phone"] == null || user["phone"] == "") {
-
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => InputPhonePage(
-                userId: user["id"],
-              ),
+              builder: (context) => InputPhonePage(userId: user["id"]),
             ),
           );
-
         } else {
-
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => const MainPage()),
           );
-
         }
-
       } else {
         print("Login gagal");
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Login gagal")),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Login gagal")));
       }
     } else {
       print("User batal login Google");
@@ -81,7 +66,6 @@ class LoginPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            /// TOMBOL MASUK (POJOK KIRI ATAS)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               child: TextButton(
@@ -106,7 +90,6 @@ class LoginPage extends StatelessWidget {
 
             const SizedBox(height: 40),
 
-            /// GAMBAR
             Center(
               child: Image.asset(
                 "assets/images/fotologin.png",
@@ -117,13 +100,11 @@ class LoginPage extends StatelessWidget {
 
             const Spacer(),
 
-            /// BAGIAN BAWAH (BUTTON)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  /// BUTTON BUAT AKUN BARU
                   SizedBox(
                     width: double.infinity,
                     height: 55,
@@ -152,9 +133,7 @@ class LoginPage extends StatelessWidget {
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 10),
-
                   const Row(
                     children: [
                       Expanded(child: Divider()),
@@ -173,8 +152,6 @@ class LoginPage extends StatelessWidget {
                   ),
 
                   const SizedBox(height: 20),
-
-                  /// GOOGLE BUTTON
                   SizedBox(
                     width: double.infinity,
                     height: 55,

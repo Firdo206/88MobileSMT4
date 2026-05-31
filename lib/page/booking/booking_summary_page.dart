@@ -25,7 +25,7 @@ class BookingSummaryPage extends StatelessWidget {
     required this.notes,
     this.promo,
     required this.busId,
-     required this.busName,
+    required this.busName,
   });
 
   String formatDate(DateTime d) {
@@ -60,7 +60,6 @@ class BookingSummaryPage extends StatelessWidget {
         : '';
     double harga = double.parse(data['price_per_person'].toString());
 
-    // 🔥 FIX - tambah .trim().toLowerCase() agar konsisten
     double discount = 0;
     if (promo != null) {
       discount = promo!.discountType.trim().toLowerCase() == 'percent'
@@ -73,7 +72,6 @@ class BookingSummaryPage extends StatelessWidget {
       backgroundColor: const Color(0xFFF5F0F0),
       body: CustomScrollView(
         slivers: [
-          /// 🔥 APP BAR
           SliverAppBar(
             pinned: true,
             backgroundColor: const Color(0xFF8B2E2E),
@@ -89,7 +87,6 @@ class BookingSummaryPage extends StatelessWidget {
           SliverToBoxAdapter(
             child: Column(
               children: [
-                /// 🔥 HERO IMAGE
                 Stack(
                   children: [
                     SizedBox(
@@ -165,7 +162,6 @@ class BookingSummaryPage extends StatelessWidget {
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     children: [
-                      /// 🔥 DETAIL PERJALANAN
                       _card(
                         title: "Detail Perjalanan",
                         icon: Icons.luggage_rounded,
@@ -196,7 +192,6 @@ class BookingSummaryPage extends StatelessWidget {
 
                       const SizedBox(height: 14),
 
-                      /// 🔥 RINCIAN HARGA
                       _card(
                         title: "Rincian Harga",
                         icon: Icons.receipt_long_rounded,
@@ -206,14 +201,14 @@ class BookingSummaryPage extends StatelessWidget {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                    "Harga Paket (Flat)",
+                                  "Harga Paket (Flat)",
                                   style: const TextStyle(
                                     color: Colors.grey,
                                     fontSize: 13,
                                   ),
                                 ),
                                 Text(
-                                   formatRupiah(harga), 
+                                  formatRupiah(harga),
                                   style: TextStyle(
                                     fontSize: 13,
                                     decoration: promo != null
@@ -239,17 +234,16 @@ class BookingSummaryPage extends StatelessWidget {
                                       fontSize: 13,
                                     ),
                                   ),
-                                 Text(
-                                  '- ${formatRupiah(discount)}',   
-                                  style: const TextStyle(
-                                    color: Colors.green,
-                                    fontSize: 13,
-                                     ),
-                                    )
-                                  ],
-                               ),
+                                  Text(
+                                    '- ${formatRupiah(discount)}',
+                                    style: const TextStyle(
+                                      color: Colors.green,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ],
-
 
                             const Padding(
                               padding: EdgeInsets.symmetric(vertical: 12),
@@ -315,7 +309,6 @@ class BookingSummaryPage extends StatelessWidget {
 
                       const SizedBox(height: 24),
 
-                      /// 🔥 BUTTON
                       SizedBox(
                         width: double.infinity,
                         height: 54,

@@ -6,8 +6,8 @@ class PaketCard extends StatelessWidget {
   final String title;
   final String price;
   final VoidCallback onTap;
-  final double rating;    // ← tambah
-  final int reviewCount;  // ← tambah
+  final double rating;
+  final int reviewCount;
 
   const PaketCard({
     super.key,
@@ -15,10 +15,9 @@ class PaketCard extends StatelessWidget {
     required this.title,
     required this.price,
     required this.onTap,
-    this.rating = 0,       // ← default 0
-    this.reviewCount = 0,  // ← default 0
+    this.rating = 0,
+    this.reviewCount = 0,
   });
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -32,7 +31,6 @@ class PaketCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // IMAGE (tidak berubah)
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
             child: image.isNotEmpty
@@ -55,10 +53,7 @@ class PaketCard extends StatelessWidget {
                     child: const Icon(Icons.image_not_supported),
                   ),
           ),
-
           const SizedBox(height: 10),
-
-          // ← GANTI bagian rating dummy dengan ini:
           Row(
             children: [
               Icon(
@@ -75,23 +70,14 @@ class PaketCard extends StatelessWidget {
               ),
             ],
           ),
-
           const SizedBox(height: 6),
-
-          // TITLE (tidak berubah)
           Text(
             title,
             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
-
           const SizedBox(height: 4),
-
-          // PRICE (tidak berubah)
           Text(price, style: const TextStyle(color: Colors.grey)),
-
           const SizedBox(height: 10),
-
-          // BUTTON + FAVORITE (tidak berubah)
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [

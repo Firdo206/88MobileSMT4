@@ -8,7 +8,7 @@ class ReviewService {
 
   static Future<String?> submitReview({
     required int userId,
-    required int bookingId,   // ← tambah
+    required int bookingId,   
     required String type,
     required int reviewableId,
     required int rating,
@@ -26,7 +26,7 @@ class ReviewService {
       request.headers['Accept'] = 'application/json';
 
       request.fields["user_id"] = userId.toString();
-      request.fields["booking_reference_id"] = bookingId.toString(); // ← tambah
+      request.fields["booking_reference_id"] = bookingId.toString(); 
       request.fields["reviewable_type"] = type;
       request.fields["reviewable_id"] = reviewableId.toString();
       request.fields["rating"] = rating.toString();

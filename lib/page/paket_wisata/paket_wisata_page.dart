@@ -7,24 +7,21 @@ import 'paket_detail_page.dart';
 
 class PaketWisataPage extends StatefulWidget {
   const PaketWisataPage({super.key});
-
   @override
   State<PaketWisataPage> createState() => _PaketWisataPageState();
 }
-
 class _PaketWisataPageState extends State<PaketWisataPage> {
   late Future<List<dynamic>> tours;
   final TextEditingController _searchController = TextEditingController();
   List<dynamic> _allTours = [];
   List<dynamic> _filteredTours = [];
-
   static const Color _primary = Color(0xFF6B0000);
 
   @override
   void initState() {
     super.initState();
     tours = TourService.getTours();
-    // Simpan data ke _allTours setelah load
+
     tours.then((data) {
       setState(() {
         _allTours = data;
@@ -32,7 +29,6 @@ class _PaketWisataPageState extends State<PaketWisataPage> {
       });
     });
   }
-
   Future<void> _refreshTours() async {
     final newTours = TourService.getTours();
     setState(() {
@@ -46,8 +42,6 @@ class _PaketWisataPageState extends State<PaketWisataPage> {
       });
     });
   }
-
-  // ✅ Filter berdasarkan nama
   void _onSearch(String query) {
     setState(() {
       if (query.isEmpty) {
@@ -66,7 +60,6 @@ class _PaketWisataPageState extends State<PaketWisataPage> {
     _searchController.dispose();
     super.dispose();
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -76,7 +69,6 @@ class _PaketWisataPageState extends State<PaketWisataPage> {
         onRefresh: _refreshTours,
         child: CustomScrollView(
           slivers: [
-            // SliverAppBar sama, tidak berubah
             SliverAppBar(
               expandedHeight: 200,
               pinned: true,
@@ -152,8 +144,6 @@ class _PaketWisataPageState extends State<PaketWisataPage> {
                 style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 16)),
               centerTitle: true,
             ),
-
-            // ✅ Search bar — sekarang pakai controller + onChanged
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
@@ -168,13 +158,13 @@ class _PaketWisataPageState extends State<PaketWisataPage> {
                   ),
                   child: TextField(
                     controller: _searchController,
-                    onChanged: _onSearch, // ✅ trigger filter
+                    onChanged: _onSearch,
                     decoration: InputDecoration(
                       hintText: "Cari destinasi wisata...",
                       hintStyle: TextStyle(color: Colors.grey[400], fontSize: 13),
                       prefixIcon: const Icon(Icons.search_rounded,
                         color: Color(0xFF8B0000), size: 20),
-                      // ✅ Tombol clear saat ada teks
+
                       suffixIcon: _searchController.text.isNotEmpty
                           ? IconButton(
                               icon: const Icon(Icons.close_rounded,
@@ -197,8 +187,6 @@ class _PaketWisataPageState extends State<PaketWisataPage> {
                 ),
               ),
             ),
-
-            // Label — tambah jumlah hasil
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
@@ -219,7 +207,7 @@ class _PaketWisataPageState extends State<PaketWisataPage> {
                         ),
                       ],
                     ),
-                    // ✅ Tampilkan jumlah hasil
+
                     if (_allTours.isNotEmpty)
                       Text(
                         "${_filteredTours.length} paket",
@@ -229,8 +217,6 @@ class _PaketWisataPageState extends State<PaketWisataPage> {
                 ),
               ),
             ),
-
-            // ✅ List paket — pakai _filteredTours, bukan FutureBuilder
             SliverToBoxAdapter(
               child: _allTours.isEmpty
                   ? FutureBuilder<List<dynamic>>(
@@ -266,7 +252,6 @@ class _PaketWisataPageState extends State<PaketWisataPage> {
                       },
                     )
                   : _filteredTours.isEmpty
-                      // ✅ Tidak ada hasil pencarian
                       ? Padding(
                           padding: const EdgeInsets.only(top: 80),
                           child: Center(

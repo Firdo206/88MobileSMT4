@@ -50,9 +50,6 @@ class AuthService {
         "password": password,
       }),
     );
-    print("STATUS CODE: ${response.statusCode}");
-    print("RESPONSE BODY: ${response.body}");
-
     return jsonDecode(response.body);
   }
 
@@ -100,7 +97,6 @@ class AuthService {
 
     return jsonDecode(response.body);
   }
-  // 🔥 VERIFY OTP
   static Future<Map<String, dynamic>> verifyOtp(
     String email,
     String otp,

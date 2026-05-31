@@ -21,14 +21,12 @@ class _DashboardPageState extends State<DashboardPage>
 
   DateTime? selectedDate;
   int _activeMenu = 0;
-
   bool _isRoundTrip = false;
   DateTime? returnDate;
-
   List<Promo> promoList = [];
   bool isLoading = true;
 
-  // ── Carousel ─────────────────────────────────────────────
+
   static const int _initialPage = 10000;
   PageController _promoPageController = PageController(
     viewportFraction: 0.85,
@@ -36,7 +34,6 @@ class _DashboardPageState extends State<DashboardPage>
   );
   int _currentPromoIndex = 0;
   Timer? _promoTimer;
-  // ─────────────────────────────────────────────────────────
 
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
@@ -156,18 +153,7 @@ class _DashboardPageState extends State<DashboardPage>
 
   String _formatDate(DateTime date) {
     const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'Mei',
-      'Jun',
-      'Jul',
-      'Agu',
-      'Sep',
-      'Okt',
-      'Nov',
-      'Des',
+      'Jan','Feb','Mar', 'Apr', 'Mei','Jun', 'Jul', 'Agu','Sep','Okt','Nov','Des',
     ];
     const days = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
     return '${days[date.weekday - 1]}, ${date.day} ${months[date.month - 1]} ${date.year}';
@@ -217,9 +203,6 @@ class _DashboardPageState extends State<DashboardPage>
       ),
     );
   }
-
-  // ─── HEADER ──────────────────────────────────────────────────────────────────
-
   Widget _buildHeader() {
     return Container(
       decoration: const BoxDecoration(
@@ -463,7 +446,7 @@ class _DashboardPageState extends State<DashboardPage>
     );
   }
 
-  // ─── TRIP TYPE TAB ───────────────────────────────────────────────────────────
+
 
   Widget _tripTypeTab({
     required String label,
@@ -507,7 +490,7 @@ class _DashboardPageState extends State<DashboardPage>
     );
   }
 
-  // ─── DATE FIELD ──────────────────────────────────────────────────────────────
+
 
   Widget _buildDateField({
     required String label,
@@ -624,9 +607,6 @@ class _DashboardPageState extends State<DashboardPage>
       ],
     );
   }
-
-  // ─── MENU TABS ───────────────────────────────────────────────────────────────
-
   Widget _buildMenuTabs() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -709,9 +689,6 @@ class _DashboardPageState extends State<DashboardPage>
       ),
     );
   }
-
-  // ─── SECTION HEADER ──────────────────────────────────────────────────────────
-
   Widget _buildSectionHeader({
     required String title,
     required String subtitle,
@@ -767,9 +744,6 @@ class _DashboardPageState extends State<DashboardPage>
       ),
     );
   }
-
-  // ─── PROMO SECTION ───────────────────────────────────────────────────────────
-
   Widget _buildPromoSection() {
     if (isLoading) {
       return const SizedBox(
@@ -831,7 +805,6 @@ class _DashboardPageState extends State<DashboardPage>
 
     return Column(
       children: [
-        // ── PageView carousel (infinite loop) ───────────────
         SizedBox(
           height: 190,
           child: PageView.builder(
@@ -852,8 +825,6 @@ class _DashboardPageState extends State<DashboardPage>
             },
           ),
         ),
-
-        // ── Dot indicator ────────────────────────────────────
         if (promoList.length > 1) ...[
           const SizedBox(height: 12),
           Row(
@@ -1087,9 +1058,6 @@ class _DashboardPageState extends State<DashboardPage>
       ),
     );
   }
-
-  // ─── INFO BANNER ─────────────────────────────────────────────────────────────
-
   Widget _buildInfoBanner() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -1097,8 +1065,7 @@ class _DashboardPageState extends State<DashboardPage>
         borderRadius: BorderRadius.circular(20),
         child: Stack(
           children: [
-            // Background gradient
-            Container(
+          Container(
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   colors: [Color(0xFF6B0000), Color(0xFF8B0000)],
@@ -1109,7 +1076,6 @@ class _DashboardPageState extends State<DashboardPage>
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
               child: Row(
                 children: [
-                  // Icon area
                   Column(
                     children: [
                       Container(
@@ -1128,7 +1094,6 @@ class _DashboardPageState extends State<DashboardPage>
                     ],
                   ),
                   const SizedBox(width: 14),
-                  // Text area
                   const Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1155,7 +1120,6 @@ class _DashboardPageState extends State<DashboardPage>
                     ),
                   ),
                   const SizedBox(width: 8),
-                  // Arrow chip
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
@@ -1171,7 +1135,6 @@ class _DashboardPageState extends State<DashboardPage>
                 ],
               ),
             ),
-            // Decorative circles
             Positioned(
               top: -18,
               right: 60,

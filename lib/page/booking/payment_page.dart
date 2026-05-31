@@ -11,17 +11,13 @@ import '../payment/midtrans_webview_page.dart';
 class PaymentPage extends StatefulWidget {
   final Map bookingData;
 
-  const PaymentPage({
-    super.key,
-    required this.bookingData,
-  });
+  const PaymentPage({super.key, required this.bookingData});
 
   @override
   State<PaymentPage> createState() => _PaymentPageState();
 }
 
-class _PaymentPageState extends State<PaymentPage>
-    with WidgetsBindingObserver {
+class _PaymentPageState extends State<PaymentPage> with WidgetsBindingObserver {
   static const Color _primary = Color(0xFF7B2D2D);
 
   Timer? _timer;
@@ -35,7 +31,6 @@ class _PaymentPageState extends State<PaymentPage>
   final _appLinks = AppLinks();
   StreamSubscription? _linkSub;
 
-  // ================= MIDTRANS =================
   Future<void> openMidtrans(int bookingId) async {
     if (_isLoadingMidtrans || _tokenRequested) return;
     setState(() {
@@ -76,7 +71,6 @@ class _PaymentPageState extends State<PaymentPage>
                 ),
               );
             }
-            // cancel → tidak perlu action
           },
         ),
       ),
@@ -103,9 +97,7 @@ class _PaymentPageState extends State<PaymentPage>
         ),
       );
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(
-          builder: (_) => const MainPage(initialIndex: 2),
-        ),
+        MaterialPageRoute(builder: (_) => const MainPage(initialIndex: 2)),
         (route) => false,
       );
     } else if (status == 'pending') {
@@ -116,9 +108,9 @@ class _PaymentPageState extends State<PaymentPage>
         ),
       );
     } else if (status != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Status: $status")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Status: $status")));
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Gagal mengecek status pembayaran")),
@@ -126,13 +118,13 @@ class _PaymentPageState extends State<PaymentPage>
     }
   }
 
-  // ================= APP LIFECYCLE =================
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed && _sudahBayar) {
-      final bookingId = int.tryParse(
+      final bookingId =
+          int.tryParse(
             (widget.bookingData['id'] ?? widget.bookingData['booking_id'])
-                ?.toString() ??
+                    ?.toString() ??
                 "0",
           ) ??
           0;
@@ -142,11 +134,11 @@ class _PaymentPageState extends State<PaymentPage>
     }
   }
 
-  // ================= DEEP LINK =================
   void _listenDeepLink() {
-    final bookingId = int.tryParse(
+    final bookingId =
+        int.tryParse(
           (widget.bookingData['id'] ?? widget.bookingData['booking_id'])
-              ?.toString() ??
+                  ?.toString() ??
               "0",
         ) ??
         0;
@@ -243,8 +235,8 @@ class _PaymentPageState extends State<PaymentPage>
     final seats = rawSeats is List
         ? rawSeats
         : (rawSeats is String && rawSeats.isNotEmpty)
-            ? rawSeats.split(',')
-            : [];
+        ? rawSeats.split(',')
+        : [];
 
     final passengers = rawPassengers is List ? rawPassengers : [];
 
@@ -272,14 +264,15 @@ class _PaymentPageState extends State<PaymentPage>
 
     final int totalNormal = hasPromo
         ? (totalPrice +
-            (double.tryParse(discountAmount.toString())?.toInt() ?? 0))
+              (double.tryParse(discountAmount.toString())?.toInt() ?? 0))
         : totalPrice;
 
     final pricePerSeat = seatCount == 0 ? 0 : (totalNormal ~/ seatCount);
 
-    final bookingId = int.tryParse(
+    final bookingId =
+        int.tryParse(
           (widget.bookingData['id'] ?? widget.bookingData['booking_id'])
-              ?.toString() ??
+                  ?.toString() ??
               "0",
         ) ??
         0;
@@ -290,9 +283,10 @@ class _PaymentPageState extends State<PaymentPage>
         title: const Text(
           "Pesan Tiket",
           style: TextStyle(
-              color: Colors.black87,
-              fontWeight: FontWeight.w600,
-              fontSize: 16),
+            color: Colors.black87,
+            fontWeight: FontWeight.w600,
+            fontSize: 16,
+          ),
         ),
         backgroundColor: Colors.white,
         elevation: 0,
@@ -303,8 +297,7 @@ class _PaymentPageState extends State<PaymentPage>
         children: [
           Container(
             color: Colors.white,
-            padding:
-                const EdgeInsets.symmetric(vertical: 14, horizontal: 40),
+            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 40),
             child: Row(
               children: [
                 Expanded(child: Container(height: 1.5, color: _primary)),
@@ -312,37 +305,45 @@ class _PaymentPageState extends State<PaymentPage>
                   width: 32,
                   height: 32,
                   decoration: const BoxDecoration(
-                      color: _primary, shape: BoxShape.circle),
+                    color: _primary,
+                    shape: BoxShape.circle,
+                  ),
                   alignment: Alignment.center,
-                  child: const Text("3",
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold)),
+                  child: const Text(
+                    "3",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
                 const SizedBox(width: 8),
-                const Text("Pembayaran",
-                    style: TextStyle(
-                        color: _primary,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600)),
+                const Text(
+                  "Pembayaran",
+                  style: TextStyle(
+                    color: _primary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
                 Expanded(
-                    child:
-                        Container(height: 1.5, color: Colors.grey.shade300)),
+                  child: Container(height: 1.5, color: Colors.grey.shade300),
+                ),
               ],
             ),
           ),
 
           Expanded(
             child: SingleChildScrollView(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Column(
                 children: [
-                  // ── TIMER ──
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 12),
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
                     decoration: BoxDecoration(
                       color: _isExpired
                           ? const Color(0xFFFFEBEE)
@@ -371,19 +372,20 @@ class _PaymentPageState extends State<PaymentPage>
                               ? const Text(
                                   "Waktu pembayaran habis. Pesanan ini telah dibatalkan.",
                                   style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.red,
-                                      fontWeight: FontWeight.w600),
+                                    fontSize: 12,
+                                    color: Colors.red,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 )
                               : Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     const Text(
                                       "Selesaikan pembayaran sebelum waktu habis",
                                       style: TextStyle(
-                                          fontSize: 12,
-                                          color: Color(0xFF5D3A00)),
+                                        fontSize: 12,
+                                        color: Color(0xFF5D3A00),
+                                      ),
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
@@ -404,7 +406,6 @@ class _PaymentPageState extends State<PaymentPage>
 
                   const SizedBox(height: 14),
 
-                  // ── DETAIL PESANAN ──
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(16),
@@ -413,108 +414,136 @@ class _PaymentPageState extends State<PaymentPage>
                       borderRadius: BorderRadius.circular(14),
                       boxShadow: [
                         BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2)),
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
                       ],
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text("Detail Pesanan",
-                            style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black87)),
+                        const Text(
+                          "Detail Pesanan",
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
                         const SizedBox(height: 12),
-                        _buildRow("Kode Booking",
-                            widget.bookingData['booking_code'] ?? "-"),
                         _buildRow(
-                            "Rute",
-                            "${widget.bookingData['origin'] ?? '-'} → ${widget.bookingData['destination'] ?? '-'}"),
-                        _buildRow("Tanggal",
-                            widget.bookingData['departure_date'] ?? "-"),
+                          "Kode Booking",
+                          widget.bookingData['booking_code'] ?? "-",
+                        ),
                         _buildRow(
-                            "Jam", widget.bookingData['departure_time'] ?? "-"),
+                          "Rute",
+                          "${widget.bookingData['origin'] ?? '-'} → ${widget.bookingData['destination'] ?? '-'}",
+                        ),
                         _buildRow(
-                            "Bus", widget.bookingData['bus_name'] ?? "-"),
+                          "Tanggal",
+                          widget.bookingData['departure_date'] ?? "-",
+                        ),
+                        _buildRow(
+                          "Jam",
+                          widget.bookingData['departure_time'] ?? "-",
+                        ),
+                        _buildRow("Bus", widget.bookingData['bus_name'] ?? "-"),
                         const SizedBox(height: 14),
-                        const Text("Penumpang",
-                            style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.black87)),
+                        const Text(
+                          "Penumpang",
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
+                        ),
                         const SizedBox(height: 8),
                         if (passengers.isNotEmpty)
-                          ...passengers.map((p) => Container(
-                                margin: const EdgeInsets.only(bottom: 8),
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 10),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFF5EAEA),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      width: 36,
-                                      height: 36,
-                                      decoration: BoxDecoration(
-                                          color: _primary,
-                                          borderRadius:
-                                              BorderRadius.circular(8)),
-                                      alignment: Alignment.center,
-                                      child: Text(
-                                        p['seat']?.toString() ?? "-",
-                                        style: const TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold),
+                          ...passengers.map(
+                            (p) => Container(
+                              margin: const EdgeInsets.only(bottom: 8),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF5EAEA),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 36,
+                                    height: 36,
+                                    decoration: BoxDecoration(
+                                      color: _primary,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      p['seat']?.toString() ?? "-",
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                    const SizedBox(width: 12),
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(p['passenger_name'] ?? "-"),
-                                        Text(p['phone'] ?? "",
-                                            style: const TextStyle(
-                                                fontSize: 11)),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ))
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(p['passenger_name'] ?? "-"),
+                                      Text(
+                                        p['phone'] ?? "",
+                                        style: const TextStyle(fontSize: 11),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          )
                         else
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 10),
+                              horizontal: 12,
+                              vertical: 10,
+                            ),
                             decoration: BoxDecoration(
-                                color: const Color(0xFFF5EAEA),
-                                borderRadius: BorderRadius.circular(10)),
+                              color: const Color(0xFFF5EAEA),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                             child: Row(
                               children: [
                                 Container(
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 10, vertical: 6),
+                                    horizontal: 10,
+                                    vertical: 6,
+                                  ),
                                   decoration: BoxDecoration(
-                                      color: _primary,
-                                      borderRadius:
-                                          BorderRadius.circular(8)),
-                                  child: Text(seats.join(", "),
-                                      style: const TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 13)),
+                                    color: _primary,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    seats.join(", "),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13,
+                                    ),
+                                  ),
                                 ),
                                 const SizedBox(width: 12),
                                 Text(
-                                    widget.bookingData['passenger_name'] ??
-                                        "-",
-                                    style: const TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.black87)),
+                                  widget.bookingData['passenger_name'] ?? "-",
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.black87,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -524,15 +553,13 @@ class _PaymentPageState extends State<PaymentPage>
 
                   const SizedBox(height: 14),
 
-                  // ── RINCIAN HARGA ──
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
                       color: const Color(0xFFFDF0EF),
                       borderRadius: BorderRadius.circular(12),
-                      border:
-                          Border.all(color: const Color(0xFFEFD5D5)),
+                      border: Border.all(color: const Color(0xFFEFD5D5)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -540,7 +567,9 @@ class _PaymentPageState extends State<PaymentPage>
                         if (hasPromo) ...[
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 7),
+                              horizontal: 10,
+                              vertical: 7,
+                            ),
                             margin: const EdgeInsets.only(bottom: 10),
                             decoration: BoxDecoration(
                               color: const Color(0xFFE8F5E9),
@@ -548,8 +577,11 @@ class _PaymentPageState extends State<PaymentPage>
                             ),
                             child: Row(
                               children: [
-                                const Icon(Icons.local_offer_rounded,
-                                    color: Colors.green, size: 14),
+                                const Icon(
+                                  Icons.local_offer_rounded,
+                                  color: Colors.green,
+                                  size: 14,
+                                ),
                                 const SizedBox(width: 6),
                                 Expanded(
                                   child: Text(
@@ -568,18 +600,22 @@ class _PaymentPageState extends State<PaymentPage>
                         Text(
                           "$seatCount Kursi x ${formatPrice(pricePerSeat)}",
                           style: const TextStyle(
-                              fontSize: 12, color: Colors.black54),
+                            fontSize: 12,
+                            color: Colors.black54,
+                          ),
                         ),
                         const SizedBox(height: 8),
                         if (hasPromo) ...[
                           Row(
-                            mainAxisAlignment:
-                                MainAxisAlignment.spaceBetween,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text("Harga Normal",
-                                  style: TextStyle(
-                                      fontSize: 13,
-                                      color: Colors.black54)),
+                              const Text(
+                                "Harga Normal",
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.black54,
+                                ),
+                              ),
                               Text(
                                 formatPrice(totalNormal),
                                 style: const TextStyle(
@@ -592,17 +628,21 @@ class _PaymentPageState extends State<PaymentPage>
                           ),
                           const SizedBox(height: 4),
                           Row(
-                            mainAxisAlignment:
-                                MainAxisAlignment.spaceBetween,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text('Diskon "$promoTitle"',
-                                  style: const TextStyle(
-                                      fontSize: 13,
-                                      color: Colors.green)),
+                              Text(
+                                'Diskon "$promoTitle"',
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.green,
+                                ),
+                              ),
                               Text(
                                 '- ${formatPrice(double.tryParse(discountAmount.toString())?.toInt() ?? 0)}',
                                 style: const TextStyle(
-                                    fontSize: 13, color: Colors.green),
+                                  fontSize: 13,
+                                  color: Colors.green,
+                                ),
                               ),
                             ],
                           ),
@@ -612,19 +652,24 @@ class _PaymentPageState extends State<PaymentPage>
                           ),
                         ],
                         Row(
-                          mainAxisAlignment:
-                              MainAxisAlignment.spaceBetween,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text("Total Pembayaran",
-                                style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.black87)),
-                            Text(formatPrice(totalPrice),
-                                style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: _primary)),
+                            const Text(
+                              "Total Pembayaran",
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            Text(
+                              formatPrice(totalPrice),
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: _primary,
+                              ),
+                            ),
                           ],
                         ),
                         const SizedBox(height: 6),
@@ -633,9 +678,10 @@ class _PaymentPageState extends State<PaymentPage>
                           child: const Text(
                             "Lakukan Pembayaran pada pesanan",
                             style: TextStyle(
-                                fontSize: 12,
-                                color: _primary,
-                                decoration: TextDecoration.underline),
+                              fontSize: 12,
+                              color: _primary,
+                              decoration: TextDecoration.underline,
+                            ),
                           ),
                         ),
                       ],
@@ -646,7 +692,6 @@ class _PaymentPageState extends State<PaymentPage>
             ),
           ),
 
-          // ── TOMBOL BAYAR ──
           Container(
             color: Colors.white,
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
@@ -658,24 +703,25 @@ class _PaymentPageState extends State<PaymentPage>
                   child: ElevatedButton(
                     onPressed:
                         (_isExpired || _isLoadingMidtrans || _tokenRequested)
-                            ? null
-                            : () async => await openMidtrans(bookingId),
+                        ? null
+                        : () async => await openMidtrans(bookingId),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: _primary,
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                       elevation: 0,
                       disabledBackgroundColor: Colors.grey.shade300,
                     ),
                     child: _isLoadingMidtrans
-                        ? const CircularProgressIndicator(
-                            color: Colors.white)
+                        ? const CircularProgressIndicator(color: Colors.white)
                         : const Text(
                             "Bayar dengan Midtrans",
                             style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white),
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
                           ),
                   ),
                 ),
@@ -691,9 +737,12 @@ class _PaymentPageState extends State<PaymentPage>
                           : () async => await _checkStatus(bookingId),
                       style: OutlinedButton.styleFrom(
                         side: const BorderSide(
-                            color: Color(0xFF7B2D2D), width: 1.5),
+                          color: Color(0xFF7B2D2D),
+                          width: 1.5,
+                        ),
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                       child: _isLoadingCheck
                           ? const SizedBox(
@@ -729,14 +778,18 @@ class _PaymentPageState extends State<PaymentPage>
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(title,
-              style:
-                  const TextStyle(fontSize: 13, color: Colors.black54)),
-          Text(value,
-              style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.black87)),
+          Text(
+            title,
+            style: const TextStyle(fontSize: 13, color: Colors.black54),
+          ),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: Colors.black87,
+            ),
+          ),
         ],
       ),
     );

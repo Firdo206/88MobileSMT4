@@ -22,7 +22,6 @@ class _LoginScreenState extends State<LoginScreen> {
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
 
-  /// POPUP MODERN
   void showPopup(
     String title,
     String message,
@@ -121,7 +120,6 @@ class _LoginScreenState extends State<LoginScreen> {
           await NotificationService.saveFcmToken(user["id"]);
         }
 
-        // ✅ SIMPAN DATA USER + FLAG LOGIN
         final prefs = await SharedPreferences.getInstance();
         prefs.setInt("user_id", user["id"]);
         prefs.setString("name", user["name"]);
@@ -161,7 +159,6 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  /// FORGOT PASSWORD
   Future<void> forgotPassword() async {
     final TextEditingController emailForgotController = TextEditingController();
     bool isSubmitting = false;
@@ -407,7 +404,6 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  /// LOGIN GOOGLE
   Future<void> loginGoogle() async {
     try {
       var account = await GoogleAuthService.signIn();
@@ -428,7 +424,7 @@ class _LoginScreenState extends State<LoginScreen> {
           prefs.setString("name", result["data"]["name"]);
           prefs.setString("email", result["data"]["email"]);
           prefs.setString("phone", result["data"]["phone"] ?? "");
-          prefs.setBool("is_logged_in", true); // ✅ TAMBAHAN
+          prefs.setBool("is_logged_in", true);
 
           showPopup(
             "Login Google Berhasil",
@@ -482,7 +478,6 @@ class _LoginScreenState extends State<LoginScreen> {
       backgroundColor: const Color(0xFFF4F4F4),
       body: Stack(
         children: [
-          // Dekoratif atas
           Positioned(
             top: 0,
             left: 0,
@@ -514,7 +509,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       children: [
                         const SizedBox(height: 30),
 
-                        /// LOGO
                         Center(
                           child: Container(
                             width: 96,
@@ -540,7 +534,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                         const SizedBox(height: 28),
 
-                        /// CARD FORM
                         Container(
                           decoration: BoxDecoration(
                             color: Colors.white,
@@ -577,7 +570,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                               const SizedBox(height: 22),
 
-                              /// EMAIL
                               _buildLabel("Email"),
                               const SizedBox(height: 8),
                               TextField(
@@ -623,7 +615,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                               const SizedBox(height: 18),
 
-                              /// PASSWORD
                               _buildLabel("Password"),
                               const SizedBox(height: 8),
                               TextField(
@@ -683,7 +674,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                               const SizedBox(height: 10),
 
-                              /// LUPA PASSWORD
                               Align(
                                 alignment: Alignment.centerRight,
                                 child: GestureDetector(
@@ -701,7 +691,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                               const SizedBox(height: 24),
 
-                              /// TOMBOL MASUK
                               SizedBox(
                                 width: double.infinity,
                                 height: 52,
@@ -747,7 +736,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
 
-                /// BOTTOM SECTION
                 Container(
                   padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
                   decoration: BoxDecoration(
@@ -762,7 +750,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   child: Column(
                     children: [
-                      // Divider OR
                       Row(
                         children: [
                           Expanded(
@@ -792,7 +779,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                       const SizedBox(height: 16),
 
-                      /// GOOGLE SIGN IN
                       SizedBox(
                         width: double.infinity,
                         height: 50,
@@ -822,7 +808,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                       const SizedBox(height: 20),
 
-                      /// DAFTAR
                       GestureDetector(
                         onTap: () {
                           Navigator.push(
@@ -875,7 +860,6 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 }
 
-// ─── Wave Clipper ─────────────────────────────────────────────────────────────
 class _WaveClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {
@@ -896,7 +880,6 @@ class _WaveClipper extends CustomClipper<Path> {
   bool shouldReclip(_WaveClipper oldClipper) => false;
 }
 
-// ─── Dot Pattern Painter ──────────────────────────────────────────────────────
 class _DotPatternPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
