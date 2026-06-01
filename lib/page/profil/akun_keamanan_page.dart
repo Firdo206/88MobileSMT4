@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'ganti_password_page.dart';
 import 'widgets/edit_phone_dialog.dart';
+import 'package:image_cropper/image_cropper.dart';
 
 class AkunKeamananPage extends StatefulWidget {
   const AkunKeamananPage({super.key});
@@ -226,36 +227,52 @@ class _AkunKeamananPageState extends State<AkunKeamananPage> {
     );
   }
 
-  Future<void> _pickImage(ImageSource source) async {
-    final XFile? pickedFile = await _picker.pickImage(source: source);
+ Future<void> _pickImage(ImageSource source) async {
+  final XFile? pickedFile = await _picker.pickImage(source: source);
+  if (pickedFile == null) return;
 
-    if (pickedFile != null) {
-      File imageFile = File(pickedFile.path);
-      print("=== FILE PATH: ${pickedFile.path}");
+  // Crop setelah pilih gambar
+  final CroppedFile? croppedFile = await ImageCropper().cropImage(
+    sourcePath: pickedFile.path,
+    aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
+    uiSettings: [
+      AndroidUiSettings(
+        toolbarTitle: 'Sesuaikan Foto Profil',
+        toolbarColor: _primary,
+        toolbarWidgetColor: Colors.white,
+        activeControlsWidgetColor: _primary,
+        initAspectRatio: CropAspectRatioPreset.square,
+        lockAspectRatio: true,
+      ),
+      IOSUiSettings(
+        title: 'Sesuaikan Foto Profil',
+        aspectRatioLockEnabled: true,
+        resetAspectRatioEnabled: false,
+      ),
+    ],
+  );
 
-      bool success = await ProfileService.uploadAvatar(userId, imageFile);
-      print("=== UPLOAD SUCCESS: $success");
+  if (croppedFile == null) return; // user cancel crop
 
-      if (success) {
-        setState(() {
-          _image = imageFile;
-        });
+  File imageFile = File(croppedFile.path);
+  bool success = await ProfileService.uploadAvatar(userId, imageFile);
 
-        loadProfile();
-
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text("Foto berhasil diupdate")));
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Gagal upload foto"),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
+  if (success) {
+    setState(() => _image = imageFile);
+    loadProfile();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Foto berhasil diupdate")),
+    );
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Gagal upload foto"),
+        backgroundColor: Colors.red,
+      ),
+    );
   }
+}
+
 
   // ── Inisial nama kalau belum ada foto ────────────────────────
   Widget _buildInitialAvatar() {

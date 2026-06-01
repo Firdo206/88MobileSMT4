@@ -103,12 +103,14 @@ class _PaymentPageState extends State<PaymentPage> {
       }
     });
   }
+
   DateTime? _parseDateTime(dynamic raw) {
     if (raw == null) return null;
     final str = raw.toString().trim();
     if (str.isEmpty) return null;
     return DateTime.tryParse(str);
   }
+
   void _startCountdown() {
     DateTime? expiry = _parseDateTime(widget.data['expired_at']);
     if (expiry == null) {
@@ -157,6 +159,7 @@ class _PaymentPageState extends State<PaymentPage> {
     final s = (d.inSeconds % 60).toString().padLeft(2, '0');
     return '$h:$m:$s';
   }
+
   Future<String?> _getSnapToken(int id) async {
     try {
       final endpoint = type == "tour"
@@ -228,7 +231,6 @@ class _PaymentPageState extends State<PaymentPage> {
                 ),
               );
             }
-
           },
         ),
       ),
@@ -236,6 +238,7 @@ class _PaymentPageState extends State<PaymentPage> {
 
     if (mounted) setState(() => _sudahBayar = true);
   }
+
   Future<void> _checkStatus() async {
     if (_isLoadingCheck) return;
     if (mounted) setState(() => _isLoadingCheck = true);
@@ -272,6 +275,7 @@ class _PaymentPageState extends State<PaymentPage> {
       (route) => false,
     );
   }
+
   Future<bool> _showExitDialog() async {
     return await showDialog<bool>(
           context: context,
@@ -357,6 +361,7 @@ class _PaymentPageState extends State<PaymentPage> {
         ) ??
         false;
   }
+
   Future<void> _handleBack() async {
     final keluar = await _showExitDialog();
     if (keluar && mounted) {
@@ -367,10 +372,6 @@ class _PaymentPageState extends State<PaymentPage> {
       );
     }
   }
-
-
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -559,7 +560,6 @@ class _PaymentPageState extends State<PaymentPage> {
               ),
             ),
 
-
             Container(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
               decoration: BoxDecoration(
@@ -656,10 +656,6 @@ class _PaymentPageState extends State<PaymentPage> {
       ),
     );
   }
-
-
-
-
 
   Widget _buildTimer() {
     return Container(
