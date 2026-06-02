@@ -112,6 +112,7 @@ class _PaymentPageState extends State<PaymentPage> {
   }
 
   void _startCountdown() {
+    if (type == "rental") return;
     DateTime? expiry = _parseDateTime(widget.data['expired_at']);
     if (expiry == null) {
       final created = _parseDateTime(widget.data['created_at']);
@@ -406,8 +407,8 @@ class _PaymentPageState extends State<PaymentPage> {
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   children: [
-                    _buildTimer(),
-                    const SizedBox(height: 14),
+                    if (type != "rental") _buildTimer(),
+                    if (type != "rental") const SizedBox(height: 14),
                     _card(
                       title: "Detail Pesanan",
                       icon: Icons.luggage_rounded,
