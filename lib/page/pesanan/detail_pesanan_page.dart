@@ -7,6 +7,7 @@ import 'widgets/tour_pesanan_pdf.dart';
 import 'widgets/rental_pesanan_pdf.dart';
 import 'refund_page.dart';
 import '../profil/review_page.dart';
+import 'package:printing/printing.dart';
 
 class DetailPesananPage extends StatelessWidget {
   final Map data;
@@ -251,10 +252,7 @@ class DetailPesananPage extends StatelessWidget {
           ),
         ],
       );
-
-  // ─── Bottom Download Bar ─────────────────────────────────────
-  // ─── Bottom Download Bar ─────────────────────────────────────
-Widget _buildBottomDownloadBar(BuildContext context, int price) => Container(
+ Widget _buildBottomDownloadBar(BuildContext context, int price) => Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -304,7 +302,7 @@ Widget _buildBottomDownloadBar(BuildContext context, int price) => Container(
           ),
         ),
       ),
-    );  
+    );
 
   // ─── Header Content ──────────────────────────────────────────
   Widget _topContent() {

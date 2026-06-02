@@ -3,6 +3,7 @@ import 'package:pdf/pdf.dart';
 import 'package:printing/printing.dart';
 import 'dart:convert';
 import 'base_pesanan_pdf.dart';
+import 'dart:typed_data'; 
 
 class RentalPesananPdf extends BasePesananPdf {
   const RentalPesananPdf({
@@ -25,75 +26,83 @@ class RentalPesananPdf extends BasePesananPdf {
   static const _white     = PdfColors.white;
   static const _divider   = PdfColor.fromInt(0xFFE5E7EB);
 
-  Future<void> generate(int price) async {
-    print("DATA KEYS: ${data.keys.toList()}");
+ Future<pw.Document> buildDocument(int price) async {
+  print("DATA KEYS: ${data.keys.toList()}");
   print("DATA VALUES: $data");
-    final pdf = pw.Document();
-    final bookingCode = data["rental_code"] ?? "UNKNOWN";
-    final time = printTime;
-    final status = (data["status_final"] ?? "-").toString().toUpperCase();
+  final pdf = pw.Document();
+  final bookingCode = data["rental_code"] ?? "UNKNOWN";
+  final time = printTime;
+  final status = (data["status_final"] ?? "-").toString().toUpperCase();
 
-    final ttf     = await PdfGoogleFonts.nunitoRegular();
-    final ttfBold = await PdfGoogleFonts.nunitoBold();
+  final ttf     = await PdfGoogleFonts.nunitoRegular();
+  final ttfBold = await PdfGoogleFonts.nunitoBold();
 
-    final qrData = jsonEncode({
-      "code": bookingCode,
-      "type": "rental",
-      "name": displayName,
-      "phone": displayPhone,
-      "price": price,
-      "status": data["status_final"] ?? "-",
-      "purpose": data["purpose"] ?? "-",    
-      "passengers": data["passenger_count"],
-    });
+  final qrData = jsonEncode({
+    "code": bookingCode,
+    "type": "rental",
+    "name": displayName,
+    "phone": displayPhone,
+    "price": price,
+    "status": data["status_final"] ?? "-",
+    "purpose": data["purpose"] ?? "-",    
+    "passengers": data["passenger_count"],
+  });
 
-    final qrImage = pw.MemoryImage(await generateQrBytes(qrData));
+  final qrImage = pw.MemoryImage(await generateQrBytes(qrData));
 
-    pdf.addPage(
-      pw.Page(
-        pageFormat: PdfPageFormat.a4,
-        margin: pw.EdgeInsets.zero,
-        theme: pw.ThemeData.withFont(base: ttf, bold: ttfBold),
-        build: (context) => pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.stretch,
-          children: [
-            _buildHeader(bookingCode, status),
-            _buildRouteBar(),
-            _buildPentingBanner(),
-            pw.Expanded(
-              child: pw.Padding(
-                padding: const pw.EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                child: pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.stretch,
-                  children: [
-                    // Rincian Perjalanan + Verifikasi Tiket (side by side)
-                    pw.Row(
-                      crossAxisAlignment: pw.CrossAxisAlignment.start,
-                      children: [
-                        pw.Expanded(child: _buildRincianPerjalanan()),
-                        pw.SizedBox(width: 16),
-                        _buildQrBlock(qrImage, bookingCode, price, status, time),
-                      ],
-                    ),
-                    pw.SizedBox(height: 14),
-                    _buildInfoPenyewa(),
-                    pw.SizedBox(height: 14),
-                    _buildDetailArmada(),
-                    pw.SizedBox(height: 14),
-                    _buildSyaratKetentuan(),
-                  ],
-                ),
+  pdf.addPage(
+    pw.Page(
+      pageFormat: PdfPageFormat.a4,
+      margin: pw.EdgeInsets.zero,
+      theme: pw.ThemeData.withFont(base: ttf, bold: ttfBold),
+      build: (context) => pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+        children: [
+          _buildHeader(bookingCode, status),
+          _buildRouteBar(),
+          _buildPentingBanner(),
+          pw.Expanded(
+            child: pw.Padding(
+              padding: const pw.EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+              child: pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+                children: [
+                  pw.Row(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Expanded(child: _buildRincianPerjalanan()),
+                      pw.SizedBox(width: 16),
+                      _buildQrBlock(qrImage, bookingCode, price, status, time),
+                    ],
+                  ),
+                  pw.SizedBox(height: 14),
+                  _buildInfoPenyewa(),
+                  pw.SizedBox(height: 14),
+                  _buildDetailArmada(),
+                  pw.SizedBox(height: 14),
+                  _buildSyaratKetentuan(),
+                ],
               ),
             ),
-            _buildFooter(price, time),
-          ],
-        ),
+          ),
+          _buildFooter(price, time),
+        ],
       ),
-    );
+    ),
+  );
 
-    await Printing.layoutPdf(onLayout: (format) async => pdf.save());
-  }
+  return pdf;
+}
 
+Future<Uint8List> generateBytes(int price) async {
+  final pdf = await buildDocument(price);
+  return Uint8List.fromList(await pdf.save()); // ✅
+}
+
+Future<void> generate(int price) async {
+  final pdf = await buildDocument(price);
+  await Printing.layoutPdf(onLayout: (format) async => pdf.save());
+}
   // ─── HEADER ───────────────────────────────────────────────────────────────
 
   pw.Widget _buildHeader(String bookingCode, String status) {
