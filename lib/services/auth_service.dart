@@ -4,7 +4,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'api_service.dart';
 
 class AuthService {
-  /// 🔥 LOGIN EMAIL
   static Future<Map<String, dynamic>> login(
     String email,
     String password,
@@ -51,9 +50,6 @@ class AuthService {
         "password": password,
       }),
     );
-    print("STATUS CODE: ${response.statusCode}");
-    print("RESPONSE BODY: ${response.body}");
-
     return jsonDecode(response.body);
   }
 
@@ -101,7 +97,6 @@ class AuthService {
 
     return jsonDecode(response.body);
   }
-  // 🔥 VERIFY OTP
   static Future<Map<String, dynamic>> verifyOtp(
     String email,
     String otp,
@@ -114,7 +109,7 @@ class AuthService {
 
     return jsonDecode(response.body);
   }
-  // 🔥 RESET PASSWORD
+  // RESET PASSWORD
   static Future<Map<String, dynamic>> resetPassword(
     String email,
     String otp,

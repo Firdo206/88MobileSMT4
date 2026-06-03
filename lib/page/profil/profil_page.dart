@@ -172,34 +172,50 @@ class _ProfilPageState extends State<ProfilPage> {
   }
 
   Widget buildAvatar() {
-    String imageUrl = avatar.isNotEmpty
-        ? "${ApiService.storageUrl}/avatar/$avatar"
-        : "https://randomuser.me/api/portraits/women/44.jpg";
+  String imageUrl = avatar.isNotEmpty
+      ? "${ApiService.storageUrl}/avatar/$avatar"
+      : "";
 
-    return GestureDetector(
-      onTap: () => openAvatarFullscreen(imageUrl),
-      child: Container(
-        width: 90,
-        height: 90,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(color: Colors.white, width: 3),
-        ),
-        child: ClipOval(
-          child: Image.network(
-            imageUrl,
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) {
-              return Image.network(
-                "https://randomuser.me/api/portraits/women/44.jpg",
+  return GestureDetector(
+    onTap: () {
+      if (imageUrl.isNotEmpty) openAvatarFullscreen(imageUrl);
+    },
+    child: Container(
+      width: 90,
+      height: 90,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white, width: 3),
+      ),
+      child: ClipOval(
+        child: imageUrl.isNotEmpty
+            ? Image.network(
+                imageUrl,
                 fit: BoxFit.cover,
-              );
-            },
-          ),
+                errorBuilder: (_, __, ___) => _buildInitialAvatar(),
+              )
+            : _buildInitialAvatar(),
+      ),
+    ),
+  );
+}
+
+Widget _buildInitialAvatar() {
+  final initial = name.isNotEmpty ? name[0].toUpperCase() : '?';
+  return Container(
+    color: const Color(0xFF6B1A24),
+    child: Center(
+      child: Text(
+        initial,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 36,
+          fontWeight: FontWeight.bold,
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   @override
   Widget build(BuildContext context) {

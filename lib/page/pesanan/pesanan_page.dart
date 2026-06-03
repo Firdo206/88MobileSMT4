@@ -15,7 +15,6 @@ class PesananPage extends StatefulWidget {
 }
 
 class _PesananPageState extends State<PesananPage> {
-
   List orders = [];
   List filteredOrders = [];
 
@@ -31,7 +30,6 @@ class _PesananPageState extends State<PesananPage> {
     loadAllOrders();
   }
 
-  /// ================= LOAD DATA =================
   Future loadAllOrders() async {
     try {
       setState(() => isLoading = true);
@@ -39,17 +37,9 @@ class _PesananPageState extends State<PesananPage> {
       final prefs = await SharedPreferences.getInstance();
       int userId = prefs.getInt("user_id") ?? 0;
 
-      print("=== USER ID: $userId ===");
-
       final bookings = await BookingService.getMyBookings(userId);
-      print("=== BOOKINGS DONE: ${bookings?.length} ===");
-
       final tours = await BookingPaketService.getMyTours(userId);
-      print("=== TOURS DONE: ${tours?.length} ===");
-      print("=== TOURS DATA: $tours ===");
-
       final rentals = await RentalService.getMyRentals(userId);
-      print("=== RENTALS DONE: ${rentals?.length} ===");
 
       List temp = [];
 
@@ -63,36 +53,34 @@ class _PesananPageState extends State<PesananPage> {
         temp.add({"type": "bus", "data": r});
       }
 
-      for (var item in temp) {
-        print("STATUS_FINAL: ${item["data"]["status_final"]} | TYPE: ${item["type"]}");
-      }
+          List activeOrders = temp.where((e) {
+            final status = e["data"]["status_final"];
+            final paymentStatus = e["data"]["payment_status"]?.toString() ?? "";
 
-      List activeOrders = temp.where((e) {
-        final status = e["data"]["status_final"];
-        return [
-          "pending_payment",
-          "waiting_confirmation",
-          "waiting_approval",
-          "paid"
-        ].contains(status);
-      }).toList();
+            // refunded → masuk riwayat, bukan pesanan aktif
+            if (paymentStatus == "refunded") return false;
 
-      print("=== ACTIVE ORDERS: ${activeOrders.length} ===");
+            return [
+              "pending_payment",
+              "waiting_confirmation",
+              "waiting_approval",
+              "paid",
+              "pending_refund",
+              "refund",
+            ].contains(status) || [
+              "pending_refund",
+              "refund",
+            ].contains(paymentStatus);
+          }).toList();
 
       setState(() {
         orders = activeOrders;
         filteredOrders = activeOrders;
         isLoading = false;
       });
-
-    } catch (e, stack) {
-      print("ERROR LOAD: $e");
-      print("STACK: $stack");
-      setState(() => isLoading = false);
-    }
+    } catch (e, stack) {}
   }
 
-  /// ================= FILTER =================
   void applyFilter(String type) {
     setState(() {
       selectedFilter = type;
@@ -104,15 +92,18 @@ class _PesananPageState extends State<PesananPage> {
     });
   }
 
-  /// ================= SEARCH =================
   void applySearch(String query) {
     final q = query.toLowerCase();
     setState(() {
       filteredOrders = orders.where((e) {
         final data = e["data"];
-        final code = (data["booking_code"] ?? data["rental_code"] ?? "").toString().toLowerCase();
+        final code = (data["booking_code"] ?? data["rental_code"] ?? "")
+            .toString()
+            .toLowerCase();
         final name = (data["name"] ?? "").toString().toLowerCase();
-        final destination = (data["destination"] ?? data["package_name"] ?? "").toString().toLowerCase();
+        final destination = (data["destination"] ?? data["package_name"] ?? "")
+            .toString()
+            .toLowerCase();
         return code.contains(q) || name.contains(q) || destination.contains(q);
       }).toList();
     });
@@ -124,102 +115,99 @@ class _PesananPageState extends State<PesananPage> {
       backgroundColor: const Color(0xFFF5F5F5),
       body: SafeArea(
         child: isLoading
-            ? const Center(
-                child: CircularProgressIndicator(color: _primary),
-              )
+            ? const Center(child: CircularProgressIndicator(color: _primary))
             : orders.isEmpty
-                ? _emptyState(
-                    title: "Belum Ada Pesanan",
-                    subtitle: "Yuk mulai rencanakan perjalananmu sekarang!",
-                    image: "assets/images/empty_all.png",
-                  )
-                : Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+            ? _emptyState(
+                title: "Belum Ada Pesanan",
+                subtitle: "Yuk mulai rencanakan perjalananmu sekarang!",
+                image: "assets/images/empty_all.png",
+              )
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildHeader(),
+                  _buildSearch(),
 
-                      /// ===== HEADER =====
-                      _buildHeader(),
+                  const SizedBox(height: 14),
 
-                      /// ===== SEARCH =====
-                      _buildSearch(),
+                  /// ===== FILTER CHIPS =====
+                  _buildFilterRow(),
 
-                      const SizedBox(height: 14),
+                  const SizedBox(height: 14),
 
-                      /// ===== FILTER CHIPS =====
-                      _buildFilterRow(),
-
-                      const SizedBox(height: 14),
-
-                      /// ===== COUNT BADGE =====
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Row(
-                          children: [
-                            Text(
-                              "${filteredOrders.length} Pesanan",
-                              style: const TextStyle(
+                  /// ===== COUNT BADGE =====
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      children: [
+                        Text(
+                          "${filteredOrders.length} Pesanan",
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black54,
+                          ),
+                        ),
+                        const Spacer(),
+                        if (selectedFilter != "all")
+                          GestureDetector(
+                            onTap: () => applyFilter("all"),
+                            child: const Text(
+                              "Lihat Semua",
+                              style: TextStyle(
                                 fontSize: 13,
+                                color: _primary,
                                 fontWeight: FontWeight.w600,
-                                color: Colors.black54,
                               ),
                             ),
-                            const Spacer(),
-                            if (selectedFilter != "all")
-                              GestureDetector(
-                                onTap: () => applyFilter("all"),
-                                child: const Text(
-                                  "Lihat Semua",
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    color: _primary,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-
-                      const SizedBox(height: 10),
-
-                      /// ===== LIST / EMPTY FILTER =====
-                      Expanded(
-                        child: filteredOrders.isEmpty
-                            ? _buildEmptyByFilter()
-                            : ListView.builder(
-                                padding: const EdgeInsets.only(bottom: 24),
-                                itemCount: filteredOrders.length,
-                                itemBuilder: (context, index) {
-                                  final item = filteredOrders[index];
-                                  final type = item["type"];
-                                  final data = item["data"];
-
-                                  return Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                                    child: OrderCard(
-                                      type: type,
-                                      data: data,
-                                      onTap: () async {
-                                        final result = await Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (_) => DetailPesananPage(
-                                              data: data,
-                                              type: type,
-                                            ),
-                                          ),
-                                        );
-                                        if (result == true) {
-                                          loadAllOrders();
-                                        }
-                                      },
-                                    ),
-                                  );
-                                },
-                              ),
-                      ),
-                    ],
+                          ),
+                      ],
+                    ),
                   ),
+
+                  const SizedBox(height: 10),
+
+                  /// ===== LIST / EMPTY FILTER =====
+                  Expanded(
+                    child: filteredOrders.isEmpty
+                        ? _buildEmptyByFilter()
+                        : ListView.builder(
+                            padding: const EdgeInsets.only(bottom: 24),
+                            itemCount: filteredOrders.length,
+                            itemBuilder: (context, index) {
+                              final item = filteredOrders[index];
+                              final type = item["type"];
+                              final data = item["data"];
+
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 6,
+                                ),
+                                child: OrderCard(
+                                  type: type,
+                                  data: data,
+                                  onTap: () async {
+                                    final result = await Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => DetailPesananPage(
+                                          data: data,
+                                          type: type,
+                                        ),
+                                      ),
+                                    );
+                                    if (result == true) {
+                                      loadAllOrders();
+                                    }
+                                  },
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              ),
       ),
     );
   }
@@ -261,7 +249,11 @@ class _PesananPageState extends State<PesananPage> {
                 color: _primary.withOpacity(0.08),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.refresh_rounded, color: _primary, size: 20),
+              child: const Icon(
+                Icons.refresh_rounded,
+                color: _primary,
+                size: 20,
+              ),
             ),
           ),
         ],
@@ -404,16 +396,14 @@ class _PesananPageState extends State<PesananPage> {
               : null,
           color: isActive ? null : Colors.white,
           borderRadius: BorderRadius.circular(30),
-          border: Border.all(
-            color: isActive ? _primary : Colors.grey.shade300,
-          ),
+          border: Border.all(color: isActive ? _primary : Colors.grey.shade300),
           boxShadow: isActive
               ? [
                   BoxShadow(
                     color: _primary.withOpacity(0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 3),
-                  )
+                  ),
                 ]
               : [],
         ),

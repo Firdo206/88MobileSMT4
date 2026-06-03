@@ -56,16 +56,19 @@ class _RiwayatTiketPageState extends State<RiwayatTiketPage> {
       });
     }
   }
+List get filteredData {
+  return data.where((e) {
+    final statusFinal = e["status_final"]?.toString() ?? "";
+    final paymentStatus = e["payment_status"]?.toString() ?? "";
 
-  /// 🔥 FILTER
-  List get filteredData {
-    return data.where((e) {
-      if (filter == "all") return true;
-      return e["status_final"] == filter;
-    }).toList();
-  }
+    if (filter == "all") return true;
+    if (filter == "refunded") {
+      return paymentStatus == "refunded";
+    }
+    return statusFinal == filter;
+  }).toList();
+}
 
-  /// 🔥 FILTER BOTTOM SHEET
   void openFilter() {
     showModalBottomSheet(
       context: context,

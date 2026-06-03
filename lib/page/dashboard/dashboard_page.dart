@@ -1,7 +1,7 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../utils/app_color.dart';
 import '../booking/schedule_page.dart';
-
 import '../promo/promo_list.dart';
 import '../armada/armada_page.dart';
 import '../../services/promo_service.dart';
@@ -21,14 +21,19 @@ class _DashboardPageState extends State<DashboardPage>
 
   DateTime? selectedDate;
   int _activeMenu = 0;
-
-  // 🔥 STATE PULANG PERGI
   bool _isRoundTrip = false;
   DateTime? returnDate;
-
-  // 🔥 STATE PROMO
   List<Promo> promoList = [];
   bool isLoading = true;
+
+
+  static const int _initialPage = 10000;
+  PageController _promoPageController = PageController(
+    viewportFraction: 0.85,
+    initialPage: _initialPage,
+  );
+  int _currentPromoIndex = 0;
+  Timer? _promoTimer;
 
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
@@ -50,6 +55,8 @@ class _DashboardPageState extends State<DashboardPage>
 
   @override
   void dispose() {
+    _promoTimer?.cancel();
+    _promoPageController.dispose();
     _fadeController.dispose();
     originController.dispose();
     destinationController.dispose();
@@ -64,13 +71,25 @@ class _DashboardPageState extends State<DashboardPage>
         promoList = data;
         isLoading = false;
       });
-    } catch (e) {
-      print("ERROR: $e");
-      if (!mounted) return;
-      setState(() {
-        isLoading = false;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _startPromoAutoScroll();
       });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => isLoading = false);
     }
+  }
+
+  void _startPromoAutoScroll() {
+    if (promoList.length <= 1) return;
+    _promoTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+      if (!mounted) return;
+      _promoPageController.animateToPage(
+        _promoPageController.page!.round() + 1,
+        duration: const Duration(milliseconds: 600),
+        curve: Curves.easeInOut,
+      );
+    });
   }
 
   Future<void> pickDate() async {
@@ -96,7 +115,6 @@ class _DashboardPageState extends State<DashboardPage>
     if (picked != null) {
       setState(() {
         selectedDate = picked;
-        // Reset tanggal pulang jika lebih awal dari tanggal berangkat
         if (returnDate != null && returnDate!.isBefore(picked)) {
           returnDate = null;
         }
@@ -129,23 +147,28 @@ class _DashboardPageState extends State<DashboardPage>
       },
     );
     if (picked != null) {
-      setState(() {
-        returnDate = picked;
-      });
+      setState(() => returnDate = picked);
     }
   }
 
   String _formatDate(DateTime date) {
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
-      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
+      'Jan','Feb','Mar', 'Apr', 'Mei','Jun', 'Jul', 'Agu','Sep','Okt','Nov','Des',
     ];
     const days = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
     return '${days[date.weekday - 1]}, ${date.day} ${months[date.month - 1]} ${date.year}';
   }
 
+  void _onTapPromoCard(Promo promo) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const PromoListPage()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    print("isRoundTrip: $_isRoundTrip");
     return Scaffold(
       backgroundColor: const Color(0xFFF7F3F0),
       body: FadeTransition(
@@ -156,17 +179,10 @@ class _DashboardPageState extends State<DashboardPage>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                /// ─── HEADER ─────────────────────────────────────────
                 _buildHeader(),
-
                 const SizedBox(height: 24),
-
-                /// ─── MENU TABS ───────────────────────────────────────
                 _buildMenuTabs(),
-
                 const SizedBox(height: 28),
-
-                /// ─── SECTION TITLE: PROMO ────────────────────────────
                 _buildSectionHeader(
                   title: "Diskon Eksklusif",
                   subtitle: "Lihat semua",
@@ -175,17 +191,10 @@ class _DashboardPageState extends State<DashboardPage>
                     MaterialPageRoute(builder: (_) => const PromoListPage()),
                   ),
                 ),
-
                 const SizedBox(height: 14),
-
-                /// ─── PROMO LIST ──────────────────────────────────────
                 _buildPromoSection(),
-
                 const SizedBox(height: 32),
-
-                /// ─── INFO BANNER ─────────────────────────────────────
                 _buildInfoBanner(),
-
                 const SizedBox(height: 32),
               ],
             ),
@@ -194,9 +203,6 @@ class _DashboardPageState extends State<DashboardPage>
       ),
     );
   }
-
-  // ─── HEADER ─────────────────────────────────────────────────────────────────
-
   Widget _buildHeader() {
     return Container(
       decoration: const BoxDecoration(
@@ -208,7 +214,6 @@ class _DashboardPageState extends State<DashboardPage>
       ),
       child: Stack(
         children: [
-          // Decorative circles
           Positioned(
             top: -30,
             right: -20,
@@ -233,13 +238,11 @@ class _DashboardPageState extends State<DashboardPage>
               ),
             ),
           ),
-
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 28, 24, 32),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Top row: greeting + avatar
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -281,10 +284,7 @@ class _DashboardPageState extends State<DashboardPage>
                     ),
                   ],
                 ),
-
                 const SizedBox(height: 24),
-
-                // Search Card
                 _buildSearchCard(),
               ],
             ),
@@ -310,7 +310,6 @@ class _DashboardPageState extends State<DashboardPage>
       ),
       child: Column(
         children: [
-          // ─── TOGGLE SEKALI JALAN / PULANG PERGI ───────────────────
           Container(
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
@@ -322,47 +321,33 @@ class _DashboardPageState extends State<DashboardPage>
                 _tripTypeTab(
                   label: "Sekali Jalan",
                   active: !_isRoundTrip,
-                  onTap: () {
-                    setState(() {
-                      _isRoundTrip = false;
-                      returnDate = null;
-                    });
-                  },
+                  onTap: () => setState(() {
+                    _isRoundTrip = false;
+                    returnDate = null;
+                  }),
                 ),
                 _tripTypeTab(
                   label: "Pulang Pergi",
                   active: _isRoundTrip,
-                  onTap: () {
-                    setState(() {
-                      _isRoundTrip = true;
-                    });
-                  },
+                  onTap: () => setState(() => _isRoundTrip = true),
                 ),
               ],
             ),
           ),
-
           const SizedBox(height: 14),
-
-          // Origin
           _buildInputField(
             controller: originController,
             label: "Kota Asal",
             icon: Icons.radio_button_checked_rounded,
             iconColor: const Color(0xFF8B0000),
           ),
-
-          // Divider with swap icon
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 6),
             child: Row(
               children: [
                 const SizedBox(width: 4),
                 Expanded(
-                  child: Container(
-                    height: 1,
-                    color: const Color(0xFFEEEEEE),
-                  ),
+                  child: Container(height: 1, color: const Color(0xFFEEEEEE)),
                 ),
                 Container(
                   margin: const EdgeInsets.symmetric(horizontal: 10),
@@ -371,9 +356,7 @@ class _DashboardPageState extends State<DashboardPage>
                   decoration: BoxDecoration(
                     color: const Color(0xFFF7F3F0),
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: const Color(0xFFE0D8D3),
-                    ),
+                    border: Border.all(color: const Color(0xFFE0D8D3)),
                   ),
                   child: const Icon(
                     Icons.swap_vert_rounded,
@@ -382,34 +365,24 @@ class _DashboardPageState extends State<DashboardPage>
                   ),
                 ),
                 Expanded(
-                  child: Container(
-                    height: 1,
-                    color: const Color(0xFFEEEEEE),
-                  ),
+                  child: Container(height: 1, color: const Color(0xFFEEEEEE)),
                 ),
                 const SizedBox(width: 4),
               ],
             ),
           ),
-
-          // Destination
           _buildInputField(
             controller: destinationController,
             label: "Kota Tujuan",
             icon: Icons.location_on_rounded,
             iconColor: const Color(0xFFCC3333),
           ),
-
           const SizedBox(height: 14),
-
-          // ─── TANGGAL BERANGKAT ────────────────────────────────────
           _buildDateField(
             label: "Tanggal Berangkat",
             date: selectedDate,
             onTap: pickDate,
           ),
-
-          // ─── TANGGAL PULANG (hanya muncul jika pulang pergi) ─────
           if (_isRoundTrip) ...[
             const SizedBox(height: 8),
             _buildDateField(
@@ -419,23 +392,19 @@ class _DashboardPageState extends State<DashboardPage>
               isDashed: true,
             ),
           ],
-
           const SizedBox(height: 16),
-
-          // Search Button
           GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => SchedulePage(
-                    origin: originController.text,
-                    destination: destinationController.text,
-                    date: selectedDate,
-                  ),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => SchedulePage(
+                  origin: originController.text,
+                  destination: destinationController.text,
+                  date: selectedDate,
+                  returnDate: _isRoundTrip ? returnDate : null,
                 ),
-              );
-            },
+              ),
+            ),
             child: Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 16),
@@ -477,7 +446,7 @@ class _DashboardPageState extends State<DashboardPage>
     );
   }
 
-  // ─── TRIP TYPE TAB ───────────────────────────────────────────────────────────
+
 
   Widget _tripTypeTab({
     required String label,
@@ -521,7 +490,7 @@ class _DashboardPageState extends State<DashboardPage>
     );
   }
 
-  // ─── DATE FIELD ──────────────────────────────────────────────────────────────
+
 
   Widget _buildDateField({
     required String label,
@@ -537,20 +506,13 @@ class _DashboardPageState extends State<DashboardPage>
         decoration: BoxDecoration(
           color: const Color(0xFFF7F3F0),
           borderRadius: BorderRadius.circular(14),
-          border: isDashed
-              ? Border.all(
-                  color: date != null
-                      ? const Color(0xFF8B0000).withOpacity(0.4)
-                      : const Color(0xFF8B0000).withOpacity(0.2),
-                  width: 1,
-                  // Note: Flutter tidak support dashed border native,
-                  // ini fallback pakai solid tipis
-                )
-              : Border.all(
-                  color: date != null
-                      ? const Color(0xFF8B0000).withOpacity(0.4)
-                      : Colors.transparent,
-                ),
+          border: Border.all(
+            color: date != null
+                ? const Color(0xFF8B0000).withOpacity(0.4)
+                : isDashed
+                    ? const Color(0xFF8B0000).withOpacity(0.2)
+                    : Colors.transparent,
+          ),
         ),
         child: Row(
           children: [
@@ -635,10 +597,7 @@ class _DashboardPageState extends State<DashboardPage>
             ),
             decoration: InputDecoration(
               labelText: label,
-              labelStyle: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[500],
-              ),
+              labelStyle: TextStyle(fontSize: 12, color: Colors.grey[500]),
               border: InputBorder.none,
               isDense: true,
               contentPadding: const EdgeInsets.symmetric(vertical: 4),
@@ -648,9 +607,6 @@ class _DashboardPageState extends State<DashboardPage>
       ],
     );
   }
-
-  // ─── MENU TABS ───────────────────────────────────────────────────────────────
-
   Widget _buildMenuTabs() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -669,17 +625,19 @@ class _DashboardPageState extends State<DashboardPage>
         ),
         child: Row(
           children: [
-            _menuTab(index: 0, label: "Cari Tiket", icon: Icons.confirmation_num_outlined),
+            _menuTab(
+              index: 0,
+              label: "Cari Tiket",
+              icon: Icons.confirmation_num_outlined,
+            ),
             _menuTab(
               index: 1,
               label: "Sewa Bus",
               icon: Icons.directions_bus_rounded,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const ArmadaPage()),
-                );
-              },
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ArmadaPage()),
+              ),
             ),
           ],
         ),
@@ -731,9 +689,6 @@ class _DashboardPageState extends State<DashboardPage>
       ),
     );
   }
-
-  // ─── SECTION HEADER ──────────────────────────────────────────────────────────
-
   Widget _buildSectionHeader({
     required String title,
     required String subtitle,
@@ -789,13 +744,10 @@ class _DashboardPageState extends State<DashboardPage>
       ),
     );
   }
-
-  // ─── PROMO SECTION ───────────────────────────────────────────────────────────
-
   Widget _buildPromoSection() {
     if (isLoading) {
       return const SizedBox(
-        height: 170,
+        height: 210,
         child: Center(
           child: CircularProgressIndicator(
             color: Color(0xFF8B0000),
@@ -806,17 +758,44 @@ class _DashboardPageState extends State<DashboardPage>
     }
 
     if (promoList.isEmpty) {
-      return SizedBox(
-        height: 170,
+      return Container(
+        height: 190,
+        margin: const EdgeInsets.symmetric(horizontal: 24),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFFEDE8E4)),
+        ),
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.local_offer_outlined, color: Colors.grey[400], size: 36),
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF8B0000).withOpacity(0.07),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Icon(
+                  Icons.local_offer_outlined,
+                  color: Color(0xFF8B0000),
+                  size: 26,
+                ),
+              ),
               const SizedBox(height: 10),
-              Text(
+              const Text(
                 "Belum ada diskon aktif",
-                style: TextStyle(color: Colors.grey[500], fontSize: 13),
+                style: TextStyle(
+                  color: Color(0xFF888888),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                "Pantau terus untuk penawaran terbaik",
+                style: TextStyle(color: Color(0xFFAAAAAA), fontSize: 11),
               ),
             ],
           ),
@@ -824,30 +803,54 @@ class _DashboardPageState extends State<DashboardPage>
       );
     }
 
-    return SizedBox(
-      height: 170,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.only(left: 24, right: 8),
-        itemCount: promoList.length,
-        itemBuilder: (context, index) {
-          final promo = promoList[index];
-          final discountLabel = promo.discountType == 'fixed'
-              ? "Rp ${promo.discountValue.toInt()}"
-              : "${promo.discountValue.toInt()}%";
-
-          return _buildPromoCard(promo: promo, discountLabel: discountLabel);
-        },
-      ),
+    return Column(
+      children: [
+        SizedBox(
+          height: 190,
+          child: PageView.builder(
+            controller: _promoPageController,
+            itemCount: 99999,
+            onPageChanged: (index) {
+              setState(() => _currentPromoIndex = index % promoList.length);
+            },
+            itemBuilder: (context, index) {
+              final promo = promoList[index % promoList.length];
+              final actualIndex = index % promoList.length;
+              return AnimatedScale(
+                scale: _currentPromoIndex == actualIndex ? 1.0 : 0.93,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOut,
+                child: _buildPromoCard(promo: promo),
+              );
+            },
+          ),
+        ),
+        if (promoList.length > 1) ...[
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(promoList.length, (index) {
+              final isActive = index == _currentPromoIndex;
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                margin: const EdgeInsets.symmetric(horizontal: 3),
+                width: isActive ? 20 : 6,
+                height: 6,
+                decoration: BoxDecoration(
+                  color: isActive
+                      ? const Color(0xFF8B0000)
+                      : const Color(0xFF8B0000).withOpacity(0.25),
+                  borderRadius: BorderRadius.circular(3),
+                ),
+              );
+            }),
+          ),
+        ],
+      ],
     );
   }
 
-  Widget _buildPromoCard({
-    required Promo promo,
-    required String discountLabel,
-  }) {
-    // Alternating card accents
+  Widget _buildPromoCard({required Promo promo}) {
     final List<List<Color>> gradients = [
       [const Color(0xFF8B0000), const Color(0xFFCC2222)],
       [const Color(0xFF6B0000), const Color(0xFFAA1111)],
@@ -856,192 +859,304 @@ class _DashboardPageState extends State<DashboardPage>
     final idx = promoList.indexOf(promo) % gradients.length;
     final grad = gradients[idx];
 
-    return Container(
-      width: 260,
-      margin: const EdgeInsets.only(right: 16, bottom: 4),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: grad,
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+    final targetLabel = switch (promo.targetType) {
+      'ticket' => 'Tiket Bus',
+      'rental' => 'Sewa Bus',
+      'tour' => 'Wisata',
+      _ => 'Semua',
+    };
+
+    return GestureDetector(
+      onTap: () => _onTapPromoCard(promo),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: grad,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(22),
+          boxShadow: [
+            BoxShadow(
+              color: grad[0].withOpacity(0.28),
+              blurRadius: 14,
+              offset: const Offset(0, 6),
+            ),
+          ],
         ),
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: [
-          BoxShadow(
-            color: grad[0].withOpacity(0.3),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          // Decorative circle
-          Positioned(
-            top: -20,
-            right: -20,
-            child: Container(
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withOpacity(0.08),
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: -30,
-            left: 60,
-            child: Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withOpacity(0.05),
-              ),
-            ),
-          ),
-
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.bolt_rounded,
-                              color: Colors.white, size: 13),
-                          const SizedBox(width: 4),
-                          Text(
-                            "Terbatas",
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.95),
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.all(7),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(Icons.local_offer_rounded,
-                          color: Colors.white, size: 16),
-                    ),
-                  ],
+        child: Stack(
+          children: [
+            Positioned(
+              top: -24,
+              right: -24,
+              child: Container(
+                width: 110,
+                height: 110,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withOpacity(0.07),
                 ),
-
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      promo.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          "Hemat",
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.75),
-                            fontSize: 12,
-                          ),
+              ),
+            ),
+            Positioned(
+              bottom: -20,
+              left: -10,
+              child: Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withOpacity(0.05),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
                         ),
-                        const SizedBox(width: 6),
-                        Text(
-                          discountLabel,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.18),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          targetLabel,
                           style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 26,
-                            fontWeight: FontWeight.w900,
-                            height: 1,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(9),
+                        ),
+                        child: const Icon(
+                          Icons.local_offer_rounded,
+                          color: Colors.white,
+                          size: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Spacer(),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        "Hemat\n",
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.65),
+                          fontSize: 10,
+                          height: 0.8,
+                        ),
+                      ),
+                      Text(
+                        promo.discountLabel,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 28,
+                          fontWeight: FontWeight.w900,
+                          height: 1,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    promo.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.9),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 7,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.18),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.people_alt_rounded,
+                              color: Colors.white.withOpacity(0.8),
+                              size: 10,
+                            ),
+                            const SizedBox(width: 3),
+                            Text(
+                              promo.quota > 0
+                                  ? '${promo.sisaKuota} sisa'
+                                  : 'Unlimited',
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.9),
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (promo.promoCode != null) ...[
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 7,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                color: Colors.white.withOpacity(0.3),
+                              ),
+                            ),
+                            child: Text(
+                              promo.promoCode!,
+                              textAlign: TextAlign.center,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.8,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  Widget _buildInfoBanner() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Stack(
+          children: [
+          Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFF6B0000), Color(0xFF8B0000)],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                ),
+              ),
+              padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+              child: Row(
+                children: [
+                  Column(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(13),
+                        ),
+                        child: const Icon(
+                          Icons.workspace_premium_rounded,
+                          color: Colors.white,
+                          size: 22,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(width: 14),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Diskon Eksklusif",
+                          style: TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 14,
+                            color: Colors.white,
+                            letterSpacing: -0.2,
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          "Hanya tersedia di hari-hari tertentu dan untuk pengguna terpilih.",
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            color: Colors.white70,
+                            height: 1.5,
                           ),
                         ),
                       ],
                     ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ─── INFO BANNER ─────────────────────────────────────────────────────────────
-
-  Widget _buildInfoBanner() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Container(
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: const Color(0xFFEDE8E4)),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: const Color(0xFF8B0000).withOpacity(0.08),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: const Icon(
-                Icons.lock_outline_rounded,
-                color: Color(0xFF8B0000),
-                size: 22,
-              ),
-            ),
-            const SizedBox(width: 14),
-            const Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "Diskon Eksklusif",
-                    style: TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 13,
-                      color: Color(0xFF1A1A1A),
-                    ),
                   ),
-                  SizedBox(height: 3),
-                  Text(
-                    "Hanya tersedia di hari-hari tertentu dan untuk pengguna terpilih.",
-                    style: TextStyle(
-                      fontSize: 11.5,
-                      color: Color(0xFF888888),
-                      height: 1.5,
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.arrow_forward_rounded,
+                      color: Colors.white,
+                      size: 16,
                     ),
                   ),
                 ],
+              ),
+            ),
+            Positioned(
+              top: -18,
+              right: 60,
+              child: Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withOpacity(0.05),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: -20,
+              right: -10,
+              child: Container(
+                width: 90,
+                height: 90,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withOpacity(0.07),
+                ),
               ),
             ),
           ],

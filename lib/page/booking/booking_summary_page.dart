@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../utils/app_color.dart';
-import '../../models/promo_model.dart'; 
+import '../../models/promo_model.dart';
 import '../../services/booking_paket_service.dart';
 import '../payment/payment_page.dart';
+import '../../services/api_service.dart';
 
 class BookingSummaryPage extends StatelessWidget {
   final dynamic data;
@@ -11,7 +12,9 @@ class BookingSummaryPage extends StatelessWidget {
   final int jumlah;
   final double total;
   final String notes;
-  final Promo? promo; 
+  final Promo? promo;
+  final int busId;
+  final String busName;
 
   const BookingSummaryPage({
     super.key,
@@ -20,33 +23,46 @@ class BookingSummaryPage extends StatelessWidget {
     required this.jumlah,
     required this.total,
     required this.notes,
-    this.promo, 
+    this.promo,
+    required this.busId,
+    required this.busName,
   });
 
   String formatDate(DateTime d) {
     const months = [
-      '', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
-      'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'
+      '',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'Mei',
+      'Jun',
+      'Jul',
+      'Ags',
+      'Sep',
+      'Okt',
+      'Nov',
+      'Des',
     ];
     return "${d.day} ${months[d.month]} ${d.year}";
   }
 
   String formatRupiah(double value) {
-    return "Rp ${value.toInt().toString().replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-      (m) => '${m[1]}.',
-    )}";
+    return "Rp ${value.toInt().toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}";
   }
 
   @override
   Widget build(BuildContext context) {
-    String imageUrl = data['image_url'] ?? '';
+    debugPrint("IMAGE URL: ${data['image_url']}");
+    debugPrint("DATA TOUR: $data");
+    String imageUrl = data['image'] != null
+        ? '${ApiService.storageUrl}/storage/${data['image']}'
+        : '';
     double harga = double.parse(data['price_per_person'].toString());
 
-    // 🔥 FIX - tambah .trim().toLowerCase() agar konsisten
     double discount = 0;
     if (promo != null) {
-      discount = promo!.discountType.trim().toLowerCase() == 'percentage'
+      discount = promo!.discountType.trim().toLowerCase() == 'percent'
           ? harga * (promo!.discountValue / 100)
           : promo!.discountValue;
     }
@@ -56,8 +72,6 @@ class BookingSummaryPage extends StatelessWidget {
       backgroundColor: const Color(0xFFF5F0F0),
       body: CustomScrollView(
         slivers: [
-
-          /// 🔥 APP BAR
           SliverAppBar(
             pinned: true,
             backgroundColor: const Color(0xFF8B2E2E),
@@ -73,8 +87,6 @@ class BookingSummaryPage extends StatelessWidget {
           SliverToBoxAdapter(
             child: Column(
               children: [
-
-                /// 🔥 HERO IMAGE
                 Stack(
                   children: [
                     SizedBox(
@@ -85,8 +97,11 @@ class BookingSummaryPage extends StatelessWidget {
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => Container(
                           color: const Color(0xFF8B2E2E).withOpacity(0.2),
-                          child: const Icon(Icons.image_not_supported,
-                              size: 60, color: Colors.white54),
+                          child: const Icon(
+                            Icons.image_not_supported,
+                            size: 60,
+                            color: Colors.white54,
+                          ),
                         ),
                       ),
                     ),
@@ -122,13 +137,18 @@ class BookingSummaryPage extends StatelessWidget {
                           const SizedBox(height: 4),
                           Row(
                             children: [
-                              const Icon(Icons.schedule_rounded,
-                                  color: Colors.white70, size: 14),
+                              const Icon(
+                                Icons.schedule_rounded,
+                                color: Colors.white70,
+                                size: 14,
+                              ),
                               const SizedBox(width: 4),
                               Text(
                                 "${data['duration_days']} hari perjalanan",
                                 style: const TextStyle(
-                                    color: Colors.white70, fontSize: 13),
+                                  color: Colors.white70,
+                                  fontSize: 13,
+                                ),
                               ),
                             ],
                           ),
@@ -142,8 +162,6 @@ class BookingSummaryPage extends StatelessWidget {
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     children: [
-
-                      /// 🔥 DETAIL PERJALANAN
                       _card(
                         title: "Detail Perjalanan",
                         icon: Icons.luggage_rounded,
@@ -174,23 +192,23 @@ class BookingSummaryPage extends StatelessWidget {
 
                       const SizedBox(height: 14),
 
-                      /// 🔥 RINCIAN HARGA
                       _card(
                         title: "Rincian Harga",
                         icon: Icons.receipt_long_rounded,
                         child: Column(
                           children: [
-                            // 👈 BERUBAH - tampilkan harga normal
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  "$jumlah orang × ${formatRupiah(harga)}",
+                                  "Harga Paket (Flat)",
                                   style: const TextStyle(
-                                      color: Colors.grey, fontSize: 13),
+                                    color: Colors.grey,
+                                    fontSize: 13,
+                                  ),
                                 ),
                                 Text(
-                                  formatRupiah(harga * jumlah),
+                                  formatRupiah(harga),
                                   style: TextStyle(
                                     fontSize: 13,
                                     decoration: promo != null
@@ -203,22 +221,25 @@ class BookingSummaryPage extends StatelessWidget {
                                 ),
                               ],
                             ),
-
-                            // 👈 TAMBAH - tampilkan baris diskon jika ada promo
                             if (promo != null) ...[
                               const SizedBox(height: 8),
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
                                     'Diskon "${promo!.title}"',
                                     style: const TextStyle(
-                                        color: Colors.green, fontSize: 13),
+                                      color: Colors.green,
+                                      fontSize: 13,
+                                    ),
                                   ),
                                   Text(
-                                    '- ${formatRupiah(discount * jumlah)}',
+                                    '- ${formatRupiah(discount)}',
                                     style: const TextStyle(
-                                        color: Colors.green, fontSize: 13),
+                                      color: Colors.green,
+                                      fontSize: 13,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -252,23 +273,31 @@ class BookingSummaryPage extends StatelessWidget {
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF8B2E2E).withOpacity(0.06),
+                                color: const Color(
+                                  0xFF8B2E2E,
+                                ).withOpacity(0.06),
                                 borderRadius: BorderRadius.circular(10),
                                 border: Border.all(
-                                  color: const Color(0xFF8B2E2E).withOpacity(0.15),
+                                  color: const Color(
+                                    0xFF8B2E2E,
+                                  ).withOpacity(0.15),
                                 ),
                               ),
                               child: const Row(
                                 children: [
-                                  Icon(Icons.info_outline_rounded,
-                                      color: Color(0xFF8B2E2E), size: 16),
+                                  Icon(
+                                    Icons.info_outline_rounded,
+                                    color: Color(0xFF8B2E2E),
+                                    size: 16,
+                                  ),
                                   SizedBox(width: 8),
                                   Expanded(
                                     child: Text(
                                       "Harga sudah termasuk semua pajak dan biaya layanan",
                                       style: TextStyle(
-                                          fontSize: 12,
-                                          color: Color(0xFF8B2E2E)),
+                                        fontSize: 12,
+                                        color: Color(0xFF8B2E2E),
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -280,7 +309,6 @@ class BookingSummaryPage extends StatelessWidget {
 
                       const SizedBox(height: 24),
 
-                      /// 🔥 BUTTON
                       SizedBox(
                         width: double.infinity,
                         height: 54,
@@ -296,7 +324,9 @@ class BookingSummaryPage extends StatelessWidget {
                             bool lanjut = await _showConfirmDialog(context);
                             if (!lanjut) return;
 
-                            await Future.delayed(const Duration(milliseconds: 150));
+                            await Future.delayed(
+                              const Duration(milliseconds: 150),
+                            );
 
                             final prefs = await SharedPreferences.getInstance();
                             final userId = prefs.getInt("user_id") ?? 0;
@@ -304,16 +334,28 @@ class BookingSummaryPage extends StatelessWidget {
                             final result = await BookingPaketService.createBooking(
                               userId: userId,
                               tourId: data['id'],
-                              date: "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}",
+                              date:
+                                  "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}",
                               qty: jumlah,
                               total: total,
                               notes: notes,
+                              promoId: promo?.id,
+                              discountAmount: promo != null
+                                  ? discount * jumlah
+                                  : null,
+                              promoTitle: promo?.title,
+                              busId: busId,
                             );
 
                             print(result);
 
                             if (result['success'] == true) {
-                              final bookingData = result['data'];
+                              final bookingData = Map<String, dynamic>.from(
+                                result['data'],
+                              );
+                              bookingData['tour_name'] = data['name'];
+                              bookingData['participants'] = jumlah.toString();
+
                               Navigator.pushReplacement(
                                 context,
                                 MaterialPageRoute(
@@ -326,7 +368,9 @@ class BookingSummaryPage extends StatelessWidget {
                             } else {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text(result['message'] ?? "Gagal booking"),
+                                  content: Text(
+                                    result['message'] ?? "Gagal booking",
+                                  ),
                                 ),
                               );
                             }
@@ -343,8 +387,11 @@ class BookingSummaryPage extends StatelessWidget {
                                 ),
                               ),
                               SizedBox(width: 8),
-                              Icon(Icons.arrow_forward_rounded,
-                                  color: Colors.white, size: 20),
+                              Icon(
+                                Icons.arrow_forward_rounded,
+                                color: Colors.white,
+                                size: 20,
+                              ),
                             ],
                           ),
                         ),
@@ -491,7 +538,9 @@ class BookingSummaryPage extends StatelessWidget {
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 14),
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFF5F0F0),
                         borderRadius: BorderRadius.circular(14),
@@ -504,7 +553,9 @@ class BookingSummaryPage extends StatelessWidget {
                               const Text(
                                 "Paket",
                                 style: TextStyle(
-                                    color: Colors.grey, fontSize: 13),
+                                  color: Colors.grey,
+                                  fontSize: 13,
+                                ),
                               ),
                               Flexible(
                                 child: Text(
@@ -525,7 +576,9 @@ class BookingSummaryPage extends StatelessWidget {
                               const Text(
                                 "Tanggal",
                                 style: TextStyle(
-                                    color: Colors.grey, fontSize: 13),
+                                  color: Colors.grey,
+                                  fontSize: 13,
+                                ),
                               ),
                               Text(
                                 formatDate(date),
@@ -543,7 +596,9 @@ class BookingSummaryPage extends StatelessWidget {
                               const Text(
                                 "Peserta",
                                 style: TextStyle(
-                                    color: Colors.grey, fontSize: 13),
+                                  color: Colors.grey,
+                                  fontSize: 13,
+                                ),
                               ),
                               Text(
                                 "$jumlah orang",
@@ -588,8 +643,7 @@ class BookingSummaryPage extends StatelessWidget {
                           child: OutlinedButton(
                             onPressed: () => Navigator.pop(context, false),
                             style: OutlinedButton.styleFrom(
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 14),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(14),
                               ),
@@ -604,8 +658,7 @@ class BookingSummaryPage extends StatelessWidget {
                             onPressed: () => Navigator.pop(context, true),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF8B2E2E),
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 14),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(14),
                               ),

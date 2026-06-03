@@ -54,7 +54,6 @@ class _RegisterPageState extends State<RegisterPage> {
       backgroundColor: const Color(0xFFF4F4F4),
       body: Stack(
         children: [
-          // Decorative top background wave
           Positioned(
             top: 0,
             left: 0,
@@ -84,7 +83,6 @@ class _RegisterPageState extends State<RegisterPage> {
                   children: [
                     const SizedBox(height: 28),
 
-                    /// LOGO
                     Center(
                       child: Container(
                         width: 88,
@@ -110,7 +108,6 @@ class _RegisterPageState extends State<RegisterPage> {
 
                     const SizedBox(height: 22),
 
-                    /// CARD FORM
                     Container(
                       decoration: BoxDecoration(
                         color: Colors.white,
@@ -147,7 +144,6 @@ class _RegisterPageState extends State<RegisterPage> {
 
                           const SizedBox(height: 22),
 
-                          /// NAMA
                           _buildLabel("Nama Lengkap"),
                           const SizedBox(height: 8),
                           _buildTextField(
@@ -158,7 +154,6 @@ class _RegisterPageState extends State<RegisterPage> {
 
                           const SizedBox(height: 16),
 
-                          /// EMAIL
                           _buildLabel("Email"),
                           const SizedBox(height: 8),
                           _buildTextField(
@@ -170,7 +165,6 @@ class _RegisterPageState extends State<RegisterPage> {
 
                           const SizedBox(height: 16),
 
-                          /// NO TELP
                           _buildLabel("No. Telepon"),
                           const SizedBox(height: 8),
                           _buildTextField(
@@ -182,7 +176,6 @@ class _RegisterPageState extends State<RegisterPage> {
 
                           const SizedBox(height: 16),
 
-                          /// PASSWORD
                           _buildLabel("Password"),
                           const SizedBox(height: 8),
                           TextField(
@@ -242,7 +235,6 @@ class _RegisterPageState extends State<RegisterPage> {
 
                           const SizedBox(height: 26),
 
-                          /// BUTTON DAFTAR
                           SizedBox(
                             width: double.infinity,
                             height: 52,
@@ -284,7 +276,6 @@ class _RegisterPageState extends State<RegisterPage> {
 
                     const SizedBox(height: 20),
 
-                    /// SUDAH PUNYA AKUN
                     Center(
                       child: RichText(
                         text: const TextSpan(
@@ -361,7 +352,6 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 }
 
-// ─── Wave Clipper ─────────────────────────────────────────────────────────────
 class _WaveClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {
@@ -382,7 +372,6 @@ class _WaveClipper extends CustomClipper<Path> {
   bool shouldReclip(_WaveClipper oldClipper) => false;
 }
 
-// ─── Dot Pattern Painter ──────────────────────────────────────────────────────
 class _DotPatternPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {

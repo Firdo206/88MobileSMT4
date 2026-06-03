@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'ganti_password_page.dart';
 import 'widgets/edit_phone_dialog.dart';
+import 'package:image_cropper/image_cropper.dart';
 
 class AkunKeamananPage extends StatefulWidget {
   const AkunKeamananPage({super.key});
@@ -24,8 +25,9 @@ class _AkunKeamananPageState extends State<AkunKeamananPage> {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
-  final TextEditingController passwordController =
-      TextEditingController(text: "********");
+  final TextEditingController passwordController = TextEditingController(
+    text: "********",
+  );
 
   int userId = 0;
 
@@ -49,9 +51,6 @@ class _AkunKeamananPageState extends State<AkunKeamananPage> {
     });
   }
 
-  /// =========================
-  /// POPUP EDIT NAMA
-  /// =========================
   void showEditNameDialog() {
     nameController.text = name;
 
@@ -140,213 +139,490 @@ class _AkunKeamananPageState extends State<AkunKeamananPage> {
     );
   }
 
-  /// =========================
-  /// UPLOAD FOTO
-  /// =========================
-  Future<void> pickImage() async {
-    final XFile? pickedFile =
-        await _picker.pickImage(source: ImageSource.gallery);
-
-    if (pickedFile != null) {
-      File imageFile = File(pickedFile.path);
-
-      bool success = await ProfileService.uploadAvatar(userId, imageFile);
-
-      if (success) {
-        setState(() {
-          _image = imageFile;
-        });
-
-        loadProfile();
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Foto berhasil diupdate"),
+  void _showImageSourceSheet() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      backgroundColor: Colors.white,
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                "Ganti Foto Profil",
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF1A1A1A),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: _imageSourceOption(
+                      icon: Icons.camera_alt_rounded,
+                      label: "Kamera",
+                      onTap: () {
+                        Navigator.pop(context);
+                        _pickImage(ImageSource.camera);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _imageSourceOption(
+                      icon: Icons.photo_library_rounded,
+                      label: "Galeri",
+                      onTap: () {
+                        Navigator.pop(context);
+                        _pickImage(ImageSource.gallery);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+            ],
           ),
-        );
-      }
-    }
+        ),
+      ),
+    );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[100],
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: const Text(
-          "Akun & keamanan",
-          style: TextStyle(color: Colors.black),
+  Widget _imageSourceOption({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 20),
+        decoration: BoxDecoration(
+          color: _primary.withOpacity(0.07),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: _primary.withOpacity(0.3)),
         ),
-        iconTheme: const IconThemeData(color: Colors.black),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            /// FOTO PROFILE
-            GestureDetector(
-              onTap: pickImage,
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Container(
-                    width: 100,
-                    height: 100,
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white,
-                    ),
-                    child: ClipOval(
-                      child: _image != null
-                          ? Image.file(_image!, fit: BoxFit.cover)
-                          : avatar.isNotEmpty
-                              ? Image.network(
-                                  "${ApiService.storageUrl}/avatar/$avatar?${DateTime.now().millisecondsSinceEpoch}",
-                                  fit: BoxFit.cover,
-                                )
-                              : Image.network(
-                                  "https://randomuser.me/api/portraits/women/44.jpg",
-                                  fit: BoxFit.cover,
-                                ),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: const BoxDecoration(
-                        color: Colors.black,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.add, size: 18, color: Colors.white),
-                    ),
-                  )
-                ],
+            Icon(icon, color: _primary, size: 32),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: const TextStyle(
+                color: _primary,
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
               ),
-            ),
-
-            const SizedBox(height: 10),
-
-            /// NAMA
-            GestureDetector(
-              onTap: showEditNameDialog,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    name.isEmpty ? "Loading..." : name,
-                    style: const TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(width: 5),
-                  const Icon(Icons.edit_outlined, size: 16)
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 25),
-
-            /// EMAIL
-            const Align(
-                alignment: Alignment.centerLeft, child: Text("Email")),
-            const SizedBox(height: 5),
-
-            TextField(
-              controller: emailController,
-              readOnly: true,
-              decoration: InputDecoration(
-                filled: true,
-                fillColor: Colors.grey[200],
-                border:
-                    OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-              ),
-            ),
-
-            const SizedBox(height: 15),
-
-            /// NO TELP
-            const Align(
-                alignment: Alignment.centerLeft, child: Text("No Telp")),
-            const SizedBox(height: 5),
-
-            TextField(
-              controller: phoneController,
-              readOnly: true,
-              decoration: InputDecoration(
-                filled: true,
-                fillColor: Colors.grey[200],
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                suffixText:
-                    phoneController.text.isEmpty ? "Tambah" : "Ubah",
-                suffixStyle: const TextStyle(
-                  color: Colors.red,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              onTap: () async {
-                final result = await showDialog(
-                  context: context,
-                  builder: (context) => EditPhoneDialog(userId: userId),
-                );
-
-                if (result != null) {
-                  loadProfile();
-                }
-              },
-            ),
-
-            const SizedBox(height: 15),
-
-            /// PASSWORD
-            const Align(
-                alignment: Alignment.centerLeft, child: Text("Password")),
-            const SizedBox(height: 5),
-
-            TextField(
-              controller: passwordController,
-              readOnly: true,
-              decoration: InputDecoration(
-                filled: true,
-                fillColor: Colors.grey[200],
-                border:
-                    OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-              ),
-            ),
-
-            const SizedBox(height: 10),
-
-            Row(
-              children: [
-                const Text("Ingin mengubah password?",
-                    style: TextStyle(color: Colors.grey)),
-                const SizedBox(width: 5),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const GantiPasswordPage(),
-                      ),
-                    );
-                  },
-                  child: const Text(
-                    "Ubah",
-                    style: TextStyle(
-                      color: Colors.red,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
             ),
           ],
         ),
       ),
+    );
+  }
+
+ Future<void> _pickImage(ImageSource source) async {
+  final XFile? pickedFile = await _picker.pickImage(source: source);
+  if (pickedFile == null) return;
+
+  // Crop setelah pilih gambar
+  final CroppedFile? croppedFile = await ImageCropper().cropImage(
+    sourcePath: pickedFile.path,
+    aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
+    uiSettings: [
+      AndroidUiSettings(
+        toolbarTitle: 'Sesuaikan Foto Profil',
+        toolbarColor: _primary,
+        toolbarWidgetColor: Colors.white,
+        activeControlsWidgetColor: _primary,
+        initAspectRatio: CropAspectRatioPreset.square,
+        lockAspectRatio: true,
+      ),
+      IOSUiSettings(
+        title: 'Sesuaikan Foto Profil',
+        aspectRatioLockEnabled: true,
+        resetAspectRatioEnabled: false,
+      ),
+    ],
+  );
+
+  if (croppedFile == null) return; // user cancel crop
+
+  File imageFile = File(croppedFile.path);
+  bool success = await ProfileService.uploadAvatar(userId, imageFile);
+
+  if (success) {
+    setState(() => _image = imageFile);
+    loadProfile();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Foto berhasil diupdate")),
+    );
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Gagal upload foto"),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+}
+
+
+  // ── Inisial nama kalau belum ada foto ────────────────────────
+  Widget _buildInitialAvatar() {
+    final initial = name.isNotEmpty ? name[0].toUpperCase() : '?';
+    return Container(
+      color: const Color(0xFF6B1E1E),
+      child: Center(
+        child: Text(
+          initial,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 36,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+
+  static const Color _primary = Color(0xFF8B2E2E);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF5F5F5),
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 220,
+            pinned: true,
+            backgroundColor: _primary,
+            foregroundColor: Colors.white,
+            elevation: 0,
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF6B1E1E), Color(0xFFB84545)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                child: SafeArea(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(height: 20),
+
+                      // Avatar
+                      GestureDetector(
+                        onTap: _showImageSourceSheet,
+                        child: Stack(
+                          children: [
+                            Container(
+                              width: 90,
+                              height: 90,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.white,
+                                  width: 3,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.2),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: ClipOval(
+                                child: _image != null
+                                    ? Image.file(_image!, fit: BoxFit.cover)
+                                    : avatar.isNotEmpty
+                                    ? Image.network(
+                                        "${ApiService.storageUrl}/avatar/$avatar?${DateTime.now().millisecondsSinceEpoch}",
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (_, __, ___) =>
+                                            _buildInitialAvatar(),
+                                      )
+                                    : _buildInitialAvatar(),
+                              ),
+                            ),
+                            Positioned(
+                              bottom: 0,
+                              right: 0,
+                              child: Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.15),
+                                      blurRadius: 6,
+                                    ),
+                                  ],
+                                ),
+                                child: const Icon(
+                                  Icons.camera_alt_rounded,
+                                  size: 14,
+                                  color: _primary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 10),
+
+                      GestureDetector(
+                        onTap: showEditNameDialog,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              name.isEmpty ? "Loading..." : name,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: const Icon(
+                                Icons.edit_rounded,
+                                size: 12,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 4),
+                      Text(
+                        emailController.text.isEmpty
+                            ? ""
+                            : emailController.text,
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            title: const Text(
+              "Akun & Keamanan",
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
+          ),
+
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _sectionLabel("Informasi Akun"),
+                  const SizedBox(height: 10),
+
+                  _infoCard(
+                    children: [
+                      _fieldTile(
+                        icon: Icons.email_outlined,
+                        label: "Email",
+                        value: emailController.text.isEmpty
+                            ? "Memuat..."
+                            : emailController.text,
+                        isReadOnly: true,
+                      ),
+                      _divider(),
+                      _fieldTile(
+                        icon: Icons.phone_outlined,
+                        label: "No. Telepon",
+                        value: phoneController.text.isEmpty
+                            ? "Belum diisi"
+                            : phoneController.text,
+                        trailingText: phoneController.text.isEmpty
+                            ? "Tambah"
+                            : "Ubah",
+                        onTap: () async {
+                          final result = await showDialog(
+                            context: context,
+                            builder: (context) =>
+                                EditPhoneDialog(userId: userId),
+                          );
+                          if (result != null) loadProfile();
+                        },
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  _sectionLabel("Keamanan"),
+                  const SizedBox(height: 10),
+
+                  _infoCard(
+                    children: [
+                      _fieldTile(
+                        icon: Icons.lock_outline_rounded,
+                        label: "Password",
+                        value: "••••••••",
+                        isReadOnly: true,
+                        trailingText: "Ubah",
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const GantiPasswordPage(),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 32),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _sectionLabel(String label) {
+    return Text(
+      label,
+      style: const TextStyle(
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+        color: Colors.black54,
+        letterSpacing: 0.5,
+      ),
+    );
+  }
+
+  Widget _infoCard({required List<Widget> children}) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(children: children),
+    );
+  }
+
+  Widget _fieldTile({
+    required IconData icon,
+    required String label,
+    required String value,
+    bool isReadOnly = false,
+    String? trailingText,
+    VoidCallback? onTap,
+  }) {
+    return InkWell(
+      onTap: isReadOnly && trailingText == null ? null : onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: _primary.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, size: 18, color: _primary),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: Colors.grey,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    value,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (trailingText != null)
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 5,
+                ),
+                decoration: BoxDecoration(
+                  color: _primary.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  trailingText,
+                  style: const TextStyle(
+                    color: _primary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              )
+            else if (!isReadOnly)
+              const Icon(
+                Icons.chevron_right_rounded,
+                color: Colors.grey,
+                size: 20,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _divider() {
+    return Padding(
+      padding: const EdgeInsets.only(left: 56),
+      child: Divider(height: 1, color: Colors.grey[100]),
     );
   }
 }

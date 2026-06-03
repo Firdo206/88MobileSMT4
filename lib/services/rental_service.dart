@@ -24,8 +24,6 @@ class RentalService {
 
     return [];
   }
-
-  /// ================= CREATE RENTAL =================
   static Future<bool> createRental({
     required int userId,
     required String startDate,
@@ -36,7 +34,7 @@ class RentalService {
     required String phone,
     required String purpose,
     required int passengerCount,
-    int? busId, // 🔥 TAMBAHAN (nullable)
+    int? busId, 
   }) async {
 
     final response = await http.post(
@@ -55,7 +53,7 @@ class RentalService {
         "contact_phone": phone,
         "purpose": purpose,
         "passenger_count": passengerCount,
-        "bus_id": busId, // 🔥 KIRIM KE BACKEND
+        "bus_id": busId, 
       }),
     );
 
@@ -87,8 +85,6 @@ class RentalService {
 
       return data;
     }
-
-  /// ================= FINISH RENTAL =================
   static Future finish(int id) async {
 
     final url = Uri.parse("${ApiService.baseUrl}/finish-rental/$id");

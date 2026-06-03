@@ -61,150 +61,260 @@ class _GantiPasswordPageState extends State<GantiPasswordPage> {
     }
   }
 
+  static const Color _primary      = Color(0xFF8B2E2E);
+  static const Color _primaryLight = Color(0xFFB84545);
+  static const Color _bgColor      = Color(0xFFF5F5F5);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: _bgColor,
       appBar: AppBar(
         title: const Text(
           "Ganti Password",
-          style: TextStyle(color: Colors.black),
+          style: TextStyle(
+            color: Colors.black87,
+            fontWeight: FontWeight.w600,
+            fontSize: 16,
+          ),
         ),
         backgroundColor: Colors.white,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black),
+        centerTitle: true,
+        iconTheme: const IconThemeData(color: Colors.black87),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(height: 1, color: Colors.grey[200]),
+        ),
       ),
       body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                "Masukkan password lama dan password baru Anda untuk mengubah password.",
-                style: TextStyle(color: Colors.grey),
-              ),
-
-              const SizedBox(height: 20),
-
-              /// PASSWORD LAMA
-              const Text("Password lama"),
-              const SizedBox(height: 8),
-              TextField(
-                controller: oldController, // TAMBAHAN
-                obscureText: isOldHidden,
-                decoration: InputDecoration(
-                  hintText: "Masukkan password lama",
-                  prefixIcon: const Icon(Icons.lock_outline),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      isOldHidden ? Icons.visibility_off : Icons.visibility,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        isOldHidden = !isOldHidden;
-                      });
-                    },
-                  ),
-                  filled: true,
-                  fillColor: Colors.grey[200],
-                  contentPadding: const EdgeInsets.symmetric(vertical: 14),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide.none,
-                  ),
+        child: Column(
+          children: [
+            // ─── Hero Banner ────────────────────────────────────
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 24),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [_primary, _primaryLight],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
               ),
-
-              const SizedBox(height: 16),
-
-              /// PASSWORD BARU
-              const Text("Password baru"),
-              const SizedBox(height: 8),
-              TextField(
-                controller: newController, // TAMBAHAN
-                obscureText: isNewHidden,
-                decoration: InputDecoration(
-                  hintText: "Masukkan password baru",
-                  prefixIcon: const Icon(Icons.lock_outline),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      isNewHidden ? Icons.visibility_off : Icons.visibility,
+              child: Row(
+                children: [
+                  Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                    onPressed: () {
-                      setState(() {
-                        isNewHidden = !isNewHidden;
-                      });
-                    },
-                  ),
-                  filled: true,
-                  fillColor: Colors.grey[200],
-                  contentPadding: const EdgeInsets.symmetric(vertical: 14),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              /// KONFIRMASI PASSWORD
-              const Text("Konfirmasi password baru"),
-              const SizedBox(height: 8),
-              TextField(
-                controller: confirmController, // TAMBAHAN
-                obscureText: isConfirmHidden,
-                decoration: InputDecoration(
-                  hintText: "Masukkan password baru",
-                  prefixIcon: const Icon(Icons.lock_outline),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      isConfirmHidden
-                          ? Icons.visibility_off
-                          : Icons.visibility,
+                    child: const Icon(
+                      Icons.lock_reset_rounded,
+                      color: Colors.white,
+                      size: 28,
                     ),
-                    onPressed: () {
-                      setState(() {
-                        isConfirmHidden = !isConfirmHidden;
-                      });
-                    },
                   ),
-                  filled: true,
-                  fillColor: Colors.grey[200],
-                  contentPadding: const EdgeInsets.symmetric(vertical: 14),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide.none,
+                  const SizedBox(width: 16),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Keamanan Akun",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          "Gunakan password yang kuat dan unik untuk melindungi akunmu.",
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 12,
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
+                ],
               ),
+            ),
 
-              const SizedBox(height: 40),
+            // ─── Form Card ──────────────────────────────────────
+            Container(
+              margin: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 16,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ── Password Lama ──
+                  _buildLabel(Icons.lock_outline_rounded, "Password Lama"),
+                  const SizedBox(height: 8),
+                  _buildTextField(
+                    controller: oldController,
+                    hint: "Masukkan password lama",
+                    isHidden: isOldHidden,
+                    onToggle: () => setState(() => isOldHidden = !isOldHidden),
+                  ),
 
-              /// BUTTON
-              SizedBox(
+                  const SizedBox(height: 8),
+                  Divider(color: Colors.grey[100], height: 24),
+
+                  // ── Password Baru ──
+                  _buildLabel(Icons.lock_rounded, "Password Baru"),
+                  const SizedBox(height: 8),
+                  _buildTextField(
+                    controller: newController,
+                    hint: "Masukkan password baru",
+                    isHidden: isNewHidden,
+                    onToggle: () => setState(() => isNewHidden = !isNewHidden),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // ── Konfirmasi ──
+                  _buildLabel(Icons.lock_clock_rounded, "Konfirmasi Password Baru"),
+                  const SizedBox(height: 8),
+                  _buildTextField(
+                    controller: confirmController,
+                    hint: "Ulangi password baru",
+                    isHidden: isConfirmHidden,
+                    onToggle: () => setState(() => isConfirmHidden = !isConfirmHidden),
+                  ),
+                ],
+              ),
+            ),
+
+            // ─── Tips Card ───────────────────────────────────────
+            Container(
+              margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: _primary.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: _primary.withOpacity(0.12)),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.info_outline_rounded, color: _primary.withOpacity(0.7), size: 16),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      "Tips: Gunakan minimal 8 karakter, kombinasikan huruf besar, huruf kecil, angka, dan simbol.",
+                      style: TextStyle(
+                        color: _primary.withOpacity(0.8),
+                        fontSize: 12,
+                        height: 1.5,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // ─── Button ─────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+              child: SizedBox(
                 width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: handleChangePassword, // TAMBAHAN
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF9E3B3B),
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25),
+                height: 52,
+                child: ElevatedButton.icon(
+                  onPressed: handleChangePassword,
+                  icon: const Icon(Icons.check_circle_outline_rounded, size: 20),
+                  label: const Text(
+                    "Simpan Password Baru",
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                  child: const Text(
-                    "Simpan Password Baru",
-                    style: TextStyle(fontSize: 16),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _primary,
+                    foregroundColor: Colors.white,
+                    elevation: 2,
+                    shadowColor: _primary.withOpacity(0.4),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
                 ),
-              )
-            ],
-          ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
+
+  Widget _buildLabel(IconData icon, String label) => Row(
+        children: [
+          Icon(icon, size: 15, color: Colors.grey[500]),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Colors.black87,
+            ),
+          ),
+        ],
+      );
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String hint,
+    required bool isHidden,
+    required VoidCallback onToggle,
+  }) =>
+      TextField(
+        controller: controller,
+        obscureText: isHidden,
+        style: const TextStyle(fontSize: 14),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: TextStyle(color: Colors.grey[400], fontSize: 13),
+          prefixIcon: Icon(Icons.lock_outline, size: 18, color: Colors.grey[400]),
+          suffixIcon: IconButton(
+            icon: Icon(
+              isHidden ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+              size: 18,
+              color: Colors.grey[400],
+            ),
+            onPressed: onToggle,
+          ),
+          filled: true,
+          fillColor: Colors.grey[50],
+          contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey[200]!),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey[200]!),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: _primary, width: 1.5),
+          ),
+        ),
+      );
 }

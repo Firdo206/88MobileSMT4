@@ -7,19 +7,18 @@ import 'widgets/seat_item.dart';
 class SeatPage extends StatefulWidget {
   final int scheduleId;
   final dynamic scheduleData;
-  final Promo? promo; // 👈 TAMBAH
+  final Promo? promo;
 
   const SeatPage({
     super.key,
     required this.scheduleId,
     this.scheduleData,
-    this.promo, // 👈 TAMBAH
+    this.promo,
   });
 
   @override
   State<SeatPage> createState() => _SeatPageState();
 }
-
 class _SeatPageState extends State<SeatPage> {
   int capacity = 0;
   List bookedSeats = [];
@@ -71,19 +70,15 @@ class _SeatPageState extends State<SeatPage> {
           origin: widget.scheduleData?['origin'],
           destination: widget.scheduleData?['destination'],
           departureDate: widget.scheduleData?['departure_date'],
-          promo: widget.promo, // 👈 TAMBAH
+          promo: widget.promo,
         ),
       ),
     );
   }
-
-  /// Builds the bus seat grid with aisle in the middle (2 + 2 layout)
   Widget _buildBusLayout() {
     int totalRows = (capacity / 4).ceil();
-
     return Column(
       children: [
-        // ── Driver label ─────────────────────────────────
         Padding(
           padding: const EdgeInsets.only(bottom: 8),
           child: Row(
@@ -116,8 +111,6 @@ class _SeatPageState extends State<SeatPage> {
             ],
           ),
         ),
-
-        // ── Seat rows ─────────────────────────────────────
         ...List.generate(totalRows, (rowIndex) {
           int seat1 = rowIndex * 4 + 1;
           int seat2 = rowIndex * 4 + 2;
@@ -178,7 +171,6 @@ class _SeatPageState extends State<SeatPage> {
               child: CircularProgressIndicator(color: Color(0xFF7B2D2D)))
           : Column(
               children: [
-                // ── Step indicator ──────────────────────────
                 Container(
                   color: Colors.white,
                   padding:
@@ -221,7 +213,6 @@ class _SeatPageState extends State<SeatPage> {
                   ),
                 ),
 
-                // ── Main content ─────────────────────────────
                 Expanded(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.all(16),
@@ -245,7 +236,6 @@ class _SeatPageState extends State<SeatPage> {
                           ),
                           const SizedBox(height: 12),
 
-                          // ── Legend ──────────────────────────
                           Row(
                             children: const [
                               _Legend(
@@ -269,8 +259,6 @@ class _SeatPageState extends State<SeatPage> {
                           ),
 
                           const SizedBox(height: 16),
-
-                          // ── Bus layout ───────────────────────
                           Container(
                             padding: const EdgeInsets.all(14),
                             decoration: BoxDecoration(
@@ -285,7 +273,6 @@ class _SeatPageState extends State<SeatPage> {
                   ),
                 ),
 
-                // ── Bottom button ─────────────────────────────
                 Container(
                   color: Colors.white,
                   padding: const EdgeInsets.fromLTRB(16, 10, 16, 20),
@@ -316,13 +303,10 @@ class _SeatPageState extends State<SeatPage> {
     );
   }
 }
-
-// ── Legend widget ─────────────────────────────────────────────────────────────
 class _Legend extends StatelessWidget {
   final Color color;
   final Color borderColor;
   final String text;
-
   const _Legend({
     required this.color,
     required this.borderColor,

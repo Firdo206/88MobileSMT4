@@ -47,12 +47,18 @@ class _RiwayatBusPageState extends State<RiwayatBusPage> {
     }
   }
 
-  List get filteredData {
-    return data.where((e) {
-      if (filter == "all") return true;
-      return e["status_final"] == filter;
-    }).toList();
-  }
+ List get filteredData {
+  return data.where((e) {
+    final statusFinal = e["status_final"]?.toString() ?? "";
+    final paymentStatus = e["payment_status"]?.toString() ?? "";
+
+    if (filter == "all") return true;
+    if (filter == "refunded") {
+      return paymentStatus == "refunded";
+    }
+    return statusFinal == filter;
+  }).toList();
+}
 
   void openFilter() {
     showModalBottomSheet(
@@ -63,6 +69,7 @@ class _RiwayatBusPageState extends State<RiwayatBusPage> {
           filterItem("Selesai", "completed"),
           filterItem("Dibatalkan", "cancelled"),
           filterItem("Expired", "expired"),
+          filterItem("Refund Selesai", "refunded"),
          
         ],
       ),

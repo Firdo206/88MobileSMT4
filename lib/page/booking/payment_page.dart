@@ -1,25 +1,23 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:http/http.dart' as http;
+import 'package:app_links/app_links.dart';
 import '../../services/api_service.dart';
 import '../../services/payment_service.dart';
-import 'transfer_page.dart';
+import 'package:app_88trans/page/navigation/main_page.dart';
+import '../payment/midtrans_webview_page.dart';
 
 class PaymentPage extends StatefulWidget {
   final Map bookingData;
 
-  const PaymentPage({
-    super.key,
-    required this.bookingData,
-  });
+  const PaymentPage({super.key, required this.bookingData});
 
   @override
   State<PaymentPage> createState() => _PaymentPageState();
 }
 
-class _PaymentPageState extends State<PaymentPage> {
+class _PaymentPageState extends State<PaymentPage> with WidgetsBindingObserver {
   static const Color _primary = Color(0xFF7B2D2D);
 
   Timer? _timer;
@@ -28,61 +26,59 @@ class _PaymentPageState extends State<PaymentPage> {
   bool _isLoadingMidtrans = false;
   bool _isLoadingCheck = false;
   bool _sudahBayar = false;
+  bool _tokenRequested = false;
 
-  // ================= MIDTRANS =================
-  Future<String?> getSnapToken(int bookingId) async {
-    try {
-      final response = await http.post(
-        Uri.parse(ApiService.midtransPayment),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"booking_id": bookingId}),
-      );
-
-      final data = jsonDecode(response.body);
-      debugPrint("RESPONSE MIDTRANS: ${response.body}");
-
-      if (response.statusCode == 200 && data['status'] == true) {
-        return data['snap_token'];
-      } else {
-        debugPrint("Gagal token: ${data.toString()}");
-        return null;
-      }
-    } catch (e) {
-      debugPrint("Error Midtrans: $e");
-      return null;
-    }
-  }
+  final _appLinks = AppLinks();
+  StreamSubscription? _linkSub;
 
   Future<void> openMidtrans(int bookingId) async {
-    if (_isLoadingMidtrans) return;
+    if (_isLoadingMidtrans || _tokenRequested) return;
+    setState(() {
+      _isLoadingMidtrans = true;
+      _tokenRequested = true;
+    });
 
-    setState(() => _isLoadingMidtrans = true);
+    final token = await PaymentService.getSnapToken(bookingId);
 
-    final token = await getSnapToken(bookingId);
+    setState(() => _isLoadingMidtrans = false);
 
     if (token == null) {
-      setState(() => _isLoadingMidtrans = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Gagal membuka pembayaran")),
-      );
+      setState(() => _tokenRequested = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Gagal membuka pembayaran")),
+        );
+      }
       return;
     }
 
-    final url = "https://app.sandbox.midtrans.com/snap/v2/vtweb/$token";
+    if (!mounted) return;
 
-    try {
-      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-    } catch (e) {
-      debugPrint("Launch error: $e");
-    }
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => MidtransWebViewPage(
+          snapToken: token,
+          onResult: (status) {
+            if (status == 'settlement') {
+              _checkStatus(bookingId);
+            } else if (status == 'pending') {
+              if (mounted) setState(() => _sudahBayar = true);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text("⏳ Pembayaran pending, cek status nanti"),
+                  backgroundColor: Colors.orange,
+                ),
+              );
+            }
+          },
+        ),
+      ),
+    );
 
-    setState(() {
-      _isLoadingMidtrans = false;
-      _sudahBayar = true;
-    });
+    if (mounted) setState(() => _sudahBayar = true);
   }
 
-  // ================= CEK STATUS =================
   Future<void> _checkStatus(int bookingId) async {
     if (_isLoadingCheck) return;
     setState(() => _isLoadingCheck = true);
@@ -91,14 +87,19 @@ class _PaymentPageState extends State<PaymentPage> {
 
     setState(() => _isLoadingCheck = false);
 
-    if (status == 'settlement' || status == 'capture') {
+    if (!mounted) return;
+
+    if (status == 'settlement' || status == 'paid') {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("✅ Pembayaran berhasil dikonfirmasi!"),
           backgroundColor: Colors.green,
         ),
       );
-      Navigator.pop(context, true);
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const MainPage(initialIndex: 2)),
+        (route) => false,
+      );
     } else if (status == 'pending') {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -107,31 +108,75 @@ class _PaymentPageState extends State<PaymentPage> {
         ),
       );
     } else if (status != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Status: $status")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Status: $status")));
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Gagal mengecek status pembayaran")),
       );
     }
   }
-  // ============================================
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _sudahBayar) {
+      final bookingId =
+          int.tryParse(
+            (widget.bookingData['id'] ?? widget.bookingData['booking_id'])
+                    ?.toString() ??
+                "0",
+          ) ??
+          0;
+      Future.delayed(const Duration(seconds: 1), () {
+        if (mounted) _checkStatus(bookingId);
+      });
+    }
+  }
+
+  void _listenDeepLink() {
+    final bookingId =
+        int.tryParse(
+          (widget.bookingData['id'] ?? widget.bookingData['booking_id'])
+                  ?.toString() ??
+              "0",
+        ) ??
+        0;
+
+    _linkSub = _appLinks.uriLinkStream.listen((uri) {
+      if (uri.scheme == 'app88trans') {
+        final transactionStatus = uri.queryParameters['transaction_status'];
+
+        if (transactionStatus == 'settlement' ||
+            transactionStatus == 'capture') {
+          if (mounted) _checkStatus(bookingId);
+        } else {
+          if (mounted) Navigator.pop(context);
+        }
+      }
+    });
+  }
 
   @override
   void initState() {
     super.initState();
     _startCountdown();
+    _listenDeepLink();
+    WidgetsBinding.instance.addObserver(this);
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _linkSub?.cancel();
     _timer?.cancel();
     super.dispose();
   }
 
   void _startCountdown() {
     final expiredAt = widget.bookingData['expired_at'];
+    debugPrint("=== EXPIRED AT: $expiredAt ===");
+
     if (expiredAt == null) return;
 
     final rawString = expiredAt.toString().trim();
@@ -139,7 +184,7 @@ class _PaymentPageState extends State<PaymentPage> {
 
     DateTime? expiry;
     if (!rawString.contains('+') && !rawString.toUpperCase().contains('Z')) {
-      expiry = DateTime.tryParse(rawString + 'Z')?.toLocal();
+      expiry = DateTime.tryParse(rawString)?.copyWith(isUtc: false);
     } else {
       expiry = DateTime.tryParse(rawString)?.toLocal();
     }
@@ -190,8 +235,8 @@ class _PaymentPageState extends State<PaymentPage> {
     final seats = rawSeats is List
         ? rawSeats
         : (rawSeats is String && rawSeats.isNotEmpty)
-            ? rawSeats.split(',')
-            : [];
+        ? rawSeats.split(',')
+        : [];
 
     final passengers = rawPassengers is List ? rawPassengers : [];
 
@@ -199,50 +244,49 @@ class _PaymentPageState extends State<PaymentPage> {
         ? seats.length
         : (widget.bookingData['seat_count'] ?? 1);
 
-    // 🔥 FIX - prioritaskan final_price (harga setelah diskon promo) jika ada
     final int totalPrice = (() {
-      // Cek apakah ada final_price dari promo
       final finalPriceRaw = widget.bookingData['final_price'];
       if (finalPriceRaw != null) {
         final parsed = double.tryParse(finalPriceRaw.toString());
         if (parsed != null && parsed > 0) return parsed.toInt();
       }
-      // Fallback ke total_price dari API
       final totalPriceRaw = int.tryParse(
         widget.bookingData['total_price']?.toString() ?? "0",
       );
       if (totalPriceRaw != null && totalPriceRaw > 0) return totalPriceRaw;
-      // Fallback hitung manual
       return seatCount *
           (int.tryParse(widget.bookingData['price']?.toString() ?? "0") ?? 0);
     })();
 
-    // 🔥 Ambil info diskon jika ada
     final discountAmount = widget.bookingData['discount_amount'];
     final promoTitle = widget.bookingData['promo_title'];
     final hasPromo = promoTitle != null && discountAmount != null;
 
-    // Harga normal (sebelum diskon) untuk ditampilkan jika ada promo
     final int totalNormal = hasPromo
         ? (totalPrice +
-            (double.tryParse(discountAmount.toString())?.toInt() ?? 0))
+              (double.tryParse(discountAmount.toString())?.toInt() ?? 0))
         : totalPrice;
 
     final pricePerSeat = seatCount == 0 ? 0 : (totalNormal ~/ seatCount);
 
-    final bookingId = int.tryParse(
+    final bookingId =
+        int.tryParse(
           (widget.bookingData['id'] ?? widget.bookingData['booking_id'])
-              ?.toString() ?? "0",
-        ) ?? 0;
-
-    final bookingCode = widget.bookingData['booking_code'] ?? "";
+                  ?.toString() ??
+              "0",
+        ) ??
+        0;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF2F2F2),
       appBar: AppBar(
         title: const Text(
           "Pesan Tiket",
-          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w600, fontSize: 16),
+          style: TextStyle(
+            color: Colors.black87,
+            fontWeight: FontWeight.w600,
+            fontSize: 16,
+          ),
         ),
         backgroundColor: Colors.white,
         elevation: 0,
@@ -251,7 +295,6 @@ class _PaymentPageState extends State<PaymentPage> {
       ),
       body: Column(
         children: [
-          // Step indicator
           Container(
             color: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 40),
@@ -261,13 +304,32 @@ class _PaymentPageState extends State<PaymentPage> {
                 Container(
                   width: 32,
                   height: 32,
-                  decoration: const BoxDecoration(color: _primary, shape: BoxShape.circle),
+                  decoration: const BoxDecoration(
+                    color: _primary,
+                    shape: BoxShape.circle,
+                  ),
                   alignment: Alignment.center,
-                  child: const Text("3", style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
+                  child: const Text(
+                    "3",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
                 const SizedBox(width: 8),
-                const Text("Pembayaran", style: TextStyle(color: _primary, fontSize: 13, fontWeight: FontWeight.w600)),
-                Expanded(child: Container(height: 1.5, color: Colors.grey.shade300)),
+                const Text(
+                  "Pembayaran",
+                  style: TextStyle(
+                    color: _primary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Expanded(
+                  child: Container(height: 1.5, color: Colors.grey.shade300),
+                ),
               ],
             ),
           ),
@@ -277,21 +339,31 @@ class _PaymentPageState extends State<PaymentPage> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Column(
                 children: [
-                  // Timer countdown
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
                     decoration: BoxDecoration(
-                      color: _isExpired ? const Color(0xFFFFEBEE) : const Color(0xFFFFF8E1),
+                      color: _isExpired
+                          ? const Color(0xFFFFEBEE)
+                          : const Color(0xFFFFF8E1),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: _isExpired ? const Color(0xFFEF9A9A) : const Color(0xFFFFCC80),
+                        color: _isExpired
+                            ? const Color(0xFFEF9A9A)
+                            : const Color(0xFFFFCC80),
                       ),
                     ),
                     child: Row(
                       children: [
                         Icon(
-                          _isExpired ? Icons.cancel_rounded : Icons.access_time_rounded,
-                          color: _isExpired ? Colors.red : const Color(0xFFE65100),
+                          _isExpired
+                              ? Icons.cancel_rounded
+                              : Icons.access_time_rounded,
+                          color: _isExpired
+                              ? Colors.red
+                              : const Color(0xFFE65100),
                           size: 20,
                         ),
                         const SizedBox(width: 10),
@@ -299,14 +371,21 @@ class _PaymentPageState extends State<PaymentPage> {
                           child: _isExpired
                               ? const Text(
                                   "Waktu pembayaran habis. Pesanan ini telah dibatalkan.",
-                                  style: TextStyle(fontSize: 12, color: Colors.red, fontWeight: FontWeight.w600),
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.red,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 )
                               : Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     const Text(
                                       "Selesaikan pembayaran sebelum waktu habis",
-                                      style: TextStyle(fontSize: 12, color: Color(0xFF5D3A00)),
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Color(0xFF5D3A00),
+                                      ),
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
@@ -327,7 +406,6 @@ class _PaymentPageState extends State<PaymentPage> {
 
                   const SizedBox(height: 14),
 
-                  // Detail Pesanan
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(16),
@@ -335,66 +413,137 @@ class _PaymentPageState extends State<PaymentPage> {
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(14),
                       boxShadow: [
-                        BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8, offset: const Offset(0, 2)),
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
                       ],
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text("Detail Pesanan", style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.black87)),
+                        const Text(
+                          "Detail Pesanan",
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
                         const SizedBox(height: 12),
-                        _buildRow("Kode Booking", widget.bookingData['booking_code'] ?? "-"),
-                        _buildRow("Rute", "${widget.bookingData['origin'] ?? '-'} → ${widget.bookingData['destination'] ?? '-'}"),
-                        _buildRow("Tanggal", widget.bookingData['departure_date'] ?? "-"),
-                        _buildRow("Jam", widget.bookingData['departure_time'] ?? "-"),
+                        _buildRow(
+                          "Kode Booking",
+                          widget.bookingData['booking_code'] ?? "-",
+                        ),
+                        _buildRow(
+                          "Rute",
+                          "${widget.bookingData['origin'] ?? '-'} → ${widget.bookingData['destination'] ?? '-'}",
+                        ),
+                        _buildRow(
+                          "Tanggal",
+                          widget.bookingData['departure_date'] ?? "-",
+                        ),
+                        _buildRow(
+                          "Jam",
+                          widget.bookingData['departure_time'] ?? "-",
+                        ),
                         _buildRow("Bus", widget.bookingData['bus_name'] ?? "-"),
                         const SizedBox(height: 14),
-                        const Text("Penumpang", style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.black87)),
+                        const Text(
+                          "Penumpang",
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
+                        ),
                         const SizedBox(height: 8),
                         if (passengers.isNotEmpty)
-                          ...passengers.map((p) => Container(
-                                margin: const EdgeInsets.only(bottom: 8),
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFF5EAEA),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      width: 36,
-                                      height: 36,
-                                      decoration: BoxDecoration(color: _primary, borderRadius: BorderRadius.circular(8)),
-                                      alignment: Alignment.center,
-                                      child: Text(
-                                        p['seat']?.toString() ?? "-",
-                                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                          ...passengers.map(
+                            (p) => Container(
+                              margin: const EdgeInsets.only(bottom: 8),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF5EAEA),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 36,
+                                    height: 36,
+                                    decoration: BoxDecoration(
+                                      color: _primary,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      p['seat']?.toString() ?? "-",
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                    const SizedBox(width: 12),
-                                    Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(p['passenger_name'] ?? "-"),
-                                        Text(p['phone'] ?? "", style: const TextStyle(fontSize: 11)),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ))
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(p['passenger_name'] ?? "-"),
+                                      Text(
+                                        p['phone'] ?? "",
+                                        style: const TextStyle(fontSize: 11),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          )
                         else
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                            decoration: BoxDecoration(color: const Color(0xFFF5EAEA), borderRadius: BorderRadius.circular(10)),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 10,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF5EAEA),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                             child: Row(
                               children: [
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                  decoration: BoxDecoration(color: _primary, borderRadius: BorderRadius.circular(8)),
-                                  child: Text(seats.join(", "), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 6,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: _primary,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    seats.join(", "),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13,
+                                    ),
+                                  ),
                                 ),
                                 const SizedBox(width: 12),
-                                Text(widget.bookingData['passenger_name'] ?? "-", style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.black87)),
+                                Text(
+                                  widget.bookingData['passenger_name'] ?? "-",
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.black87,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -404,7 +553,6 @@ class _PaymentPageState extends State<PaymentPage> {
 
                   const SizedBox(height: 14),
 
-                  // 🔥 Ringkasan Harga — tampilkan diskon jika ada promo
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(14),
@@ -416,10 +564,12 @@ class _PaymentPageState extends State<PaymentPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Banner promo jika ada
                         if (hasPromo) ...[
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 7,
+                            ),
                             margin: const EdgeInsets.only(bottom: 10),
                             decoration: BoxDecoration(
                               color: const Color(0xFFE8F5E9),
@@ -427,7 +577,11 @@ class _PaymentPageState extends State<PaymentPage> {
                             ),
                             child: Row(
                               children: [
-                                const Icon(Icons.local_offer_rounded, color: Colors.green, size: 14),
+                                const Icon(
+                                  Icons.local_offer_rounded,
+                                  color: Colors.green,
+                                  size: 14,
+                                ),
                                 const SizedBox(width: 6),
                                 Expanded(
                                   child: Text(
@@ -443,20 +597,25 @@ class _PaymentPageState extends State<PaymentPage> {
                             ),
                           ),
                         ],
-
                         Text(
                           "$seatCount Kursi x ${formatPrice(pricePerSeat)}",
-                          style: const TextStyle(fontSize: 12, color: Colors.black54),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.black54,
+                          ),
                         ),
-
                         const SizedBox(height: 8),
-
-                        // Harga normal dicoret jika ada promo
                         if (hasPromo) ...[
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text("Harga Normal", style: TextStyle(fontSize: 13, color: Colors.black54)),
+                              const Text(
+                                "Harga Normal",
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.black54,
+                                ),
+                              ),
                               Text(
                                 formatPrice(totalNormal),
                                 style: const TextStyle(
@@ -471,10 +630,19 @@ class _PaymentPageState extends State<PaymentPage> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text('Diskon "$promoTitle"', style: const TextStyle(fontSize: 13, color: Colors.green)),
+                              Text(
+                                'Diskon "$promoTitle"',
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.green,
+                                ),
+                              ),
                               Text(
                                 '- ${formatPrice(double.tryParse(discountAmount.toString())?.toInt() ?? 0)}',
-                                style: const TextStyle(fontSize: 13, color: Colors.green),
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.green,
+                                ),
                               ),
                             ],
                           ),
@@ -483,12 +651,25 @@ class _PaymentPageState extends State<PaymentPage> {
                             child: Divider(height: 1),
                           ),
                         ],
-
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text("Total Pembayaran", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black87)),
-                            Text(formatPrice(totalPrice), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: _primary)),
+                            const Text(
+                              "Total Pembayaran",
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            Text(
+                              formatPrice(totalPrice),
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: _primary,
+                              ),
+                            ),
                           ],
                         ),
                         const SizedBox(height: 6),
@@ -496,7 +677,11 @@ class _PaymentPageState extends State<PaymentPage> {
                           onTap: () {},
                           child: const Text(
                             "Lakukan Pembayaran pada pesanan",
-                            style: TextStyle(fontSize: 12, color: _primary, decoration: TextDecoration.underline),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: _primary,
+                              decoration: TextDecoration.underline,
+                            ),
                           ),
                         ),
                       ],
@@ -507,68 +692,40 @@ class _PaymentPageState extends State<PaymentPage> {
             ),
           ),
 
-          // ================= TOMBOL BAYAR =================
           Container(
             color: Colors.white,
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
             child: Column(
               children: [
-                // 🔴 Tombol Midtrans
                 SizedBox(
                   width: double.infinity,
                   height: 52,
                   child: ElevatedButton(
-                    onPressed: (_isExpired || _isLoadingMidtrans)
+                    onPressed:
+                        (_isExpired || _isLoadingMidtrans || _tokenRequested)
                         ? null
                         : () async => await openMidtrans(bookingId),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: _primary,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                       elevation: 0,
+                      disabledBackgroundColor: Colors.grey.shade300,
                     ),
                     child: _isLoadingMidtrans
                         ? const CircularProgressIndicator(color: Colors.white)
                         : const Text(
                             "Bayar dengan Midtrans",
-                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white),
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
                           ),
                   ),
                 ),
 
-                const SizedBox(height: 10),
-
-                // ⚪ Tombol Transfer Manual
-                SizedBox(
-                  width: double.infinity,
-                  height: 52,
-                  child: ElevatedButton(
-                    onPressed: _isExpired
-                        ? null
-                        : () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => TransferPage(
-                                  bookingId: bookingId,
-                                  total: totalPrice,
-                                  bookingCode: bookingCode,
-                                ),
-                              ),
-                            );
-                          },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey.shade400,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      elevation: 0,
-                    ),
-                    child: const Text(
-                      "Transfer Manual",
-                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white),
-                    ),
-                  ),
-                ),
-
-                // 🟢 Tombol Cek Status — muncul SETELAH user buka Midtrans
                 if (_sudahBayar) ...[
                   const SizedBox(height: 10),
                   SizedBox(
@@ -579,8 +736,13 @@ class _PaymentPageState extends State<PaymentPage> {
                           ? null
                           : () async => await _checkStatus(bookingId),
                       style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Color(0xFF7B2D2D), width: 1.5),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        side: const BorderSide(
+                          color: Color(0xFF7B2D2D),
+                          width: 1.5,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                       child: _isLoadingCheck
                           ? const SizedBox(
@@ -616,8 +778,18 @@ class _PaymentPageState extends State<PaymentPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(title, style: const TextStyle(fontSize: 13, color: Colors.black54)),
-          Text(value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Colors.black87)),
+          Text(
+            title,
+            style: const TextStyle(fontSize: 13, color: Colors.black54),
+          ),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: Colors.black87,
+            ),
+          ),
         ],
       ),
     );
