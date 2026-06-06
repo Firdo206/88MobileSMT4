@@ -4,17 +4,25 @@ import 'api_service.dart';
 
 class PaymentService {
   static Future<String?> getSnapToken(int bookingId) async {
+    print("=== GET SNAP TOKEN ===");
+    print("URL: ${ApiService.midtransPayment}");
+    print("BOOKING ID: $bookingId");
+
     final response = await http.post(
       Uri.parse(ApiService.midtransPayment),
       headers: {
         "Accept": "application/json",
-      "Content-Type": "application/json", 
-        },
-        body: jsonEncode({                     
-          "booking_id": bookingId,
-        }),
-      );
-      
+        "Content-Type": "application/json",
+      },
+      body: jsonEncode({
+        "booking_id": bookingId,
+        "type": "bus",
+      }),
+    );
+
+    print("STATUS CODE: ${response.statusCode}");
+    print("RESPONSE BODY: ${response.body}");
+
     final data = jsonDecode(response.body);
 
     if (data['status'] == true) {
@@ -24,7 +32,8 @@ class PaymentService {
       return null;
     }
   }
-  //pembayaran dengan midtrans
+
+  // pembayaran dengan midtrans
   static Future<String?> checkStatus(int bookingId) async {
     try {
       final response = await http.get(

@@ -1125,10 +1125,10 @@ class _BookingFormPageState extends State<BookingFormPage> {
                           return;
                         }
 
-                        int jumlah = int.parse(jumlahController.text);
-                        double harga = double.parse(
-                          widget.data['price_per_person'].toString(),
-                        );
+                        int jumlah = int.tryParse(jumlahController.text) ?? 1;
+                          double harga = double.tryParse(
+                            widget.data['price_per_person']?.toString() ?? '0',
+                          ) ?? 0;
 
                         double discount = 0;
                         if (activePromo != null) {
@@ -1154,7 +1154,7 @@ class _BookingFormPageState extends State<BookingFormPage> {
                               total: total,
                               notes: catatanController.text,
                               promo: activePromo,
-                              busId: _selectedBus!['id'],
+                              busId: int.tryParse(_selectedBus!['id']?.toString() ?? '0') ?? 0,
                               busName: _selectedBus!['name'],
                             ),
                           ),

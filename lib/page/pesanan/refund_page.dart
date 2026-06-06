@@ -35,6 +35,8 @@ class _RefundPageState extends State<RefundPage> {
 
   Future<void> submitRefund() async {
     setState(() => isLoading = true);
+     print("BOOKING DATA: ${widget.booking}");
+      print("BOOKING ID: ${widget.booking['id']}");
 
     try {
       final prefs = await SharedPreferences.getInstance();

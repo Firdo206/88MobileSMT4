@@ -58,7 +58,7 @@ class BookingSummaryPage extends StatelessWidget {
     String imageUrl = data['image'] != null
         ? '${ApiService.storageUrl}/storage/${data['image']}'
         : '';
-    double harga = double.parse(data['price_per_person'].toString());
+    double harga = double.tryParse(data['price_per_person']?.toString() ?? '0') ?? 0;
 
     double discount = 0;
     if (promo != null) {

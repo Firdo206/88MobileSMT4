@@ -235,7 +235,10 @@ class _SchedulePageState extends State<SchedulePage> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => SeatPage(scheduleId: item['id'], scheduleData: item),
+                builder: (_) => SeatPage(
+                scheduleId: int.tryParse(item['id']?.toString() ?? '0') ?? 0,
+                scheduleData: item,
+              ),
               ),
             );
           },

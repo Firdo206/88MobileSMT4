@@ -291,7 +291,7 @@ class _PaketWisataPageState extends State<PaketWisataPage> {
                                 price: "Rp ${item['price_per_person']}",
                                 rating: double.tryParse(
                                   item['reviews_avg_rating']?.toString() ?? '0') ?? 0,
-                                reviewCount: item['reviews_count'] ?? 0,
+                                reviewCount: int.tryParse(item['reviews_count']?.toString() ?? '0') ?? 0,
                                 onTap: () {
                                   Navigator.push(context,
                                     MaterialPageRoute(

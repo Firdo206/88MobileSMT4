@@ -9,10 +9,10 @@ class SeatService {
 
     final response = await http.get(
       Uri.parse("${ApiService.baseUrl}/seat-layout/$scheduleId"),
-      headers: {
-        "Accept": "application/json"
-      },
+      headers: {"Accept": "application/json" },
+      
     );
+    print("SEAT RESPONSE: ${response.body}");
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body);

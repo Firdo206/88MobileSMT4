@@ -80,7 +80,7 @@ class _PaketDetailPageState extends State<PaketDetailPage> {
 
     final double avgRating =
         double.tryParse(data['reviews_avg_rating']?.toString() ?? '0') ?? 0;
-    final int reviewCount = data['reviews_count'] ?? 0;
+    final int reviewCount = int.tryParse(data['reviews_count']?.toString() ?? '0') ?? 0;
     final String imageUrl = _getImageUrl(data);
 
     return Scaffold(

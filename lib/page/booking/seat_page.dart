@@ -32,15 +32,18 @@ class _SeatPageState extends State<SeatPage> {
   }
 
   Future<void> loadSeats() async {
-    final data = await SeatService.getSeatLayout(widget.scheduleId);
-    setState(() {
-      capacity = data['capacity'];
-      bookedSeats = List<int>.from(
-        data['booked_seats'].map((e) => int.parse(e.toString())),
-      );
-      isLoading = false;
-    });
-  }
+  final data = await SeatService.getSeatLayout(widget.scheduleId);
+  print("SEAT DATA: $data");
+  print("CAPACITY TYPE: ${data['capacity'].runtimeType}");
+  print("BOOKED SEATS: ${data['booked_seats']}");
+  setState(() {
+    capacity = int.tryParse(data['capacity']?.toString() ?? '0') ?? 0;
+    bookedSeats = List<int>.from(
+      data['booked_seats'].map((e) => int.tryParse(e.toString()) ?? 0),
+    );
+    isLoading = false;
+  });
+}
 
   void toggleSeat(int seatNumber) {
     if (bookedSeats.contains(seatNumber)) return;
